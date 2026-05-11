@@ -283,18 +283,7 @@ export function PasswordInput({
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="flex h-[50px] w-[300px] items-center rounded-[10px] bg-[#D9D9D9D9] px-4 text-[#5f5f5f] transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)]">
-      <input
-        type={showPassword ? "text" : "password"}
-        name={name}
-        aria-label={ariaLabel}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        placeholder={placeholder}
-        className="h-full flex-1 border-none bg-transparent text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] disabled:cursor-not-allowed"
-      />
-
+    <div className="flex h-[50px] w-[300px] items-center flex-row-reverse rounded-[10px] bg-[#D9D9D9D9] px-4 text-[#5f5f5f] transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)]" dir="ltr">
       <button
         type="button"
         onClick={() => setShowPassword((prev) => !prev)}
@@ -304,6 +293,18 @@ export function PasswordInput({
       >
         <EyeIcon closed={!showPassword} />
       </button>
+
+      <input
+        dir="ltr"
+        type={showPassword ? "text" : "password"}
+        name={name}
+        aria-label={ariaLabel}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        className="h-full flex-1 border-none bg-transparent text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] disabled:cursor-not-allowed text-left"
+      />
     </div>
   );
 }
