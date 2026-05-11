@@ -104,6 +104,7 @@ export function Input({
 
   return (
     <input
+      dir="ltr"
       type={type}
       name={name}
       aria-label={ariaLabel}
