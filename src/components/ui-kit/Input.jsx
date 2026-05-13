@@ -3,19 +3,14 @@ import { useState, useRef } from "react";
 function SearchIcon() {
   return (
     <svg
-      width="18"
-      height="18"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
-      className="shrink-0"
+      className="block shrink-0"
+      aria-hidden="true"
     >
-      <circle
-        cx="11"
-        cy="11"
-        r="7"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
       <path
         d="M20 20L16.65 16.65"
         stroke="currentColor"
@@ -29,11 +24,12 @@ function SearchIcon() {
 function KeyboardIcon() {
   return (
     <svg
-      width="20"
-      height="20"
+      width="15"
+      height="15"
       viewBox="0 0 24 24"
       fill="none"
-      className="shrink-0"
+      className="block shrink-0"
+      aria-hidden="true"
     >
       <rect
         x="2.5"
@@ -63,7 +59,8 @@ function EyeIcon({ closed = false }) {
       height="22"
       viewBox="0 0 24 24"
       fill="none"
-      className="shrink-0"
+      className="block shrink-0"
+      aria-hidden="true"
     >
       <path
         d="M2 12C3.8 8.5 7.4 6 12 6C16.6 6 20.2 8.5 22 12C20.2 15.5 16.6 18 12 18C7.4 18 3.8 15.5 2 12Z"
@@ -83,6 +80,42 @@ function EyeIcon({ closed = false }) {
   );
 }
 
+const englishToPersianDigits = {
+  0: "۰",
+  1: "۱",
+  2: "۲",
+  3: "۳",
+  4: "۴",
+  5: "۵",
+  6: "۶",
+  7: "۷",
+  8: "۸",
+  9: "۹",
+};
+
+const arabicToPersianDigits = {
+  "٠": "۰",
+  "١": "۱",
+  "٢": "۲",
+  "٣": "۳",
+  "٤": "۴",
+  "٥": "۵",
+  "٦": "۶",
+  "٧": "۷",
+  "٨": "۸",
+  "٩": "۹",
+};
+
+function toPersianDigits(value) {
+  return String(value)
+    .replace(/[0-9]/g, (digit) => englishToPersianDigits[digit])
+    .replace(/[٠-٩]/g, (digit) => arabicToPersianDigits[digit]);
+}
+
+function extractPersianDigits(value) {
+  return toPersianDigits(value).replace(/[^۰-۹]/g, "");
+}
+
 export function Input({
   variant = "grayLarge",
   type = "text",
@@ -94,16 +127,17 @@ export function Input({
   ariaLabel,
 }) {
   const baseClasses =
-    "outline-none border-none px-4 text-[14px] font-medium text-[#24344c] placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:opacity-50 disabled:cursor-not-allowed";
+    "outline-none border-none px-4 text-right text-[14px] font-medium text-[#24344c] placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
-    grayLarge: "w-[300px] h-[50px] rounded-[10px] bg-[#D9D9D9D9]",
+    grayLarge: "w-[350px] h-[50px] rounded-[10px] bg-[#D9D9D9D9]",
     whiteMedium: "w-[352px] h-[41px] rounded-[8px] bg-white",
     blueMedium: "w-[200px] h-[45px] rounded-[10px] bg-[#9ec2d4]",
   };
 
   return (
     <input
+      dir="rtl"
       type={type}
       name={name}
       aria-label={ariaLabel}
@@ -115,8 +149,6 @@ export function Input({
     />
   );
 }
-
-
 
 export function OtpInput({
   value,
@@ -130,6 +162,8 @@ export function OtpInput({
   return (
     <input
       ref={inputRef}
+      dir="ltr"
+      lang="fa"
       type="text"
       inputMode="numeric"
       maxLength={1}
@@ -152,48 +186,67 @@ export function OtpInputGroup({
 }) {
   const inputRefs = useRef([]);
 
-  const handleChange = (index, newValue) => {
-    const onlyDigit = newValue.replace(/\D/g, "").slice(-1);
+  const normalizedValues = Array.from({ length }, (_, index) => {
+    return extractPersianDigits(values[index] || "").slice(0, 1);
+  });
 
-    if (!onlyDigit) {
-      const updated = [...values];
+  const focusInput = (index) => {
+    requestAnimationFrame(() => {
+      inputRefs.current[index]?.focus();
+      inputRefs.current[index]?.select();
+    });
+  };
+
+  const handleChange = (index, newValue) => {
+    const digits = extractPersianDigits(newValue);
+    const updated = [...normalizedValues];
+
+    if (!digits) {
       updated[index] = "";
       onChange(updated);
       return;
     }
 
-    const updated = [...values];
-    updated[index] = onlyDigit;
+    const chars = digits.split("");
+
+    chars.forEach((char, charIndex) => {
+      const targetIndex = index + charIndex;
+
+      if (targetIndex < length) {
+        updated[targetIndex] = char;
+      }
+    });
+
     onChange(updated);
 
-    if (index < length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
+    const nextIndex = Math.min(index + chars.length, length - 1);
+    focusInput(nextIndex);
   };
 
   const handleKeyDown = (index, event) => {
-    if (event.key === "Backspace" && !values[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+    if (event.key === "Backspace" && !normalizedValues[index] && index > 0) {
+      focusInput(index - 1);
     }
   };
 
   const handlePaste = (event) => {
     event.preventDefault();
 
-    const pastedValue = event.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, length);
+    const pastedValue = extractPersianDigits(
+      event.clipboardData.getData("text"),
+    ).slice(0, length);
 
     if (!pastedValue) return;
 
-    const updated = Array.from({ length }, (_, index) => pastedValue[index] || "");
+    const updated = Array.from(
+      { length },
+      (_, index) => pastedValue[index] || "",
+    );
+
     onChange(updated);
 
-    const nextIndex =
-      pastedValue.length >= length ? length - 1 : pastedValue.length;
-
-    inputRefs.current[nextIndex]?.focus();
+    const nextIndex = Math.min(pastedValue.length, length - 1);
+    focusInput(nextIndex);
   };
 
   return (
@@ -201,7 +254,7 @@ export function OtpInputGroup({
       {Array.from({ length }).map((_, index) => (
         <OtpInput
           key={index}
-          value={values[index] || ""}
+          value={normalizedValues[index] || ""}
           onChange={(e) => handleChange(index, e.target.value)}
           onKeyDown={(e) => handleKeyDown(index, e)}
           onPaste={handlePaste}
@@ -226,14 +279,16 @@ export function TextArea({
   ariaLabel,
 }) {
   const baseClasses =
-    "resize-none outline-none border-none px-4 py-3 text-[14px] font-medium text-[#24344c] placeholder:text-[#5f7480] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:opacity-50 disabled:cursor-not-allowed";
+    "resize-none outline-none border-none px-4 py-3 text-right text-[14px] font-medium text-[#24344c] placeholder:text-[#5f7480] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
-    blueLarge: "w-[665px] h-[100px] rounded-[10px] bg-[#9ec2d4]",
+    blueLarge: "w-[860px] h-[100px] rounded-[10px] bg-[#9ec2d4]",
+    grayTall: "w-[350px] h-[160px] rounded-[10px] bg-[#D9D9D9]",
   };
 
   return (
     <textarea
+      dir="rtl"
       name={name}
       aria-label={ariaLabel}
       className={`${baseClasses} ${variants[variant]}`}
@@ -254,8 +309,13 @@ export function SearchInput({
   placeholder = "جستجو",
 }) {
   return (
-    <div className="flex h-[56px] w-[360px] items-center rounded-[12px] bg-[#6f82b1] px-4 text-white transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)]">
+    <div className="relative h-[35px] w-[200px] overflow-hidden rounded-[12px] bg-[#D1EDF1] text-[#24344c] transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)]">
+      <span className="pointer-events-none absolute right-[10px] top-1/2 flex h-4 w-4 -translate-y-1/2 items-center justify-center text-[#24344c]">
+        <SearchIcon />
+      </span>
+
       <input
+        dir="rtl"
         type="text"
         name={name}
         aria-label={ariaLabel}
@@ -263,11 +323,39 @@ export function SearchInput({
         onChange={onChange}
         disabled={disabled}
         placeholder={placeholder}
-        className="h-full flex-1 border-none bg-transparent text-[14px] font-medium text-white outline-none placeholder:text-white/75 disabled:cursor-not-allowed"
+        className="h-full w-full border-none bg-transparent pr-[36px] pl-3 text-right text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#24344c] disabled:cursor-not-allowed"
       />
-      <span className="ml-3 text-white">
-        <SearchIcon />
-      </span>
+    </div>
+  );
+}
+
+export function SearchKeyboardInput({
+  value,
+  onChange,
+  disabled = false,
+  name,
+  ariaLabel = "keyboard search input",
+  placeholder = "جستجو",
+}) {
+  return (
+    <div className="flex h-[35px] w-[170px] items-center justify-center overflow-hidden rounded-[10px] bg-[#B4C9EA]">
+      <div className="relative h-[26px] w-[162px] overflow-hidden rounded-[8px] bg-[#D1EDF1] text-[#24344c] transition-all duration-200 focus-within:ring-[2px] focus-within:ring-[rgba(111,130,177,0.35)]">
+        <input
+          dir="rtl"
+          type="text"
+          name={name}
+          aria-label={ariaLabel}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          placeholder={placeholder}
+          className="h-full w-full border-none bg-transparent pr-2 pl-[30px] text-right text-[13px] font-medium text-[#24344c] outline-none placeholder:text-[#24344c] disabled:cursor-not-allowed"
+        />
+
+        <span className="pointer-events-none absolute left-[8px] top-1/2 flex h-[15px] w-[15px] -translate-y-1/2 items-center justify-center text-[#24344c]">
+          <KeyboardIcon />
+        </span>
+      </div>
     </div>
   );
 }
@@ -284,7 +372,18 @@ export function PasswordInput({
 
   return (
     <div className="flex h-[50px] w-[300px] items-center rounded-[10px] bg-[#D9D9D9D9] px-4 text-[#5f5f5f] transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)]">
+      <button
+        type="button"
+        onClick={() => setShowPassword((prev) => !prev)}
+        disabled={disabled}
+        className="ml-3 shrink-0 text-[#5f5f5f] outline-none disabled:cursor-not-allowed"
+        aria-label={showPassword ? "hide password" : "show password"}
+      >
+        <EyeIcon closed={!showPassword} />
+      </button>
+
       <input
+        dir="ltr"
         type={showPassword ? "text" : "password"}
         name={name}
         aria-label={ariaLabel}
@@ -292,18 +391,8 @@ export function PasswordInput({
         onChange={onChange}
         disabled={disabled}
         placeholder={placeholder}
-        className="h-full flex-1 border-none bg-transparent text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] disabled:cursor-not-allowed"
+        className="h-full flex-1 appearance-none border-none bg-transparent text-left text-[14px] font-medium text-[#24344c] outline-none placeholder:text-right placeholder:text-[#777777] disabled:cursor-not-allowed [&::-ms-clear]:hidden [&::-ms-reveal]:hidden"
       />
-
-      <button
-        type="button"
-        onClick={() => setShowPassword((prev) => !prev)}
-        disabled={disabled}
-        className="ml-3 text-[#5f5f5f] outline-none disabled:cursor-not-allowed"
-        aria-label={showPassword ? "hide password" : "show password"}
-      >
-        <EyeIcon closed={!showPassword} />
-      </button>
     </div>
   );
 }
@@ -329,16 +418,13 @@ export function KeyboardInput({
 
   return (
     <div
+      dir="rtl"
       className={`
         flex items-center bg-[#b4c9ea] px-4 text-[#4e6483]
         transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)]
         ${variants[variant]}
       `}
     >
-      <span className="mr-3 text-[#4e6483]">
-        <KeyboardIcon />
-      </span>
-
       <input
         type="text"
         name={name}
@@ -347,7 +433,7 @@ export function KeyboardInput({
         onChange={onChange}
         disabled={disabled}
         placeholder={placeholder}
-        className={`h-full flex-1 border-none bg-transparent font-medium text-[#24344c] outline-none placeholder:text-[#5f7480] disabled:cursor-not-allowed ${textSizes[variant]}`}
+        className={`h-full flex-1 border-none bg-transparent text-right font-medium text-[#24344c] outline-none placeholder:text-[#5f7480] disabled:cursor-not-allowed ${textSizes[variant]}`}
       />
     </div>
   );
