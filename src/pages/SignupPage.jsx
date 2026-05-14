@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Input, OtpInputGroup, PasswordInput } from '../components/ui/Input';
 import { Button, SegmentButton } from '../components/ui/Button';
-import Checkbox from "../components/CheckBox";
+// import Checkbox from "../components/CheckBox";
+import api from '../services/api';
 
 
 export default function SignupPage() {
@@ -15,33 +16,76 @@ export default function SignupPage() {
 
   const validatePassword = (pass) => {
     if (pass.length < 8) return "رمز عبور باید حداقل ۸ کاراکتر باشد.";
-    if (!/(?=.*[a-zA-Z])(?=.*[0-9])/.test(pass)) return "رمز عبور باید شامل اعداد و حروف باشد.";
+    if (!/(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])/.test(pass)) return "رمز عبور باید شامل اعداد و حروف و حداقل یک حرف بزرگ باشد.";
     if (!/(?=.*[@!#%&_])/.test(pass)) return "رمز عبور باید حداقل یک کاراکتر ویژه داشته باشد (@, !, ...).";
     return "";
   };
 
+  const normalizeDigits = (value) => {
+    if (!value) return "";
+
+    return value
+      .toString()
+      .replace(/[۰-۹]/g, d => "0123456789"["۰۱۲۳۴۵۶۷۸۹".indexOf(d)])
+      .replace(/[٠-٩]/g, d => "0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)]);
+  };
+
+
   const [phoneError, setPhoneError] = useState("");
 
   const validatePhone = (phone) => {
-  if (!phone) return "شماره موبایل الزامی است";
+    if (!phone) return "شماره موبایل الزامی است";
 
-  const normalizedPhone = phone.replace(/[۰-۹]/g, d =>
-    "۰۱۲۳۴۵۶۷۸۹".indexOf(d)
-  );
+    const normalizedPhone = normalizeDigits(phone);
 
-  if (!/^09\d{9}$/.test(normalizedPhone)) {
-    return "شماره موبایل معتبر نیست";
-  }
+    if (!/^09\d{9}$/.test(normalizedPhone)) {
+      return "شماره موبایل معتبر نیست";
+    }
 
-  return "";
+    return "";
   };
 
   const [isForgotOpen, setIsForgotOpen] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  // const [rememberMe, setRememberMe] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpSendMessage, setOtpSendMessage] = useState("");
 
 
+  const handleSendOtp = async () => {
+    // validate phone first
+    const phoneErr = validatePhone(phone);
+    if (phoneErr) {
+      setPhoneError(phoneErr);
+      return;
+    }
 
-  const handleSubmit = (e) => {
+    const normalizedPhone = normalizeDigits(phone);
+
+    setIsSendingOtp(true);
+    setOtpSendMessage("");
+    setOtpError("");
+
+
+    try {
+      const response = await api.post("/auth/send-otp/", {
+        phone: normalizedPhone,
+      });
+
+      console.log("OTP sent:", response.data);
+
+      setOtpSendMessage("کد تایید برای شما ارسال شد ");
+    } catch (error) {
+      console.error("Send OTP error:", error.response?.data || error.message);
+
+      setOtpSendMessage("خطا در ارسال کد تایید");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const phoneErr = validatePhone(phone);
@@ -61,28 +105,87 @@ export default function SignupPage() {
       return;
     }
 
+    const normalizedPhone = normalizeDigits(phone);
+    const normalizedOtp = normalizeDigits(otpValues.join(""));
+
+    if (normalizedOtp.length !== 6) {
+    setOtpError("کد تایید باید ۶ رقم باشد.");
+    return;
+    }
+
+
     setPasswordError("");
+    setOtpError("");
+    setPhoneError("");
+
+    try {
+    // Send register request
+    const response = await api.post("/auth/register/", {
+      phone: normalizedPhone,
+      otp: normalizedOtp,
+      password: password,
+      confirm_password: confirmPassword,
+    });
+
+    console.log("Success:", response.data);
+
     alert("ثبت نام با موفقیت انجام شد.");
-    // Proceed with submission logic (API calls will be added here)
+
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("خطا در ارتباط با سرور");
+      }
+    }
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     
+    // validate phone
     const phoneErr = validatePhone(phone);
     if (phoneErr) {
       setPhoneError(phoneErr);
       return;
     }
 
+    // validate password
     const error = validatePassword(password);
     if (error) {
       setPasswordError(error);
       return;
     }
-    console.log("rememberMe:", rememberMe);
-    alert("ورود با موفقیت انجام شد.");
-    // Proceed with login logic
+    const normalizedPhone = normalizeDigits(phone);
+
+    setPhoneError("");
+
+    try {
+      // 3) Send request to backend
+      const response = await api.post("/auth/login/", {
+        phone: normalizedPhone,
+        password: password,
+      });
+
+      console.log("Success:", response.data);
+
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+      }
+
+      alert("ورود با موفقیت انجام شد.");
+
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert("خطا در ارتباط با سرور");
+      }
+    }
   };
 
   return (
@@ -144,7 +247,7 @@ export default function SignupPage() {
               <span>رمز ورود باید:</span>
               <ul className="list-disc list-inside">
                 <li>حداقل ۸ کاراکتر باشد</li>
-                <li>شامل اعداد و حروف باشد</li>
+                <li>شامل اعداد و حروف و خداقل یک حرف بزرگ باشد</li>
                 <li>حداقل یک کاراکتر ویژه داشته باشد (@, !, ...)</li>
               </ul>
             </div>
@@ -172,17 +275,34 @@ export default function SignupPage() {
                 <label className="text-[14px] text-[#24344c] font-medium">
                   کد تایید:
                 </label>
-                <button type="button" className="text-[12px] text-[#6f82b1] font-medium hover:underline">
-                  ارسال کد تایید
+                <button type="button" 
+                        className="text-[12px] text-[#6f82b1] font-medium hover:underline"
+                        disabled={isSendingOtp}
+                        onClick={handleSendOtp}>
+                  {isSendingOtp? "درحال ارسال" : "ارسال کد تایید"}
                 </button>
               </div>
               <div dir="ltr">
                 <OtpInputGroup
                   length={6}
                   values={otpValues}
-                  onChange={setOtpValues}
+                  onChange={(values) => {
+                              setOtpValues(values);
+                              setOtpError("");
+                            }}
                 />
               </div>
+              {otpSendMessage && (
+                <p className="text-[12px] mt-1 font-medium text-[#6f82b1]">
+                  {otpSendMessage}
+                </p>
+              )}
+              {otpError && (
+                <p className="text-red-500 text-[12px] font-medium mr-1">
+                  {otpError}
+                </p>
+              )}
+
             </div>
 
             <div className="flex flex-col items-center mt-6 gap-3">
@@ -238,12 +358,12 @@ export default function SignupPage() {
                 فراموشی رمز عبور
               </button>
 
-              <Checkbox
+              {/* <Checkbox
                 checked={rememberMe}
                 onChange={setRememberMe}
                 label="مرا به خاطر بسپار"
                 className="block ml-auto"
-              />
+              /> */}
             </div>
 
             <div className="flex flex-col items-center mt-4 gap-3">
@@ -253,7 +373,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setAuthType("signup")}
-                className="text-[1px] text-[#24344c] font-medium hover:underline"
+                className="text-[12px] text-[#24344c] font-medium hover:underline"
               >
                 حساب کاربری ندارید؟ ثبت نام
               </button>
