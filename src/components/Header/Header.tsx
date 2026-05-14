@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "../ui-kit/Button";
+import { Button, ToggleSwitch } from "../ui-kit/Button";
+import { SearchInput } from "../ui-kit/Input";
 import {
   fetchHeaderBoards,
   fetchHeaderProfile,
@@ -43,28 +44,6 @@ function MenuIcon() {
         stroke="currentColor"
         strokeLinecap="round"
         strokeWidth="7"
-      />
-    </svg>
-  );
-}
-
-function SmallSearchIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-      <circle
-        cx="10.5"
-        cy="10.5"
-        r="6.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-      />
-      <path
-        d="M15.5 15.5L21 21"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="2.4"
       />
     </svg>
   );
@@ -148,7 +127,6 @@ export default function Header() {
   const [isNightMode, setIsNightMode] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const headerRef = useRef<HTMLDivElement | null>(null);
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -206,12 +184,6 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    if (isSearchOpen) {
-      searchInputRef.current?.focus();
-    }
-  }, [isSearchOpen]);
-
-  useEffect(() => {
     if (!shouldUseHeaderApi || !searchValue.trim()) return;
 
     const timeoutId = window.setTimeout(async () => {
@@ -227,7 +199,7 @@ export default function Header() {
 
   return (
     <header
-      className={`tak-header ${isNightMode ? "is-night-mode" : ""}`}
+      className={`tak-header ${isNightMode ? "is-night-mode" : ""} bg-[var(--tak-page)] text-[var(--tak-text)]`}
       dir="rtl"
     >
       <div
@@ -242,20 +214,13 @@ export default function Header() {
         />
 
         <div className="tak-header-pill">
-          <div className="tak-search-panel" aria-hidden={!isSearchOpen}>
-            <input
-              ref={searchInputRef}
-              className="tak-search-input"
+          <div className={`tak-search-wrapper flex overflow-hidden transition-all duration-[360ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]${isSearchOpen ? " is-open" : ""}`}>
+            <SearchInput
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               placeholder="جستجو"
-              aria-label="جستجو"
-              tabIndex={isSearchOpen ? 0 : -1}
-              type="search"
+              ariaLabel="جستجو"
             />
-            <span className="tak-search-panel-icon">
-              <SmallSearchIcon />
-            </span>
           </div>
 
           <div className="tak-board" dir="rtl">
@@ -293,8 +258,8 @@ export default function Header() {
             )}
           </div>
 
-          <a className="tak-logo" href="/" aria-label="تک‌رای">
-            تک‌رای
+          <a className="tak-logo" href="/" aria-label="کاربورد">
+            کاربورد
           </a>
 
           <div className="tak-menu-wrap">
@@ -362,29 +327,27 @@ export default function Header() {
                     </span>
                   </a>
 
-                  <button
-                    className="tak-menu-row tak-night-row"
-                    type="button"
-                    onClick={() => setIsNightMode((nightMode) => !nightMode)}
-                  >
+                  <div className="tak-menu-row tak-night-row">
                     <span className="tak-menu-icon-slot" />
                     <span className="tak-menu-label">حالت شب/روز</span>
-                    <span
-                      className={`tak-night-switch ${
-                        isNightMode ? "is-on" : ""
-                      }`}
-                      aria-hidden="true"
-                    >
-                      <span />
-                    </span>
-                  </button>
+                    <ToggleSwitch
+                      checked={isNightMode}
+                      onChange={setIsNightMode}
+                      aria-label="تغییر حالت شب/روز"
+                    />
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        <a className="tak-profile" href="/profile" aria-label="پروفایل">
+        <Button
+          variant="doubleCircle"
+          className="tak-profile"
+          aria-label="پروفایل"
+          onClick={() => window.location.href = "/profile"}
+        >
           <span className="tak-profile-photo">
             {profile?.avatarUrl ? (
               <img src={profile.avatarUrl} alt="" />
@@ -395,7 +358,7 @@ export default function Header() {
               </>
             )}
           </span>
-        </a>
+        </Button>
       </div>
     </header>
   );
