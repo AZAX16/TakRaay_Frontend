@@ -1,4 +1,67 @@
-import { useState, useRef } from "react";
+import {
+  useRef,
+  useState,
+  type ChangeEventHandler,
+  type ClipboardEventHandler,
+  type KeyboardEvent,
+  type KeyboardEventHandler,
+  type Ref,
+} from "react";
+
+type TextInputVariant = "grayLarge" | "whiteMedium" | "blueMedium";
+type TextAreaVariant = "blueLarge" | "grayTall";
+type KeyboardInputVariant = "small" | "large";
+
+type TextInputProps = {
+  variant?: TextInputVariant;
+  type?: string;
+  placeholder?: string;
+  value?: string;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+  disabled?: boolean;
+  name?: string;
+  ariaLabel?: string;
+};
+
+type TextAreaProps = {
+  variant?: TextAreaVariant;
+  placeholder?: string;
+  value?: string;
+  onChange?: ChangeEventHandler<HTMLTextAreaElement>;
+  disabled?: boolean;
+  name?: string;
+  ariaLabel?: string;
+};
+
+type OtpInputProps = {
+  value: string;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+  onKeyDown: KeyboardEventHandler<HTMLInputElement>;
+  onPaste: ClipboardEventHandler<HTMLInputElement>;
+  disabled?: boolean;
+  ariaLabel?: string;
+  inputRef?: Ref<HTMLInputElement>;
+};
+
+type OtpInputGroupProps = {
+  length?: number;
+  values?: string[];
+  onChange: (values: string[]) => void;
+  disabled?: boolean;
+};
+
+type SearchInputProps = {
+  value?: string;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+  disabled?: boolean;
+  name?: string;
+  ariaLabel?: string;
+  placeholder?: string;
+};
+
+type KeyboardInputProps = SearchInputProps & {
+  variant?: KeyboardInputVariant;
+};
 
 function SearchIcon() {
   return (
@@ -52,7 +115,7 @@ function KeyboardIcon() {
   );
 }
 
-function EyeIcon({ closed = false }) {
+function EyeIcon({ closed = false }: { closed?: boolean }) {
   return (
     <svg
       width="22"
@@ -80,7 +143,7 @@ function EyeIcon({ closed = false }) {
   );
 }
 
-const englishToPersianDigits = {
+const englishToPersianDigits: Record<string, string> = {
   0: "۰",
   1: "۱",
   2: "۲",
@@ -93,7 +156,7 @@ const englishToPersianDigits = {
   9: "۹",
 };
 
-const arabicToPersianDigits = {
+const arabicToPersianDigits: Record<string, string> = {
   "٠": "۰",
   "١": "۱",
   "٢": "۲",
@@ -106,13 +169,13 @@ const arabicToPersianDigits = {
   "٩": "۹",
 };
 
-function toPersianDigits(value) {
+function toPersianDigits(value: string | number) {
   return String(value)
     .replace(/[0-9]/g, (digit) => englishToPersianDigits[digit])
     .replace(/[٠-٩]/g, (digit) => arabicToPersianDigits[digit]);
 }
 
-function extractPersianDigits(value) {
+function extractPersianDigits(value: string | number) {
   return toPersianDigits(value).replace(/[^۰-۹]/g, "");
 }
 
@@ -125,11 +188,11 @@ export function Input({
   disabled = false,
   name,
   ariaLabel,
-}) {
+}: TextInputProps) {
   const baseClasses =
     "outline-none border-none px-4 text-right text-[14px] font-medium text-[#24344c] placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:opacity-50 disabled:cursor-not-allowed";
 
-  const variants = {
+  const variants: Record<TextInputVariant, string> = {
     grayLarge: "w-[350px] h-[50px] rounded-[10px] bg-[#D9D9D9D9]",
     whiteMedium: "w-[352px] h-[41px] rounded-[8px] bg-white",
     blueMedium: "w-[200px] h-[45px] rounded-[10px] bg-[#9ec2d4]",
@@ -158,7 +221,7 @@ export function OtpInput({
   disabled = false,
   ariaLabel,
   inputRef,
-}) {
+}: OtpInputProps) {
   return (
     <input
       ref={inputRef}
@@ -183,21 +246,21 @@ export function OtpInputGroup({
   values = [],
   onChange,
   disabled = false,
-}) {
-  const inputRefs = useRef([]);
+}: OtpInputGroupProps) {
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const normalizedValues = Array.from({ length }, (_, index) => {
     return extractPersianDigits(values[index] || "").slice(0, 1);
   });
 
-  const focusInput = (index) => {
+  const focusInput = (index: number) => {
     requestAnimationFrame(() => {
       inputRefs.current[index]?.focus();
       inputRefs.current[index]?.select();
     });
   };
 
-  const handleChange = (index, newValue) => {
+  const handleChange = (index: number, newValue: string) => {
     const digits = extractPersianDigits(newValue);
     const updated = [...normalizedValues];
 
@@ -207,9 +270,7 @@ export function OtpInputGroup({
       return;
     }
 
-    const chars = digits.split("");
-
-    chars.forEach((char, charIndex) => {
+    digits.split("").forEach((char, charIndex) => {
       const targetIndex = index + charIndex;
 
       if (targetIndex < length) {
@@ -218,18 +279,16 @@ export function OtpInputGroup({
     });
 
     onChange(updated);
-
-    const nextIndex = Math.min(index + chars.length, length - 1);
-    focusInput(nextIndex);
+    focusInput(Math.min(index + digits.length, length - 1));
   };
 
-  const handleKeyDown = (index, event) => {
+  const handleKeyDown = (index: number, event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Backspace" && !normalizedValues[index] && index > 0) {
       focusInput(index - 1);
     }
   };
 
-  const handlePaste = (event) => {
+  const handlePaste: ClipboardEventHandler<HTMLInputElement> = (event) => {
     event.preventDefault();
 
     const pastedValue = extractPersianDigits(
@@ -244,9 +303,7 @@ export function OtpInputGroup({
     );
 
     onChange(updated);
-
-    const nextIndex = Math.min(pastedValue.length, length - 1);
-    focusInput(nextIndex);
+    focusInput(Math.min(pastedValue.length, length - 1));
   };
 
   return (
@@ -255,8 +312,8 @@ export function OtpInputGroup({
         <OtpInput
           key={index}
           value={normalizedValues[index] || ""}
-          onChange={(e) => handleChange(index, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(index, e)}
+          onChange={(event) => handleChange(index, event.target.value)}
+          onKeyDown={(event) => handleKeyDown(index, event)}
           onPaste={handlePaste}
           disabled={disabled}
           ariaLabel={`code-${index + 1}`}
@@ -277,11 +334,11 @@ export function TextArea({
   disabled = false,
   name,
   ariaLabel,
-}) {
+}: TextAreaProps) {
   const baseClasses =
     "resize-none outline-none border-none px-4 py-3 text-right text-[14px] font-medium text-[#24344c] placeholder:text-[#5f7480] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:opacity-50 disabled:cursor-not-allowed";
 
-  const variants = {
+  const variants: Record<TextAreaVariant, string> = {
     blueLarge: "w-[860px] h-[100px] rounded-[10px] bg-[#9ec2d4]",
     grayTall: "w-[350px] h-[160px] rounded-[10px] bg-[#D9D9D9]",
   };
@@ -307,7 +364,7 @@ export function SearchInput({
   name,
   ariaLabel = "search input",
   placeholder = "جستجو",
-}) {
+}: SearchInputProps) {
   return (
     <div className="relative h-[35px] w-[200px] overflow-hidden rounded-[12px] bg-[#D1EDF1] text-[#24344c] transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)]">
       <span className="pointer-events-none absolute right-[10px] top-1/2 flex h-4 w-4 -translate-y-1/2 items-center justify-center text-[#24344c]">
@@ -336,7 +393,7 @@ export function SearchKeyboardInput({
   name,
   ariaLabel = "keyboard search input",
   placeholder = "جستجو",
-}) {
+}: SearchInputProps) {
   return (
     <div className="flex h-[35px] w-[170px] items-center justify-center overflow-hidden rounded-[10px] bg-[#B4C9EA]">
       <div className="relative h-[26px] w-[162px] overflow-hidden rounded-[8px] bg-[#D1EDF1] text-[#24344c] transition-all duration-200 focus-within:ring-[2px] focus-within:ring-[rgba(111,130,177,0.35)]">
@@ -367,7 +424,7 @@ export function PasswordInput({
   name,
   ariaLabel = "password input",
   placeholder = "رمز عبور",
-}) {
+}: SearchInputProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -405,13 +462,13 @@ export function KeyboardInput({
   name,
   ariaLabel = "keyboard input",
   placeholder = "",
-}) {
-  const variants = {
+}: KeyboardInputProps) {
+  const variants: Record<KeyboardInputVariant, string> = {
     small: "w-[250px] h-[45px] rounded-[10px]",
     large: "w-[470px] h-[70px] rounded-[10px]",
   };
 
-  const textSizes = {
+  const textSizes: Record<KeyboardInputVariant, string> = {
     small: "text-[14px]",
     large: "text-[16px]",
   };
@@ -419,11 +476,7 @@ export function KeyboardInput({
   return (
     <div
       dir="rtl"
-      className={`
-        flex items-center bg-[#b4c9ea] px-4 text-[#4e6483]
-        transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)]
-        ${variants[variant]}
-      `}
+      className={`flex items-center bg-[#b4c9ea] px-4 text-[#4e6483] transition-all duration-200 focus-within:ring-[3px] focus-within:ring-[rgba(111,130,177,0.35)] ${variants[variant]}`}
     >
       <input
         type="text"

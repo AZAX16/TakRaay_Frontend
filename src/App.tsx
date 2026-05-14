@@ -1,8 +1,7 @@
-import './index.css';
-import Home from "./pages/Home";
+import Header from "./components/Header/Header";
 
 function App() {
-  return <Home />;
+  return <Header />;
 }
 
 export default App;

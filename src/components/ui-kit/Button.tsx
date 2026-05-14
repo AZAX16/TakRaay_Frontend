@@ -1,7 +1,7 @@
-// src/components/ui-kit/Button.tsx
-import React, {
-  type ButtonHTMLAttributes,
-  type DetailedHTMLProps,
+import type {
+  ButtonHTMLAttributes,
+  DetailedHTMLProps,
+  ReactNode,
 } from "react";
 
 type ButtonType = "button" | "submit" | "reset";
@@ -27,12 +27,45 @@ type NativeButtonProps = DetailedHTMLProps<
 
 type ButtonProps = Omit<NativeButtonProps, "type" | "disabled"> & {
   variant?: ButtonVariant;
-  children?: React.ReactNode;
+  children?: ReactNode;
   disabled?: boolean;
   loading?: boolean;
   checked?: boolean;
   type?: ButtonType;
 };
+
+const variantClasses: Record<ButtonVariant, string> = {
+  whiteSmall:
+    "w-[96px] h-[42px] rounded-[8px] bg-white text-[#24344c] border border-[#dfe3ea] hover:bg-[#f7f8fb] hover:border-[#cfd5df] active:bg-[#eef1f6]",
+  primaryLarge:
+    "w-[200px] h-[60px] rounded-[10px] bg-[#6f82b1] text-white text-[18px] border-0 hover:bg-[#6377a8] active:bg-[#596d9d]",
+  pillDark:
+    "w-[300px] h-[50px] rounded-[40px] bg-[#24344c] text-white text-[20px] border-0 hover:bg-[#1f2d43] active:bg-[#19263a]",
+  pillGold:
+    "w-[300px] h-[50px] rounded-[40px] bg-[#cdb190] text-[#24344c] text-[20px] border-0 hover:bg-[#bea17e] active:bg-[#ad916f]",
+  rectPlus:
+    "w-[125px] h-[70px] rounded-[10px] bg-[#6f82b1] text-white text-[20px] font-bold hover:bg-[#6377a8] active:bg-[#596d9d]",
+  circleCloseDark: "w-[65px] h-[65px] rounded-full bg-transparent",
+  circleCloseLight: "w-[65px] h-[65px] rounded-full bg-transparent",
+  circlePlusSmall:
+    "w-[25px] h-[25px] rounded-full bg-[#2c344c] text-[15px] font-bold text-[#b4c9ea]",
+  doubleCircle:
+    "w-[86px] h-[86px] rounded-full bg-[#2c344c] hover:scale-[1.03] active:scale-[0.97]",
+  doubleCircleSearch:
+    "w-[86px] h-[86px] rounded-full bg-[#2c344c] hover:scale-[1.03] active:scale-[0.97]",
+  smallToggle: "w-[40px] h-[25px] rounded-full transition-all duration-300",
+  squarePlus:
+    "w-[32px] h-[32px] rounded-[10px] bg-[#b4c9ea] border-4 border-[#2c344c] relative hover:bg-[#a6bdd6]",
+};
+
+const normalChildVariants: ButtonVariant[] = [
+  "rectPlus",
+  "whiteSmall",
+  "primaryLarge",
+  "pillDark",
+  "pillGold",
+  "circlePlusSmall",
+];
 
 export function Button({
   variant = "primaryLarge",
@@ -45,62 +78,20 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const toggleClass =
+    variant === "smallToggle"
+      ? checked
+        ? "bg-[#b4c9ea]"
+        : "bg-[#2c344c]"
+      : "";
 
   const baseClasses =
     "relative inline-flex items-center justify-center outline-none font-[inherit] text-[14px] font-semibold leading-none cursor-pointer transition-[background-color,color,border-color,transform,opacity,box-shadow] duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none";
 
-  const variantsMap: Record<ButtonVariant, string> = {
-    whiteSmall:
-      "w-[96px] h-[42px] rounded-[8px] bg-white text-[#24344c] border border-[#dfe3ea] hover:bg-[#f7f8fb] hover:border-[#cfd5df] active:bg-[#eef1f6]",
-
-    primaryLarge:
-      "w-[200px] h-[60px] rounded-[10px] bg-[#6f82b1] text-white text-[18px] border-0 hover:bg-[#6377a8] active:bg-[#596d9d]",
-
-    pillDark:
-      "w-[300px] h-[50px] rounded-[40px] bg-[#24344c] text-white text-[20px] border-0 hover:bg-[#1f2d43] active:bg-[#19263a]",
-
-    pillGold:
-      "w-[300px] h-[50px] rounded-[40px] bg-[#cdb190] text-[#24344c] text-[20px] border-0 hover:bg-[#bea17e] active:bg-[#ad916f]",
-
-    rectPlus:
-      "w-[125px] h-[70px] rounded-[10px] bg-[#6f82b1] text-white text-[20px] font-bold hover:bg-[#6377a8] active:bg-[#596d9d]",
-
-    circleCloseDark:
-      "w-[65px] h-[65px] rounded-full bg-transparent",
-
-    circleCloseLight:
-      "w-[65px] h-[65px] rounded-full bg-transparent",
-
-    circlePlusSmall:
-      "w-[25px] h-[25px] rounded-full bg-[#2c344c] text-[15px] font-bold text-[#b4c9ea]",
-
-    doubleCircle:
-      "w-[86px] h-[86px] rounded-full bg-[#2c344c] hover:scale-[1.03] active:scale-[0.97]",
-    
-    doubleCircleSearch:
-    "w-[86px] h-[86px] rounded-full bg-[#2c344c] hover:scale-[1.03] active:scale-[0.97]",
-
-    smallToggle: `w-[40px] h-[25px] rounded-full transition-all duration-300 ${
-      checked ? "bg-[#b4c9ea]" : "bg-[#2c344c]"
-    }`,
-
-    squarePlus:
-      "w-[32px] h-[32px] rounded-[10px] bg-[#b4c9ea] border-4 border-[#2c344c] relative hover:bg-[#a6bdd6]",
-  };
-
-  const shouldRenderNormalChildren = [
-    "rectPlus",
-    "whiteSmall",
-    "primaryLarge",
-    "pillDark",
-    "pillGold",
-    "circlePlusSmall",
-  ].includes(variant);
-
   return (
     <button
       type={type}
-      className={`${baseClasses} ${variantsMap[variant]} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${toggleClass} ${className}`}
       disabled={isDisabled}
       aria-busy={loading}
       aria-pressed={variant === "smallToggle" ? checked : undefined}
@@ -117,19 +108,19 @@ export function Button({
       )}
 
       {variant === "circleCloseDark" && (
-        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] font-bold text-[#6f82b1] leading-none">
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] font-bold leading-none text-[#6f82b1]">
           ×
         </span>
       )}
 
       {variant === "circleCloseLight" && (
-        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] font-bold text-[#2c344c] leading-none">
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] font-bold leading-none text-[#2c344c]">
           ×
         </span>
       )}
 
       {variant === "doubleCircle" && (
-        <span className="absolute top-1/2 left-1/2 flex h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#D1EDF1] text-[20px] font-bold text-[#2c344c]">
+        <span className="absolute left-1/2 top-1/2 flex h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#D1EDF1] text-[20px] font-bold text-[#2c344c]">
           {children}
         </span>
       )}
@@ -155,8 +146,8 @@ export function Button({
               <path
                 d="M15.5 15.5L21 21"
                 stroke="#2C344C"
-                strokeWidth="2.5"
                 strokeLinecap="round"
+                strokeWidth="2.5"
               />
             </svg>
           </span>
@@ -170,7 +161,7 @@ export function Button({
         </span>
       )}
 
-      {shouldRenderNormalChildren && !loading && children}
+      {normalChildVariants.includes(variant) && !loading && children}
 
       {loading && (
         <span className="absolute h-[18px] w-[18px] animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -178,8 +169,6 @@ export function Button({
     </button>
   );
 }
-
-// ---------------- SegmentButton ----------------
 
 type SegmentButtonVariant = "small" | "large";
 
@@ -196,14 +185,14 @@ export function SegmentButton({
   value,
   onChange,
 }: SegmentButtonProps) {
-  const variantsMap: Record<SegmentButtonVariant, string> = {
+  const sizes: Record<SegmentButtonVariant, string> = {
     small: "w-[200px] h-[40px]",
     large: "w-[300px] h-[40px]",
   };
 
   return (
     <div
-      className={`relative flex items-center rounded-[40px] bg-[#f4f4f4] p-[5px] ${variantsMap[variant]}`}
+      className={`relative flex items-center rounded-[40px] bg-[#f4f4f4] p-[5px] ${sizes[variant]}`}
     >
       <span className="absolute left-1/2 top-1/2 h-[28px] w-[2px] -translate-x-1/2 -translate-y-1/2 bg-black" />
 
@@ -228,8 +217,6 @@ export function SegmentButton({
     </div>
   );
 }
-
-// ---------------- ToggleSwitch ----------------
 
 type ToggleSwitchProps = {
   checked: boolean;
@@ -257,7 +244,7 @@ export function ToggleSwitch({
       } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
     >
       <span
-        className={`absolute top-[2px] left-[2px] h-[21px] w-[21px] rounded-full transition-transform duration-300 ${
+        className={`absolute left-[2px] top-[2px] h-[21px] w-[21px] rounded-full transition-transform duration-300 ${
           checked
             ? "translate-x-[15px] bg-[#2c344c]"
             : "translate-x-0 bg-white"
