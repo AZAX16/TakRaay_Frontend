@@ -55,7 +55,7 @@
 }
 
 #root {
-  width: 1126px;
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
@@ -68,6 +68,7 @@
 
 body {
   margin: 0;
+  font-family: "Vazirmatn", sans-serif;
 }
 
 h1,
