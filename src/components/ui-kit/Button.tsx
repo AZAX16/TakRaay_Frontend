@@ -10,8 +10,6 @@ type ButtonVariant =
   | "whiteSmall"
   | "primaryLarge"
   | "pillDark"
-  | "pillGold"
-  | "rectPlus"
   | "circleCloseDark"
   | "circleCloseLight"
   | "circlePlusSmall"
@@ -38,32 +36,25 @@ const variantClasses: Record<ButtonVariant, string> = {
   whiteSmall:
     "w-[96px] h-[42px] rounded-[8px] bg-white text-[#24344c] border border-[#dfe3ea] hover:bg-[#f7f8fb] hover:border-[#cfd5df] active:bg-[#eef1f6]",
   primaryLarge:
-    "w-[200px] h-[60px] rounded-[10px] bg-[#6f82b1] text-white text-[18px] border-0 hover:bg-[#6377a8] active:bg-[#596d9d]",
+    "w-[200px] h-[60px] rounded-[10px] bg-[#387FA3] text-white text-[18px] border-0 hover:bg-[#2F6E8F] active:bg-[#285E7A]",
   pillDark:
-    "w-[300px] h-[50px] rounded-[40px] bg-[#24344c] text-white text-[20px] border-0 hover:bg-[#1f2d43] active:bg-[#19263a]",
-  pillGold:
-    "w-[300px] h-[50px] rounded-[40px] bg-[#cdb190] text-[#24344c] text-[20px] border-0 hover:bg-[#bea17e] active:bg-[#ad916f]",
-  rectPlus:
-    "w-[125px] h-[70px] rounded-[10px] bg-[#6f82b1] text-white text-[20px] font-bold hover:bg-[#6377a8] active:bg-[#596d9d]",
-  circleCloseDark: "w-[65px] h-[65px] rounded-full bg-transparent",
+    "w-[300px] h-[50px] rounded-[40px] bg-[#387FA3] text-white text-[20px] border-0 hover:bg-[#2F6E8F] active:bg-[#285E7A]",
+ 
+  circleCloseDark:  "w-[65px] h-[65px] rounded-full bg-transparent ",
   circleCloseLight: "w-[65px] h-[65px] rounded-full bg-transparent",
-  circlePlusSmall:
-    "w-[25px] h-[25px] rounded-full bg-[#2c344c] text-[15px] font-bold text-[#b4c9ea]",
+  circlePlusSmall:  "w-[25px] h-[25px] rounded-full bg-[#00AFB9] text-[15px] font-bold text-[#ffff]",
   doubleCircle:
-    "w-[86px] h-[86px] rounded-full bg-[#2c344c] hover:scale-[1.03] active:scale-[0.97]",
+    "w-[86px] h-[86px] rounded-full bg-[#387FA3] hover:scale-[1.03] active:scale-[0.97]",
   doubleCircleSearch:
-    "w-[86px] h-[86px] rounded-full bg-[#2c344c] hover:scale-[1.03] active:scale-[0.97]",
+    "w-[86px] h-[86px] rounded-full bg-[#387FA3] hover:scale-[1.03] active:scale-[0.97]",
   smallToggle: "w-[40px] h-[25px] rounded-full transition-all duration-300",
-  squarePlus:
-    "w-[32px] h-[32px] rounded-[10px] bg-[#b4c9ea] border-4 border-[#2c344c] relative hover:bg-[#a6bdd6]",
+  squarePlus:  "w-[32px] h-[32px] rounded-[10px] bg-transparent border-4 border-[#387FA3] relative hover:bg-[#a6bdd6]",
 };
 
 const normalChildVariants: ButtonVariant[] = [
-  "rectPlus",
   "whiteSmall",
   "primaryLarge",
   "pillDark",
-  "pillGold",
   "circlePlusSmall",
 ];
 
@@ -108,13 +99,13 @@ export function Button({
       )}
 
       {variant === "circleCloseDark" && (
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] font-bold leading-none text-[#6f82b1]">
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] font-bold leading-none text-[#387FA3]">
           ×
         </span>
       )}
 
       {variant === "circleCloseLight" && (
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] font-bold leading-none text-[#2c344c]">
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] font-bold leading-none text-[#b8eaed]">
           ×
         </span>
       )}
@@ -156,8 +147,8 @@ export function Button({
 
       {variant === "squarePlus" && (
         <span className="absolute left-1/2 top-1/2 h-[18px] w-[18px] -translate-x-1/2 -translate-y-1/2">
-          <span className="absolute left-0 top-1/2 h-[5px] w-full -translate-y-1/2 rounded-full bg-[#2c344c]" />
-          <span className="absolute left-1/2 top-0 h-full w-[5px] -translate-x-1/2 rounded-full bg-[#2c344c]" />
+          <span className="absolute left-0 top-1/2 h-[5px] w-full -translate-y-1/2 rounded-full bg-[#387FA3]" />
+          <span className="absolute left-1/2 top-0 h-full w-[5px] -translate-x-1/2 rounded-full bg-[#387FA3]" />
         </span>
       )}
 
@@ -194,7 +185,7 @@ export function SegmentButton({
     <div
       className={`relative flex items-center rounded-[40px] bg-[#f4f4f4] p-[5px] ${sizes[variant]}`}
     >
-      <span className="absolute left-1/2 top-1/2 h-[28px] w-[2px] -translate-x-1/2 -translate-y-1/2 bg-black" />
+      <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 h-[28px] w-[2px] -translate-x-1/2 -translate-y-1/2 bg-black" />
 
       {options.map((option) => {
         const isActive = value === option.value;
@@ -206,8 +197,8 @@ export function SegmentButton({
             onClick={() => onChange(option.value)}
             className={`relative z-10 flex h-full flex-1 items-center justify-center rounded-[40px] text-[14px] font-semibold transition-all duration-200 ${
               isActive
-                ? "bg-[#e4bc92] text-black"
-                : "bg-transparent text-[#777777] hover:bg-[#e4bc92] hover:text-black"
+                ? "bg-[#F3C8C7] text-black"
+                : "bg-transparent text-[#777777] hover:bg-[#F3C8C7] hover:text-black"
             }`}
           >
             {option.label}
@@ -240,7 +231,7 @@ export function ToggleSwitch({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative h-[25px] w-[40px] rounded-full outline-none transition-all duration-300 ${
-        checked ? "bg-[#b4c9ea]" : "bg-[#2c344c]"
+        checked ? "bg-[#B8EAED]" : "bg-[#2c344c]"
       } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
     >
       <span
