@@ -1,85 +1,119 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type React from "react";
 import { Input, OtpInputGroup, PasswordInput } from '../components/ui-kit/Input';
 import { Button, SegmentButton } from '../components/ui-kit/Button';
 // import Checkbox from "../components/CheckBox";
 import api from '../services/api';
+import ForgotPasswordModal from "../components/forgot-password/ForgotPasswordModal";
+import {getSignupErrorMessage, getLoginErrorMessage} from '../utils/apiErrors';
+import ErrorModal from '../components/modals/ErrorModal';
 
 
 export default function SignupPage() {
   const [authType, setAuthType] = useState<"signup" | "login">("signup");
+  
   const [phone, setPhone] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [otpValues, setOtpValues] = useState<string[]>(["", "", "", "", "", ""]);
-  const [passwordError, setPasswordError] = useState<string>("");
   const [phoneError, setPhoneError] = useState<string>("");
-  const [isForgotOpen, setIsForgotOpen] = useState<boolean>(false);
+  
+  const [otpValues, setOtpValues] = useState<string[]>(["", "", "", "", "", ""]);
   const [otpError, setOtpError] = useState<string>("");
   const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
   const [otpSendMessage, setOtpSendMessage] = useState<string>("");
+  
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [passwordError, setPasswordError] = useState<string>("");
+  
+  const [isForgotOpen, setIsForgotOpen] = useState<boolean>(false);
   // const [rememberMe, setRememberMe] = useState<boolean>(false);
+  
+  const [loading, setLoading] = useState(false);
 
+  const OTP_EXPIRE_TIME = 6 * 60;
+  const [resendTimer, setResendTimer] = useState<number>(0);
 
+  const [errorModal, setErrorModal] = useState<{
+    open: boolean;
+    message: string;
+  }>({
+    open: false,
+    message: "",
+  });
 
-  const validatePassword = (pass: string): string => {
-    if (pass.length < 8) return "رمز عبور باید حداقل ۸ کاراکتر باشد.";
-    if (!/(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])/.test(pass)) return "رمز عبور باید شامل اعداد و حروف و حداقل یک حرف بزرگ باشد.";
-    if (!/(?=.*[@!#%&_])/.test(pass)) return "رمز عبور باید حداقل یک کاراکتر ویژه داشته باشد (@, !, ...).";
-    return "";
+  const showError = (message: string) => {
+    setErrorModal({
+      open: true,
+      message,
+    });
   };
+
+  const closeErrorModal = () => {
+    setErrorModal({ open: false, message: "" });
+  };
+
+
 
   const normalizeDigits = (value: string): string => {
     if (!value) return "";
-
     return value
       .toString()
       .replace(/[۰-۹]/g, d => "0123456789"["۰۱۲۳۴۵۶۷۸۹".indexOf(d)])
       .replace(/[٠-٩]/g, d => "0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)]);
   };
-
-
-
+    
   const validatePhone = (phone: string): string => {
     if (!phone) return "شماره موبایل الزامی است";
-
     const normalizedPhone = normalizeDigits(phone);
-
     if (!/^09\d{9}$/.test(normalizedPhone)) {
       return "شماره موبایل معتبر نیست";
     }
-
     return "";
   };
 
+  const validatePassword = (pass: string): string => {
+    if (pass.length < 8) return "رمز عبور باید حداقل ۸ کاراکتر باشد.";
+    if (!/(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])/.test(pass)) return "رمز عبور باید شامل اعداد و حروف و حداقل یک حرف بزرگ باشد.";
+    if (!/(?=.*[@!#%&_])/.test(pass)) return "رمز عبور باید حداقل یک کاراکتر ویژه داشته باشد (@, !, ...)";
+    return "";
+  };
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+
+    const interval = setInterval(() => {
+      setResendTimer((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
 
   const handleSendOtp = async () => {
-    // validate phone first
     const phoneErr = validatePhone(phone);
     if (phoneErr) {
       setPhoneError(phoneErr);
       return;
     }
-
     const normalizedPhone = normalizeDigits(phone);
 
     setIsSendingOtp(true);
     setOtpSendMessage("");
     setOtpError("");
 
-
     try {
       const response = await api.post("/auth/send-otp/", {
         phone: normalizedPhone,
       });
-
       console.log("OTP sent:", response.data);
-
       setOtpSendMessage("کد تایید برای شما ارسال شد ");
-    } catch (error: any) {
-      console.error("Send OTP error:", error.response?.data || error.message);
-
+      setResendTimer(OTP_EXPIRE_TIME);
+    } catch {
       setOtpSendMessage("خطا در ارسال کد تایید");
     } finally {
       setIsSendingOtp(false);
@@ -119,6 +153,7 @@ export default function SignupPage() {
     setPasswordError("");
     setOtpError("");
     setPhoneError("");
+    setLoading(true);
 
     try {
     // Send register request
@@ -133,14 +168,10 @@ export default function SignupPage() {
 
     alert("ثبت نام با موفقیت انجام شد.");
 
-    } catch (error: any) {
-      console.error("Error:", error.response?.data || error.message);
-
-      if (error.response?.data?.message) {
-        alert(error.response.data.message);
-      } else {
-        alert("خطا در ارتباط با سرور");
-      }
+    } catch (error: unknown) {
+      showError(getSignupErrorMessage(error))
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -163,6 +194,7 @@ export default function SignupPage() {
     const normalizedPhone = normalizeDigits(phone);
 
     setPhoneError("");
+    setLoading(true);
 
     try {
       // 3) Send request to backend
@@ -179,14 +211,11 @@ export default function SignupPage() {
 
       alert("ورود با موفقیت انجام شد.");
 
-    } catch (error: any) {
-      console.error("Error:", error.response?.data || error.message);
-
-      if (error.response?.data?.message) {
-        alert(error.response.data.message);
-      } else {
-        alert("خطا در ارتباط با سرور");
-      }
+    } catch (error: unknown) {
+      showError(getLoginErrorMessage(error))
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -282,10 +311,16 @@ export default function SignupPage() {
                   کد تایید:
                 </label>
                 <button type="button" 
-                        className="text-[12px] text-[#4eacb7] font-medium hover:underline"
-                        disabled={isSendingOtp}
+                        className={`text-[12px] font-medium 
+                                    ${resendTimer > 0 || isSendingOtp ? "text-gray-400 cursor-not-allowed" : "text-[#4eacb7] hover:underline"}
+                                  `}
+                        disabled={isSendingOtp || resendTimer > 0}
                         onClick={handleSendOtp}>
-                  {isSendingOtp? "درحال ارسال" : "ارسال کد تایید"}
+                  {isSendingOtp
+                    ? "درحال ارسال" 
+                    : resendTimer > 0
+                    ? `ارسال مجدد کد تایید (${formatTime(resendTimer)})`
+                    : "ارسال کد تایید"}
                 </button>
               </div>
               <div dir="ltr">
@@ -313,7 +348,7 @@ export default function SignupPage() {
 
             <div className="flex flex-col items-center mt-6 gap-3">
               <Button variant="pillDark" type="submit">
-                ثبت نام
+                {loading? "درحال ثبت..." : "ثبت نام"}
               </Button>
               <button
                 type="button"
@@ -354,10 +389,16 @@ export default function SignupPage() {
               </label>
               <PasswordInput
                 value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setPassword(e.target.value);
+                  setPasswordError("");}}
                 placeholder=""
               />
             </div>
+            
+            {passwordError && (
+              <p className="text-[#e0786c] text-[12px] font-medium mr-1">{passwordError}</p>
+            )}
 
             <div className="flex flex-col mt-2 gap-3">
               <button
@@ -378,7 +419,7 @@ export default function SignupPage() {
 
             <div className="flex flex-col items-center mt-4 gap-3">
               <Button variant="pillDark" type="submit">
-                ورود
+                {loading? "درحال ورود..." : "ورود"}
               </Button>
               <button
                 type="button"
@@ -392,6 +433,16 @@ export default function SignupPage() {
         )}
 
       </div>
+      <ForgotPasswordModal
+        isOpen={isForgotOpen}
+        onClose={() => setIsForgotOpen(false)}
+        showError={showError}
+      />
+      <ErrorModal
+        isOpen={errorModal.open}
+        message={errorModal.message}
+        onClose={closeErrorModal}
+      />
     </div>
   );
 }

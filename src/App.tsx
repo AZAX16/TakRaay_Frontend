@@ -1,8 +1,9 @@
-import './index.css';
-import Home from "./pages/Home";
+import SignupPage from './pages/SignupPage';
 
 function App() {
-  return <Home />;
+  return (
+    <SignupPage />
+  );
 }
 
 export default App;
