@@ -1,0 +1,84 @@
+@import url("https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+  color: #24344c;
+  background: #f7f8fc;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: #f7f8fc;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+:root {
+  --app-page-light: #f3f6f8;
+  --app-page-dark: #153347;
+  --app-text-light: #000000;
+  --app-text-dark: #ffffff;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background-color: var(--app-page-light);
+}
+
+.tak-header,
+.boards-page {
+  background-color: var(--app-page-light) !important;
+}
+
+.boards-page-title {
+  color: var(--app-text-light);
+}
+
+body:has(.tak-header.is-night-mode),
+body:has(.tak-header.is-night-mode) #root {
+  background-color: var(--app-page-dark);
+}
+
+body:has(.tak-header.is-night-mode) .tak-header,
+body:has(.tak-header.is-night-mode) .boards-page {
+  background-color: var(--app-page-dark) !important;
+}
+
+body:has(.tak-header.is-night-mode) .boards-page-title {
+  color: var(--app-text-dark);
+}
+
+.boards-page-title {
+  color: #000000;
+}
+
+body:has(.tak-header.is-night-mode) .boards-page-title {
+  color: #ffffff;
+}
