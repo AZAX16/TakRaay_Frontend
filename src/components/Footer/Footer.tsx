@@ -1,60 +1,13 @@
 import { Link, Linkedin, Instagram } from "lucide-react";
+import karbordLogo from "../../assets/karbord_logo.webp";
 
 export default function Footer() {
   return (
-    <footer className="bg-takraay-footer text-white py-10 w-full mt-auto rounded-[32px] mx-4 max-w-[calc(100%-2rem)] md:mx-10 md:max-w-[calc(100%-5rem)] xl:mx-auto xl:max-w-7xl">
+    <footer className="bg-takraay-footer text-white py-10 w-full mt-auto rounded-[32px] mx-4 max-w-[calc(100%-2rem)] md:mx-10 md:max-w-[calc(100%-5rem)] xl:mx-auto xl:max-w-7xl font-sans">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-y-10 md:gap-y-0 text-sm">
 
-          {/* Section 1: Links */}
-          <div className="flex flex-col items-end gap-y-4 w-full md:w-[20%]">
-            <a href="#" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
-              <span>داشبورد</span>
-              <Link size={18} />
-            </a>
-            <a href="#" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
-              <span>درباره‌ی ما</span>
-              <Link size={18} />
-            </a>
-            <a href="#" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
-              <span>سوالات متداول</span>
-              <Link size={18} />
-            </a>
-            <a href="#" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
-              <span>ارتباط با ما</span>
-              <Link size={18} />
-            </a>
-          </div>
-
-          <div className="hidden md:block w-px h-32 bg-white/50"></div>
-
-          {/* Section 2: Logo and subtitle */}
-          <div className="flex flex-col items-center justify-center gap-y-4 w-full md:w-[30%]">
-            <div className="text-4xl font-bold font-sans">تک‌رای</div>
-            <div className="text-center opacity-90 leading-relaxed">
-              تولید شده توسط تیم تک‌رای
-              <br />
-              بهار ۱۴۰۵
-            </div>
-          </div>
-
-          <div className="hidden md:block w-px h-32 bg-white/50"></div>
-
-          {/* Section 3: Copyright */}
-          <div className="flex flex-col items-center justify-center gap-y-4 w-full md:w-[25%] text-center">
-            <div>© ۱۴۰۵ تک‌رای</div>
-            <div className="opacity-90 leading-relaxed">
-              کلیه حقوق مادی و معنوی
-              <br />
-              این وب‌سایت برای تیم
-              <br />
-              تک‌رای محفوظ است.
-            </div>
-          </div>
-
-          <div className="hidden md:block w-px h-32 bg-white/50"></div>
-
-          {/* Section 4: Socials */}
+          {/* Section 1: Socials */}
           <div className="flex flex-col items-start gap-y-4 w-full md:w-[25%] pr-0 md:pr-4">
             <div className="font-bold mb-2">دنبال کنید:</div>
 
@@ -76,6 +29,54 @@ export default function Footer() {
             <a href="#" className="flex items-center gap-x-3 w-full justify-between hover:opacity-80 transition-opacity">
               <span className="font-sans" dir="ltr">instagram.com/takraay</span>
               <Instagram size={18} />
+            </a>
+          </div>
+
+          <div className="hidden md:block w-px h-32 bg-white/50"></div>
+
+          {/* Section 2: Copyright */}
+          <div className="flex flex-col items-center justify-center gap-y-4 w-full md:w-[25%] text-center">
+            <div>© ۱۴۰۵ تک‌رای</div>
+            <div className="opacity-90 leading-relaxed">
+              کلیه حقوق مادی و معنوی
+              <br />
+              این وب‌سایت برای تیم
+              <br />
+              تک‌رای محفوظ است.
+            </div>
+          </div>
+
+          <div className="hidden md:block w-px h-32 bg-white/50"></div>
+
+          {/* Section 3: Logo and subtitle */}
+          <div className="flex flex-col items-center justify-center gap-y-4 w-full md:w-[30%] text-center">
+            <img src={karbordLogo} alt="کاربرد" className="h-10 object-contain" />
+            <div className="opacity-90 leading-relaxed">
+              تولید شده توسط تیم تک‌رای
+              <br />
+              بهار ۱۴۰۵
+            </div>
+          </div>
+
+          <div className="hidden md:block w-px h-32 bg-white/50"></div>
+
+          {/* Section 4: Links */}
+          <div className="flex flex-col items-end gap-y-4 w-full md:w-[20%]">
+            <a href="#" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
+              <span>داشبورد</span>
+              <Link size={18} />
+            </a>
+            <a href="#" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
+              <span>درباره‌ی ما</span>
+              <Link size={18} />
+            </a>
+            <a href="#" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
+              <span>سوالات متداول</span>
+              <Link size={18} />
+            </a>
+            <a href="#" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
+              <span>ارتباط با ما</span>
+              <Link size={18} />
             </a>
           </div>
 
