@@ -1,5 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
+const TEMP_ACCESS_TOKEN = "اینجا access token کامل را بدون Bearer بذار";
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   headers: {
@@ -9,10 +11,8 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem("takraay_token");
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (TEMP_ACCESS_TOKEN) {
+    config.headers.Authorization = `Bearer ${TEMP_ACCESS_TOKEN}`;
   }
 
   return config;
