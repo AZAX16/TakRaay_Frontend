@@ -5,11 +5,18 @@ type Member = {
   name: string;
 };
 
+export type CardColorScheme = {
+  light: string;
+  dark: string;
+  text: string;
+};
+
 type CardProps = {
   title?: string;
   tag?: string;
   description?: string;
   date?: string;
+  colorScheme?: CardColorScheme;
 };
 
 const allMembers: Member[] = [
@@ -28,6 +35,7 @@ export default function Card({
   tag = "فرانت-اند",
   description = "طراحی تمامی مراحل login و signup شامل تمام جزئیات مربوط به ارسال رمز یکبار مصرف و فراموشی رمز و ...",
   date = "۱۴۰۵/۷/۲۳",
+  colorScheme,
 }: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -72,6 +80,8 @@ export default function Card({
   }
 
   function getCardColor() {
+    if (colorScheme) return colorScheme;
+
     if (status === "برای انجام")
       return {
         light: "#F3C8C7",
@@ -128,7 +138,7 @@ export default function Card({
 
   return (
     <div
-      className="w-[380px] h-[230px] rounded-[15px] border p-[10px] flex gap-[10px] overflow-visible"
+      className="w-full max-w-[380px] h-[230px] rounded-[15px] border p-[10px] flex gap-[10px] overflow-visible"
       style={{
         background: `linear-gradient(135deg, ${colors.light} 0%, ${colors.dark} 100%)`,
         borderColor: colors.text,
