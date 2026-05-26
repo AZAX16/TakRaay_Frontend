@@ -13,8 +13,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --app-page-light: #f3f6f8;
-  --app-page-dark: #153347;
+  --app-page-light: #f7f8fc;
+  --app-page-dark: #053442;
   --app-text-light: #000000;
   --app-text-dark: #ffffff;
 
@@ -29,6 +29,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
+  background-color: var(--app-page-light);
 }
 
 body {
@@ -50,15 +51,20 @@ textarea {
 
 /* Page backgrounds */
 .boards-page,
-.about-page {
+.about-page,
+.faq-page {
+  min-height: 100vh;
   background-color: var(--app-page-light);
+  transition: background-color 0.3s ease;
 }
 
 /* Page titles */
 .boards-page-title,
 .about-page-title,
-.about-section-title {
+.about-section-title,
+.faq-page-title {
   color: var(--app-text-light);
+  transition: color 0.3s ease;
 }
 
 /* Dark mode trigger from Header */
@@ -69,18 +75,21 @@ body:has(.tak-header.is-night-mode) {
   background-color: var(--app-page-dark);
 }
 
+body:has(.tak-header.is-night-mode) html,
 body:has(.tak-header.is-night-mode) #root {
   background-color: var(--app-page-dark);
 }
 
 body:has(.tak-header.is-night-mode) .boards-page,
-body:has(.tak-header.is-night-mode) .about-page {
+body:has(.tak-header.is-night-mode) .about-page,
+body:has(.tak-header.is-night-mode) .faq-page {
   background-color: var(--app-page-dark);
 }
 
 body:has(.tak-header.is-night-mode) .boards-page-title,
 body:has(.tak-header.is-night-mode) .about-page-title,
-body:has(.tak-header.is-night-mode) .about-section-title {
+body:has(.tak-header.is-night-mode) .about-section-title,
+body:has(.tak-header.is-night-mode) .faq-page-title {
   color: var(--app-text-dark);
 }
 
@@ -111,4 +120,48 @@ body:has(.tak-header.is-night-mode) .about-surface h3 {
 body:has(.tak-header.is-night-mode) .about-overview-icons svg,
 body:has(.tak-header.is-night-mode) .about-overview-icons p {
   color: #dbeafe !important;
+}
+
+/* FAQ scrollbar */
+.faq-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4f6689 #b8eaed;
+}
+
+.faq-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.faq-scroll::-webkit-scrollbar-track {
+  background: #b8eaed;
+  border-radius: 999px;
+}
+
+.faq-scroll::-webkit-scrollbar-thumb {
+  background: #4f6689;
+  border-radius: 999px;
+  border: 2px solid #b8eaed;
+}
+
+.faq-frame {
+  border-color: #4a5575;
+}
+
+body:has(.tak-header.is-night-mode) .faq-frame {
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+.faq-frame-bg {
+  background-image:
+    linear-gradient(rgba(247, 248, 252, 0.78), rgba(247, 248, 252, 0.78)),
+    url("/images/faq-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+body:has(.tak-header.is-night-mode) .faq-frame-bg {
+  background-image:
+    linear-gradient(rgba(5, 52, 66, 0.82), rgba(5, 52, 66, 0.82)),
+    url("/images/faq-bg.jpg");
 }
