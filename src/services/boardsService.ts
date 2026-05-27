@@ -6,6 +6,7 @@ type ProjectApiResponse = {
   name: string;
   description: string;
   owner: number;
+  background_color?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -13,38 +14,44 @@ type ProjectApiResponse = {
 type CreateProjectRequest = {
   name: string;
   description: string;
+  background_color_input: string;
 };
 
-const boardColors = ["#C7F0F4", "#F5C9C9", "#55B3BF", "#F6E0B5"];
-
-const getBoardColor = (id: number) => {
-  return boardColors[id % boardColors.length];
-};
+const DEFAULT_BOARD_COLOR = "#B8EAED";
 
 const mapProjectToBoard = (
   project: ProjectApiResponse,
-  fallbackColor?: string,
+  fallbackColor = DEFAULT_BOARD_COLOR,
 ): Board => {
   return {
     id: project.id,
     title: project.name,
     description: project.description || "توضیحاتی برای این برد ثبت نشده است.",
-    color: fallbackColor || getBoardColor(project.id),
+    color: project.background_color || fallbackColor,
   };
 };
 
 export const getBoards = async (): Promise<Board[]> => {
   const response = await apiClient.get<ProjectApiResponse[]>("/projects/");
 
-  return response.data.map((project) => mapProjectToBoard(project));
+  return response.data
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    )
+    .map((project) => mapProjectToBoard(project));
 };
 
 export const createBoard = async (
   payload: CreateBoardPayload,
 ): Promise<Board> => {
+  const selectedColor = payload.color || DEFAULT_BOARD_COLOR;
+
   const requestBody: CreateProjectRequest = {
     name: payload.title,
     description: payload.description || "",
+    background_color_input: selectedColor,
   };
 
   const response = await apiClient.post<ProjectApiResponse>(
@@ -52,7 +59,7 @@ export const createBoard = async (
     requestBody,
   );
 
-  return mapProjectToBoard(response.data, payload.color);
+  return mapProjectToBoard(response.data, selectedColor);
 };
 
 export const deleteBoard = async (boardId: Board["id"]): Promise<void> => {

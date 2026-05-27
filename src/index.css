@@ -165,3 +165,14 @@ body:has(.tak-header.is-night-mode) .faq-frame-bg {
     linear-gradient(rgba(5, 52, 66, 0.82), rgba(5, 52, 66, 0.82)),
     url("/images/faq-bg.jpg");
 }
+
+.create-board-card {
+  background-color: #ffffff;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #dbeafe;
+}

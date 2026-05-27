@@ -8,5 +8,5 @@ export type Board = {
 export type CreateBoardPayload = {
   title: string;
   description?: string;
-  color?: string;
+  color: string;
 };

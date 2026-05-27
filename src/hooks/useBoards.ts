@@ -43,11 +43,10 @@ export const useBoards = () => {
   const addBoard = async (payload: CreateBoardPayload) => {
     const newBoard = await createBoard(payload);
 
-    setBoards((prevBoards) => [newBoard, ...prevBoards]);
+    setBoards((prevBoards) => [...prevBoards, newBoard]);
 
     return newBoard;
   };
-
   const removeBoard = async (boardId: Board["id"]) => {
     await deleteBoard(boardId);
 
