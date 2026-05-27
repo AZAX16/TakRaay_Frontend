@@ -8,7 +8,7 @@ const FaqPage = () => {
       <Header />
 
       <main className="mx-auto max-w-5xl px-4 py-10 md:px-6">
-        <section className="faq-frame faq-frame-bg mx-auto w-full max-w-3xl rounded-[22px] border-2 border-[#4A5575] px-4 py-5 transition-colors duration-300 md:px-6">
+        <section className="faq-frame faq-frame-bg mx-auto w-full max-w-3xl rounded-[22px] border-2 border-[#4A5575] py-5 pl-1 pr-4 transition-colors duration-300 md:pl-2 md:pr-6">
           <h1 className="faq-page-title mb-6 text-right text-2xl font-extrabold md:text-4xl">
            سوالات متداول:
           </h1>
