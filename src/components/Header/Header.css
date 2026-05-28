@@ -23,6 +23,7 @@
   height: 92px;
   margin: 0 auto;
   padding: 0 136px 0 92px;
+  transition: height 0.32s ease;
 }
 
 .tak-header-pill {
@@ -101,11 +102,21 @@
 }
 
 .tak-search-orb > span {
+  width: 70px;
+  height: 70px;
   background: var(--tak-text) !important;
+  transform: translate(-50%, -50%);
 }
 
 .tak-search-orb > span > span {
+  width: 65px;
+  height: 65px;
   background: var(--tak-secondary) !important;
+}
+
+.tak-search-orb svg {
+  width: 52px;
+  height: 52px;
 }
 
 .tak-search-orb svg circle,
@@ -222,21 +233,30 @@
   left: 50%;
   top: 50%;
   z-index: 3;
-  direction: rtl;
-  color: var(--tak-text);
-  font-size: clamp(35px, 4vw, 56px);
-  font-weight: 950;
-  line-height: 1;
-  letter-spacing: 0;
+  width: clamp(280px, 37vw, 500px);
+  height: clamp(74px, 9.65vw, 133px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
-  text-shadow: 0 3px 0 rgb(0 77 99 / 0.32);
-  transform: translate(-50%, calc(-50% - 1px));
-  white-space: nowrap;
-  transition: transform 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translate(-50%, calc(-50% + 2px));
+  transition:
+    width 0.3s ease,
+    height 0.3s ease,
+    transform 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tak-logo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  mix-blend-mode: screen;
 }
 
 .tak-menu-wrap {
   position: relative;
+  z-index: 5;
   justify-self: end;
 }
 
@@ -245,7 +265,7 @@
 }
 
 .tak-header-stage.is-search-open .tak-logo {
-  transform: translate(calc(-50% + 36px), calc(-50% - 1px));
+  transform: translate(calc(-50% + 36px), calc(-50% + 2px));
 }
 
 .tak-menu-button {
@@ -284,6 +304,10 @@
     0 18px 32px rgb(0 84 110 / 0.26),
     0 6px 14px rgb(0 129 167 / 0.18);
   text-decoration: none;
+}
+
+.tak-profile > span {
+  background: #d1edf1 !important;
 }
 
 .tak-profile-photo {
@@ -339,7 +363,7 @@
   border-radius: 14px;
   background: var(--tak-secondary);
   box-shadow: 0 18px 40px var(--tak-shadow);
-  z-index: 8;
+  z-index: 12;
   left: 0;
 }
 
@@ -489,7 +513,7 @@
   transform: translateX(20px);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .tak-header {
     padding-inline: 10px;
   }
@@ -500,17 +524,40 @@
     padding-left: 84px;
   }
 
-  .tak-header-pill {
+  .tak-header-stage.is-search-open {
+    height: 134px;
+  }
+
+  .tak-header-pill,
+  .tak-header-stage.is-search-open .tak-header-pill {
     height: 64px;
     margin-top: 20px;
-    padding-right: 14px;
-    padding-left: 12px;
+    padding: 0 14px 0 12px;
+    grid-template-columns: minmax(150px, auto) minmax(140px, 1fr) auto;
     gap: 10px;
     transform: translateX(4px);
   }
 
-  .tak-header-stage.is-search-open .tak-header-pill {
-    grid-template-columns: 0 auto minmax(110px, 1fr) auto;
+  .tak-search-wrapper,
+  .tak-search-wrapper.is-open {
+    position: absolute;
+    inset-inline: 14px;
+    top: calc(100% + 10px);
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    transform: translateY(-6px);
+  }
+
+  .tak-search-wrapper.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .tak-search-wrapper > div {
+    width: 100%;
+    height: 42px;
   }
 
   .tak-search-panel {
@@ -523,18 +570,37 @@
     height: 76px;
   }
 
-  .tak-header-stage.is-search-open .tak-board,
-  .tak-header-stage.is-search-open .tak-logo {
+  .tak-search-orb > span {
+    width: 60px;
+    height: 60px;
+  }
+
+  .tak-search-orb > span > span {
+    width: 56px;
+    height: 56px;
+  }
+
+  .tak-search-orb svg {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tak-profile-photo {
+    width: 60px;
+    height: 60px;
+    border-width: 3px;
+  }
+
+  .tak-header-stage.is-search-open .tak-board {
     transform: none;
+  }
+
+  .tak-header-stage.is-search-open .tak-logo {
+    transform: translate(-50%, calc(-50% + 2px));
   }
 
   .tak-search-orb::after {
     top: 25px;
-  }
-
-  .tak-search-orb > span,
-  .tak-profile-photo {
-    transform: scale(0.86);
   }
 
   .tak-board-button {
@@ -544,7 +610,8 @@
   }
 
   .tak-logo {
-    font-size: 36px;
+    width: clamp(272px, 44vw, 380px);
+    height: 104px;
   }
 
   .tak-menu-button {
@@ -556,70 +623,281 @@
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 760px) {
   .tak-header-stage {
-    padding-right: 86px;
-    padding-left: 64px;
+    padding-right: 96px;
+    padding-left: 80px;
   }
 
-  .tak-header-pill {
-    grid-template-columns: auto minmax(80px, 1fr) auto;
-    gap: 6px;
-    padding-inline: 10px;
-    transform: translateX(0);
+  .tak-logo {
+    width: 296px;
+    height: 96px;
+  }
+}
+
+@media (max-width: 640px) {
+  .tak-header {
+    padding-inline: 8px;
+    padding-bottom: 18px;
   }
 
+  .tak-header-stage {
+    height: 78px;
+    padding: 0;
+  }
+
+  .tak-header-stage.is-search-open {
+    height: 128px;
+  }
+
+  .tak-header-pill,
   .tak-header-stage.is-search-open .tak-header-pill {
-    grid-template-columns: auto minmax(80px, 1fr) auto;
+    height: 62px;
+    margin-top: 8px;
+    padding-inline: 72px;
+    transform: none;
   }
 
   .tak-search-orb,
   .tak-profile {
-    width: 64px;
-    height: 64px;
+    top: 0;
+    width: 62px;
+    height: 62px;
+    z-index: 4;
+    box-shadow: none;
   }
 
-  .tak-header-stage.is-search-open .tak-board,
-  .tak-header-stage.is-search-open .tak-logo {
-    transform: none;
+  .tak-search-orb {
+    left: 0;
   }
 
-  .tak-search-orb > span,
-  .tak-profile-photo {
-    transform: scale(0.74);
+  .tak-profile {
+    right: 0;
+  }
+
+  .tak-board {
+    z-index: 5;
+    transform: translateX(52px);
+  }
+
+  .tak-board-dropdown {
+    left: 52px;
   }
 
   .tak-search-orb::after {
-    top: 25px;
-    right: -24px;
-    width: 34px;
+    display: none;
   }
 
-  .tak-board-button {
-    max-width: 140px;
-    font-size: 16px;
+  .tak-search-orb > span {
+    width: 50px;
+    height: 50px;
+  }
+
+  .tak-search-orb > span > span {
+    width: 46px;
+    height: 46px;
+  }
+
+  .tak-search-orb svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .tak-profile-photo {
+    width: 46px;
+    height: 46px;
+  }
+
+  .tak-profile > span {
+    width: 54px;
+    height: 54px;
   }
 
   .tak-logo {
-    font-size: 28px;
+    width: 264px;
+    height: 84px;
   }
 
   .tak-menu-button {
-    width: 42px;
+    width: 52px;
   }
 
   .tak-menu-button svg {
-    width: 42px;
+    width: 46px;
   }
 
   .tak-menu-popover {
-    right: -66px;
+    right: -62px;
     width: min(392px, calc(100vw - 20px));
+  }
+}
+
+@media (max-width: 600px) {
+  .tak-header-pill,
+  .tak-header-stage.is-search-open .tak-header-pill {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+  }
+
+  .tak-board {
+    display: inline-flex;
+    justify-self: start;
+    width: 44px;
+    transform: translateX(44px);
+  }
+
+  .tak-board-button {
+    width: 44px;
+    height: 44px;
+    max-width: none;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .tak-board-button span {
+    display: none;
+  }
+
+  .tak-board-button svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .tak-board-dropdown {
+    left: 44px;
+  }
+
+  .tak-menu-wrap {
+    justify-self: end;
+  }
+
+  .tak-logo {
+    width: min(250px, calc(100vw - 170px));
+    height: 80px;
+  }
+}
+
+@media (max-width: 460px) {
+  .tak-header {
+    padding-inline: 6px;
+  }
+
+  .tak-header-stage {
+    height: 68px;
+  }
+
+  .tak-header-stage.is-search-open {
+    height: 120px;
+  }
+
+  .tak-header-pill,
+  .tak-header-stage.is-search-open .tak-header-pill {
+    height: 56px;
+    margin-top: 6px;
+    padding-inline: 56px;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+  }
+
+  .tak-search-orb,
+  .tak-profile {
+    top: 0;
+    width: 56px;
+    height: 56px;
+  }
+
+  .tak-search-orb > span {
+    width: 46px;
+    height: 46px;
+  }
+
+  .tak-search-orb > span > span {
+    width: 42px;
+    height: 42px;
+  }
+
+  .tak-search-orb svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .tak-profile-photo {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+
+  .tak-profile > span {
+    width: 48px;
+    height: 48px;
+  }
+
+  .tak-menu-wrap {
+    position: absolute;
+    right: 56px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .tak-menu-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .tak-menu-button svg {
+    width: 40px;
+    height: 32px;
+  }
+
+  .tak-logo {
+    left: calc(50% - 28px);
+    width: min(180px, calc(100vw - 176px));
+    height: 58px;
+  }
+
+  .tak-search-wrapper,
+  .tak-search-wrapper.is-open {
+    inset-inline: 6px;
+    top: calc(100% + 8px);
+  }
+
+  .tak-search-wrapper > div {
+    height: 40px;
+  }
+
+  .tak-menu-popover {
+    right: -56px;
   }
 
   .tak-menu-row {
     min-height: 54px;
     padding-inline: 18px;
     font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .tak-logo {
+    width: min(160px, calc(100vw - 176px));
+    height: 52px;
+  }
+
+  .tak-menu-wrap {
+    right: 52px;
+  }
+
+  .tak-search-orb,
+  .tak-profile {
+    width: 52px;
+    height: 52px;
+  }
+
+  .tak-profile > span {
+    width: 46px;
+    height: 46px;
+  }
+
+  .tak-profile-photo {
+    width: 38px;
+    height: 38px;
   }
 }

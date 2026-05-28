@@ -9,11 +9,13 @@ import {
   type HeaderBoardResponse,
   type HeaderProfile,
 } from "../../services/headerApi";
+import logoUrl from "../../assets/white1.webp";
 import "./Header.css";
 
 const fallbackBoards = ["برد شماره ۱۰", "برد شماره ۱۱", "برد شماره ۱۲", "برد شماره ۱۳"];
 const fallbackRecentBoards = ["برد ۱۲", "برد حسن آقا", "بورد", "My Board"];
 const shouldUseHeaderApi = import.meta.env.VITE_ENABLE_HEADER_API === "true";
+const compactSearchQuery = "(max-width: 980px)";
 
 function getBoardTitle(board: HeaderBoardResponse): string {
   if (typeof board === "string") return board;
@@ -121,7 +123,10 @@ export default function Header() {
   const [boards, setBoards] = useState<string[]>(fallbackBoards);
   const [recentBoards, setRecentBoards] = useState<string[]>(fallbackRecentBoards);
   const [profile, setProfile] = useState<HeaderProfile | null>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(true);
+  const [isSearchOpen, setIsSearchOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !window.matchMedia(compactSearchQuery).matches;
+  });
   const [isBoardOpen, setIsBoardOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
@@ -168,6 +173,20 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    const compactSearchMedia = window.matchMedia(compactSearchQuery);
+    const syncSearchLayout = () => {
+      setIsSearchOpen(!compactSearchMedia.matches);
+    };
+
+    syncSearchLayout();
+    compactSearchMedia.addEventListener("change", syncSearchLayout);
+
+    return () => {
+      compactSearchMedia.removeEventListener("change", syncSearchLayout);
+    };
+  }, []);
+
+  useEffect(() => {
     function closeFloatingPanels(event: MouseEvent) {
       if (
         event.target instanceof Node &&
@@ -209,12 +228,21 @@ export default function Header() {
         <Button
           variant="doubleCircleSearch"
           aria-label={isSearchOpen ? "بستن جستجو" : "باز کردن جستجو"}
+          aria-controls="tak-header-search"
+          aria-expanded={isSearchOpen}
           className="tak-search-orb"
-          onClick={() => setIsSearchOpen((open) => !open)}
+          onClick={() => {
+            setIsSearchOpen((open) => !open);
+            setIsBoardOpen(false);
+            setIsMenuOpen(false);
+          }}
         />
 
         <div className="tak-header-pill">
-          <div className={`tak-search-wrapper flex overflow-hidden transition-all duration-[360ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]${isSearchOpen ? " is-open" : ""}`}>
+          <div
+            id="tak-header-search"
+            className={`tak-search-wrapper flex overflow-hidden transition-all duration-[360ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]${isSearchOpen ? " is-open" : ""}`}
+          >
             <SearchInput
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
@@ -259,7 +287,7 @@ export default function Header() {
           </div>
 
           <a className="tak-logo" href="/" aria-label="کاربورد">
-            کاربورد
+            <img className="tak-logo-image" src={logoUrl} alt="" />
           </a>
 
           <div className="tak-menu-wrap">
