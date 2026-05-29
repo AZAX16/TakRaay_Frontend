@@ -1,3 +1,8 @@
+import SignupPage from './pages/SignupPage';
+
+function App() {
+  return (
+    <SignupPage />
 import './index.css';
 // import TestProfile from "./pages/TestProfile.tsx";
 // import TestKit from "./pages/TestKit.tsx";

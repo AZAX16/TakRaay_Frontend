@@ -1,5 +1,7 @@
-import axios, { type InternalAxiosRequestConfig } from "axios";
+import axios from "axios";
 
+const api = axios.create({
+  baseURL: "https://karboard.chbk.dev/api",
 const defaultBaseURL = import.meta.env.DEV
   ? "/api"
   : "https://karboard.chbkn.run/api";
@@ -10,7 +12,6 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000,
 });
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
