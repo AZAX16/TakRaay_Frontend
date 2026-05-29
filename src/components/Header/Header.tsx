@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MoonStar, PanelsTopLeft } from "lucide-react";
 import { Button, ToggleSwitch } from "../ui-kit/Button";
 import { SearchInput } from "../ui-kit/Input";
 import {
@@ -353,7 +354,9 @@ export default function Header() {
                   </a>
 
                   <div className="tak-menu-row tak-night-row">
-                    <span className="tak-menu-icon-slot" />
+                    <span className="tak-menu-icon-slot">
+                      <MoonStar aria-hidden="true" size={22} strokeWidth={2.2} />
+                    </span>
                     <span className="tak-menu-label">حالت شب/روز</span>
                     <ToggleSwitch
                       checked={isNightMode}
