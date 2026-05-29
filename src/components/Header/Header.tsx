@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MoonStar, PanelsTopLeft } from "lucide-react";
 import { Button, ToggleSwitch } from "../ui-kit/Button";
 import { SearchInput } from "../ui-kit/Input";
 import {
@@ -9,6 +10,7 @@ import {
   type HeaderBoardResponse,
   type HeaderProfile,
 } from "../../services/headerApi";
+import headerLogo from "../../assets/karbord_logo.webp";
 import "./Header.css";
 
 const fallbackBoards = ["برد شماره ۱۰", "برد شماره ۱۱", "برد شماره ۱۲", "برد شماره ۱۳"];
@@ -259,7 +261,7 @@ export default function Header() {
           </div>
 
           <a className="tak-logo" href="/" aria-label="کاربورد">
-            کاربورد
+            <img className="tak-logo-image" src={headerLogo} alt="" />
           </a>
 
           <div className="tak-menu-wrap">
@@ -289,7 +291,9 @@ export default function Header() {
                         setIsMenuOpen(false);
                       }}
                     >
-                      <span className="tak-menu-icon-slot" />
+                      <span className="tak-menu-icon-slot">
+                        <PanelsTopLeft aria-hidden="true" size={22} strokeWidth={2.2} />
+                      </span>
                       <span className="tak-menu-label">{board}</span>
                       <span className="tak-menu-arrow">
                         <ArrowIcon />
@@ -328,7 +332,9 @@ export default function Header() {
                   </a>
 
                   <div className="tak-menu-row tak-night-row">
-                    <span className="tak-menu-icon-slot" />
+                    <span className="tak-menu-icon-slot">
+                      <MoonStar aria-hidden="true" size={22} strokeWidth={2.2} />
+                    </span>
                     <span className="tak-menu-label">حالت شب/روز</span>
                     <ToggleSwitch
                       checked={isNightMode}
