@@ -1,17 +1,29 @@
 import axios from "axios";
 
-const TEMP_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc5OTExNjU2LCJpYXQiOjE3Nzk5MDk4NTYsImp0aSI6IjdkY2MwNzMxOGNjMTQwZGY4M2QxMmJkMDUyMDQ5YmQ3IiwidXNlcl9pZCI6IjIifQ.ApcGP1428gVeJ-4NtLImX7HnHafTIsoHYdO--5cL5Hc";
+const api = axios.create({
+  baseURL: "https://karboard.chbk.dev/api",
+const defaultBaseURL = import.meta.env.DEV
+  ? "/api"
+  : "https://karboard.chbkn.run/api";
+const tokenStorageKeys = ["takraay_token", "access_token", "access", "token"];
 
 const apiClient = axios.create({
-  baseURL: "https://karboard.chbkn.run/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || defaultBaseURL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-apiClient.interceptors.request.use((config) => {
-  config.headers.Authorization = `Bearer ${TEMP_ACCESS_TOKEN}`;
+apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = tokenStorageKeys
+    .map((key) => localStorage.getItem(key))
+    .find((value): value is string => Boolean(value));
 
+  if (token) {
+    config.headers.Authorization = token.startsWith("Bearer ")
+      ? token
+      : `Bearer ${token}`;
+  }
 
   return config;
 });
