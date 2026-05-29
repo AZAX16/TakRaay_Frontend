@@ -5,21 +5,23 @@ import { SearchInput } from "../ui-kit/Input";
 import {
   fetchHeaderBoards,
   fetchHeaderProfile,
-  fetchRecentBoards,
-  searchBoards,
   type HeaderBoardResponse,
   type HeaderProfile,
 } from "../../services/headerApi";
-import headerLogo from "../../assets/karbord_logo.webp";
+import logoUrl from "../../assets/white1.webp";
 import "./Header.css";
 
-const fallbackBoards = ["برد شماره ۱۰", "برد شماره ۱۱", "برد شماره ۱۲", "برد شماره ۱۳"];
-const fallbackRecentBoards = ["برد ۱۲", "برد حسن آقا", "بورد", "My Board"];
-const shouldUseHeaderApi = import.meta.env.VITE_ENABLE_HEADER_API === "true";
+const defaultBoardLabel = "بردها";
+const compactSearchQuery = "(max-width: 980px)";
 
 function getBoardTitle(board: HeaderBoardResponse): string {
   if (typeof board === "string") return board;
-  return board.title || board.name || String(board.id || "");
+  return board.name || board.title || String(board.id || "");
+}
+
+function getBoardKey(board: HeaderBoardResponse, index: number): string {
+  if (typeof board === "string") return `${board}-${index}`;
+  return board.id ? String(board.id) : `${getBoardTitle(board)}-${index}`;
 }
 
 function ChevronDownIcon() {
@@ -119,11 +121,15 @@ function HelpIcon() {
 }
 
 export default function Header() {
-  const [activeBoard, setActiveBoard] = useState("برد شماره ۱۲");
-  const [boards, setBoards] = useState<string[]>(fallbackBoards);
-  const [recentBoards, setRecentBoards] = useState<string[]>(fallbackRecentBoards);
+  const [activeBoard, setActiveBoard] = useState(defaultBoardLabel);
+  const [boards, setBoards] = useState<HeaderBoardResponse[]>([]);
+  const [isBoardsLoading, setIsBoardsLoading] = useState(true);
+  const [boardsError, setBoardsError] = useState("");
   const [profile, setProfile] = useState<HeaderProfile | null>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(true);
+  const [isSearchOpen, setIsSearchOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !window.matchMedia(compactSearchQuery).matches;
+  });
   const [isBoardOpen, setIsBoardOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
@@ -133,39 +139,64 @@ export default function Header() {
   useEffect(() => {
     let ignore = false;
 
-    async function loadHeaderData() {
-      if (!shouldUseHeaderApi) return;
-
+    async function loadBoards() {
+      setIsBoardsLoading(true);
+      setBoardsError("");
       try {
-        const [boardData, recentBoardData, profileData] = await Promise.all([
-          fetchHeaderBoards(),
-          fetchRecentBoards(),
-          fetchHeaderProfile(),
-        ]);
+        const boardData = await fetchHeaderBoards();
 
         if (ignore) return;
 
-        if (Array.isArray(boardData) && boardData.length > 0) {
-          setBoards(boardData.map(getBoardTitle).filter(Boolean));
-        }
+        const nextBoards = boardData.filter((board) => getBoardTitle(board));
+        setBoards(nextBoards);
+        setActiveBoard((currentBoard) => {
+          const currentExists = nextBoards.some(
+            (board) => getBoardTitle(board) === currentBoard,
+          );
 
-        if (Array.isArray(recentBoardData) && recentBoardData.length > 0) {
-          setRecentBoards(recentBoardData.map(getBoardTitle).filter(Boolean));
-        }
+          if (currentExists) return currentBoard;
 
-        setProfile(profileData);
+          return nextBoards[0] ? getBoardTitle(nextBoards[0]) : defaultBoardLabel;
+        });
       } catch {
         if (!ignore) {
-          setBoards(fallbackBoards);
-          setRecentBoards(fallbackRecentBoards);
+          setBoards([]);
+          setBoardsError("بردها بارگذاری نشدند");
+          setActiveBoard(defaultBoardLabel);
         }
+      } finally {
+        if (!ignore) setIsBoardsLoading(false);
       }
     }
 
-    loadHeaderData();
+    async function loadProfile() {
+      try {
+        const profileData = await fetchHeaderProfile();
+        if (!ignore) setProfile(profileData);
+      } catch {
+        if (!ignore) setProfile(null);
+      }
+    }
+
+    loadBoards();
+    loadProfile();
 
     return () => {
       ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const compactSearchMedia = window.matchMedia(compactSearchQuery);
+    const syncSearchLayout = () => {
+      setIsSearchOpen(!compactSearchMedia.matches);
+    };
+
+    syncSearchLayout();
+    compactSearchMedia.addEventListener("change", syncSearchLayout);
+
+    return () => {
+      compactSearchMedia.removeEventListener("change", syncSearchLayout);
     };
   }, []);
 
@@ -185,20 +216,6 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", closeFloatingPanels);
   }, []);
 
-  useEffect(() => {
-    if (!shouldUseHeaderApi || !searchValue.trim()) return;
-
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        await searchBoards(searchValue.trim());
-      } catch {
-        // Placeholder endpoint: keep local UI responsive until the API is wired.
-      }
-    }, 350);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [searchValue]);
-
   return (
     <header
       className={`tak-header ${isNightMode ? "is-night-mode" : ""} bg-[var(--tak-page)] text-[var(--tak-text)]`}
@@ -211,12 +228,21 @@ export default function Header() {
         <Button
           variant="doubleCircleSearch"
           aria-label={isSearchOpen ? "بستن جستجو" : "باز کردن جستجو"}
+          aria-controls="tak-header-search"
+          aria-expanded={isSearchOpen}
           className="tak-search-orb"
-          onClick={() => setIsSearchOpen((open) => !open)}
+          onClick={() => {
+            setIsSearchOpen((open) => !open);
+            setIsBoardOpen(false);
+            setIsMenuOpen(false);
+          }}
         />
 
         <div className="tak-header-pill">
-          <div className={`tak-search-wrapper flex overflow-hidden transition-all duration-[360ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]${isSearchOpen ? " is-open" : ""}`}>
+          <div
+            id="tak-header-search"
+            className={`tak-search-wrapper flex overflow-hidden transition-all duration-[360ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]${isSearchOpen ? " is-open" : ""}`}
+          >
             <SearchInput
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
@@ -241,27 +267,45 @@ export default function Header() {
 
             {isBoardOpen && (
               <div className="tak-dropdown tak-board-dropdown">
-                {boards.map((board) => (
-                  <button
-                    className={`tak-dropdown-item ${
-                      board === activeBoard ? "is-active" : ""
-                    }`}
-                    key={board}
-                    type="button"
-                    onClick={() => {
-                      setActiveBoard(board);
-                      setIsBoardOpen(false);
-                    }}
-                  >
-                    {board}
-                  </button>
-                ))}
+                {isBoardsLoading && (
+                  <div className="tak-dropdown-state">در حال بارگذاری...</div>
+                )}
+
+                {!isBoardsLoading && boardsError && (
+                  <div className="tak-dropdown-state">{boardsError}</div>
+                )}
+
+                {!isBoardsLoading && !boardsError && boards.length === 0 && (
+                  <div className="tak-dropdown-state">بردی پیدا نشد</div>
+                )}
+
+                {!isBoardsLoading &&
+                  !boardsError &&
+                  boards.map((board, index) => {
+                    const boardTitle = getBoardTitle(board);
+
+                    return (
+                      <button
+                        className={`tak-dropdown-item ${
+                          boardTitle === activeBoard ? "is-active" : ""
+                        }`}
+                        key={getBoardKey(board, index)}
+                        type="button"
+                        onClick={() => {
+                          setActiveBoard(boardTitle);
+                          setIsBoardOpen(false);
+                        }}
+                      >
+                        {boardTitle}
+                      </button>
+                    );
+                  })}
               </div>
             )}
           </div>
 
           <a className="tak-logo" href="/" aria-label="کاربورد">
-            <img className="tak-logo-image" src={headerLogo} alt="" />
+            <img className="tak-logo-image" src={logoUrl} alt="" />
           </a>
 
           <div className="tak-menu-wrap">
@@ -280,28 +324,6 @@ export default function Header() {
 
             {isMenuOpen && (
               <div className="tak-menu-popover">
-                <div className="tak-menu-section">
-                  {recentBoards.map((board) => (
-                    <button
-                      className="tak-menu-row tak-menu-row-board"
-                      key={board}
-                      type="button"
-                      onClick={() => {
-                        setActiveBoard(board);
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      <span className="tak-menu-icon-slot">
-                        <PanelsTopLeft aria-hidden="true" size={22} strokeWidth={2.2} />
-                      </span>
-                      <span className="tak-menu-label">{board}</span>
-                      <span className="tak-menu-arrow">
-                        <ArrowIcon />
-                      </span>
-                    </button>
-                  ))}
-                </div>
-
                 <div className="tak-menu-section tak-menu-section-static">
                   <a className="tak-menu-row" href="#">
                     <span className="tak-menu-icon-slot">
