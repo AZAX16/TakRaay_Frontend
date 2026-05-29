@@ -40,6 +40,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   pillDark:
     "w-[300px] h-[50px] rounded-[40px] bg-[#387FA3] text-white text-[20px] border-0 hover:bg-[#2F6E8F] active:bg-[#285E7A]",
 
+ 
   circleCloseDark:  "w-[65px] h-[65px] rounded-full bg-transparent ",
   circleCloseLight: "w-[65px] h-[65px] rounded-full bg-transparent",
   circlePlusSmall:  "w-[25px] h-[25px] rounded-full bg-[#00AFB9] text-[15px] font-bold text-[#ffff]",
