@@ -1,0 +1,45 @@
+@import "@fontsource/vazirmatn";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: "Vazirmatn", sans-serif;
+}
+
+.css-1m8qzkt {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 9999 !important;
+}
+
+.css-137m4ck{
+  border-radius: 25px !important;
+}
+
+.zm-DaysButton {
+  border-radius: 100% !important;
+}
+
+.zm-IconNextButton{
+    border-radius: 100% !important;
+}
+
+.zm-IconPrevButton{
+    border-radius: 100% !important;
+}
+
+.zm-YearPickerButton{
+    border-radius: 8px !important;
+}
+.zm-MonthPickerButton{
+    border-radius: 8px !important;
+}
+
+.zm-MonthYearButton {
+    border-radius: 8px !important;
+}
