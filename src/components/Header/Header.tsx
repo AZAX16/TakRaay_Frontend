@@ -10,7 +10,7 @@ import {
   type HeaderBoardResponse,
   type HeaderProfile,
 } from "../../services/headerApi";
-import headerLogo from "../../white1.webp";
+import headerLogo from "../../assets/karbord_logo.webp";
 import "./Header.css";
 
 const fallbackBoards = ["برد شماره ۱۰", "برد شماره ۱۱", "برد شماره ۱۲", "برد شماره ۱۳"];
