@@ -1,6 +1,26 @@
-import { useState, type SVGProps } from 'react';
+import { useEffect, useState, type SVGProps } from 'react';
 import Header from '../components/Header/Header';
-import Card, { type CardColorScheme } from '../components/task-card/Card';
+import Card, {
+  type CardColorScheme,
+  type CardUpdatePayload,
+  type Member as CardMember,
+} from '../components/task-card/Card';
+import {
+  createBoardList,
+  createListCard,
+  deleteProjectCard,
+  fetchBoardLists,
+  fetchListCards,
+  fetchProject,
+  fetchProjectMembers,
+  fetchProjects,
+  updateProjectCard,
+  type BoardList,
+  type BoardStatus,
+  type Project,
+  type ProjectCard,
+  type ProjectMember,
+} from '../services/projectApi';
 
 type IconProps = SVGProps<SVGSVGElement> & {
   size?: number;
@@ -96,11 +116,28 @@ function ChevronRight(props: IconProps) {
   );
 }
 
-const columns = [
-  { id: 1, title: 'تمام شده (۳)', bgColor: 'bg-[#FFFC9C]', headerBg: 'bg-[#f4f195]', borderColor: 'border-[#FFFC9C]', cards: [1, 2, 3] },
-  { id: 2, title: 'برای بررسی (۱)', bgColor: 'bg-[#00AFB9]', headerBg: 'bg-[#0199a2]', borderColor: 'border-[#00AFB9]', cards: [1] },
-  { id: 3, title: 'در دست انجام (۲۱)', bgColor: 'bg-[#FED9B7]', headerBg: 'bg-[#eecba6]', borderColor: 'border-[#FED9B7]', cards: [1, 2] },
-  { id: 4, title: 'برای انجام (۶۷)', bgColor: 'bg-[#F07167]', headerBg: 'bg-[#db675d]', borderColor: 'border-[#F07167]', cards: [1, 2, 3, 4] },
+type ColumnStyleId = 1 | 2 | 3 | 4;
+
+type ColumnDefinition = {
+  status: BoardStatus;
+  styleId: ColumnStyleId;
+  label: string;
+  bgColor: string;
+  headerBg: string;
+  borderColor: string;
+};
+
+type BoardColumn = ColumnDefinition & {
+  listId?: number;
+  title: string;
+  cards: ProjectCard[];
+};
+
+const columnDefinitions: ColumnDefinition[] = [
+  { status: 'todo', styleId: 4, label: 'برای انجام', bgColor: 'bg-[#F07167]', headerBg: 'bg-[#db675d]', borderColor: 'border-[#F07167]' },
+  { status: 'doing', styleId: 3, label: 'در دست انجام', bgColor: 'bg-[#FED9B7]', headerBg: 'bg-[#eecba6]', borderColor: 'border-[#FED9B7]' },
+  { status: 'review', styleId: 2, label: 'برای بررسی', bgColor: 'bg-[#00AFB9]', headerBg: 'bg-[#0199a2]', borderColor: 'border-[#00AFB9]' },
+  { status: 'done', styleId: 1, label: 'تمام شده', bgColor: 'bg-[#FFFC9C]', headerBg: 'bg-[#f4f195]', borderColor: 'border-[#FFFC9C]' },
 ];
 
 const cardColors: Record<number, CardColorScheme> = {
@@ -129,44 +166,287 @@ const headerColors: Record<number, { title: string; button: string }> = {
   },
 };
 
+const fallbackSidebarProfiles = [
+  { id: 1, name: 'حسن آقا' },
+  { id: 2, name: 'علیرضا' },
+  { id: 3, name: 'طیبه' },
+];
+
+const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+const englishDigitByPersianDigit: Record<string, string> = {
+  '۰': '0',
+  '۱': '1',
+  '۲': '2',
+  '۳': '3',
+  '۴': '4',
+  '۵': '5',
+  '۶': '6',
+  '۷': '7',
+  '۸': '8',
+  '۹': '9',
+  '٠': '0',
+  '١': '1',
+  '٢': '2',
+  '٣': '3',
+  '٤': '4',
+  '٥': '5',
+  '٦': '6',
+  '٧': '7',
+  '٨': '8',
+  '٩': '9',
+};
+
+function toPersianDigits(value: number | string) {
+  return String(value).replace(/[0-9]/g, (digit) => persianNumbers[Number(digit)]);
+}
+
+function toEnglishDigits(value: string) {
+  return value.replace(/[۰-۹٠-٩]/g, (digit) => englishDigitByPersianDigit[digit] ?? digit);
+}
+
+function getColumnDefinition(status: BoardStatus) {
+  return columnDefinitions.find((column) => column.status === status) ?? columnDefinitions[0];
+}
+
+function getStatusLabel(status?: BoardStatus) {
+  return getColumnDefinition(status ?? 'todo').label;
+}
+
+function getStatusFromLabel(label: string): BoardStatus {
+  return columnDefinitions.find((column) => column.label === label)?.status ?? 'todo';
+}
+
+function getMemberName(member: ProjectMember) {
+  return member.phone || `کاربر ${toPersianDigits(member.id)}`;
+}
+
+function sortByOrder<T extends { order?: number }>(items: T[]) {
+  return [...items].sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
+}
+
+function createBoardColumns(
+  lists: BoardList[] = [],
+  cardsByList: Record<number, ProjectCard[]> = {},
+): BoardColumn[] {
+  const activeLists = lists.filter((list) => !list.is_archived);
+
+  return columnDefinitions.map((definition) => {
+    const list = activeLists.find((item) => item.title === definition.status);
+    const cards = list
+      ? sortByOrder((cardsByList[list.id] ?? []).filter((card) => !card.is_archived))
+      : [];
+
+    return {
+      ...definition,
+      listId: list?.id,
+      title: `${definition.label} (${toPersianDigits(cards.length)})`,
+      cards,
+    };
+  });
+}
+
+function getCardDate(date?: string | null) {
+  return date ? toPersianDigits(date) : '';
+}
+
 const BoardPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeProjectId, setActiveProjectId] = useState<number | string | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
+  const [columns, setColumns] = useState<BoardColumn[]>(() => createBoardColumns());
+  const [members, setMembers] = useState<ProjectMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function loadBoard(projectId?: number | string) {
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const projects = await fetchProjects();
+      const nextProjectId = projectId ?? projects[0]?.id;
+
+      if (!nextProjectId) {
+        setActiveProjectId(null);
+        setProject(null);
+        setMembers([]);
+        setColumns(createBoardColumns());
+        setMessage('بردی برای نمایش پیدا نشد.');
+        return;
+      }
+
+      setActiveProjectId(nextProjectId);
+
+      const [projectData, listData, memberData] = await Promise.all([
+        fetchProject(nextProjectId),
+        fetchBoardLists(nextProjectId),
+        fetchProjectMembers(nextProjectId),
+      ]);
+
+      const cardEntries = await Promise.all(
+        listData
+          .filter((list) => !list.is_archived)
+          .map(async (list) => [list.id, await fetchListCards(list.id)] as const),
+      );
+
+      setProject(projectData);
+      setMembers(memberData);
+      setColumns(createBoardColumns(listData, Object.fromEntries(cardEntries)));
+    } catch {
+      setProject(null);
+      setMembers([]);
+      setColumns(createBoardColumns());
+      setMessage('اتصال به API انجام نشد. لطفا توکن یا دسترسی را بررسی کنید.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadBoard();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const cardMemberOptions: CardMember[] = members.map((member) => ({
+    id: member.id,
+    name: getMemberName(member),
+  }));
+
+  const sidebarProfiles = members.length > 0
+    ? members.map((member) => ({ id: member.id, name: getMemberName(member) }))
+    : fallbackSidebarProfiles;
+
+  async function handleCreateCard(column: BoardColumn) {
+    if (!activeProjectId) {
+      setMessage('برای ساخت کارت، ابتدا باید یک برد انتخاب شود.');
+      return;
+    }
+
+    setMessage(null);
+
+    try {
+      let listId = column.listId;
+
+      if (!listId) {
+        const createdList = await createBoardList(activeProjectId, { title: column.status });
+        listId = createdList.id;
+      }
+
+      await createListCard(listId, {
+        title: 'کارت جدید',
+        description: '',
+        due_date: null,
+        labels: '',
+        status: column.status,
+        assigned_to: [],
+      });
+
+      await loadBoard(activeProjectId);
+    } catch {
+      setMessage('ساخت کارت انجام نشد.');
+    }
+  }
+
+  async function handleUpdateCard(cardId: number, payload: CardUpdatePayload) {
+    if (!activeProjectId) return;
+
+    setMessage(null);
+
+    try {
+      await updateProjectCard(cardId, {
+        title: payload.title,
+        description: payload.description,
+        due_date: toEnglishDigits(payload.date) || null,
+        labels: payload.tag,
+        status: getStatusFromLabel(payload.status),
+        assigned_to: payload.assignedMemberIds,
+      });
+
+      await loadBoard(activeProjectId);
+    } catch {
+      setMessage('ذخیره کارت انجام نشد.');
+    }
+  }
+
+  async function handleDeleteCard(cardId: number) {
+    if (!activeProjectId) return;
+
+    setMessage(null);
+
+    try {
+      await deleteProjectCard(cardId);
+      await loadBoard(activeProjectId);
+    } catch {
+      setMessage('حذف کارت انجام نشد.');
+    }
+  }
 
   return (
     <div className="h-screen bg-[#f3f4f6] flex flex-col font-['Vazirmatn'] overflow-hidden" dir="rtl">
       <Header />
 
       <div className="flex flex-1 overflow-hidden relative">
+        {(isLoading || message) && (
+          <div className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-xl bg-white/95 px-4 py-2 text-sm font-bold text-red-500 shadow-sm">
+            {isLoading ? 'در حال دریافت اطلاعات برد...' : message}
+          </div>
+        )}
+
         {/* Main Content Area */}
         <main className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
           <div className="flex gap-6 p-6 h-full w-max items-start">
             {columns.map((col) => (
               <div
-                key={col.id}
+                key={col.status}
                 className={`w-[396px] h-full flex flex-col`}
               >
                 {/* Column Header */}
                 <div className={`${col.bgColor} rounded-2xl py-3 px-4 flex items-center justify-between shadow-sm z-10 relative`}>
                   <div className="flex items-center gap-2">
-                    <span className={`font-bold text-[15px] ${headerColors[col.id].title}`}>{col.title}</span>
+                    <span className={`font-bold text-[15px] ${headerColors[col.styleId].title}`}>{col.title}</span>
                   </div>
-                  <button className={`w-6 h-6 border rounded flex items-center justify-center transition-colors ${headerColors[col.id].button}`}>
+                  <button
+                    type="button"
+                    onClick={() => void handleCreateCard(col)}
+                    className={`w-6 h-6 border rounded flex items-center justify-center transition-colors ${headerColors[col.styleId].button}`}
+                  >
                     <Plus size={16} strokeWidth={2.5} />
                   </button>
                 </div>
 
                 {/* Column Content/Cards Area */}
                 <div className={`${col.bgColor} bg-opacity-30 backdrop-blur-md flex-1 rounded-2xl border ${col.borderColor} border-opacity-50 p-4 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center gap-4 pb-5 shadow-sm mt-3 pt-4`}>
-                   {col.cards.map((cardId) => (
+                   {col.cards.map((card) => (
                      <Card
-                       key={cardId}
-                       colorScheme={cardColors[col.id]}
-                       title="تیتر کارت تسک"
-                       description="توضیحات..."
-                       date="۱۴۰۵/۷/۲۳"
-                       tag="تگ۱"
+                       key={[
+                         card.id,
+                         card.title,
+                         card.description,
+                         card.due_date,
+                         card.labels,
+                         card.status,
+                         card.assigned_to?.join('-'),
+                       ].join('|')}
+                       colorScheme={cardColors[col.styleId]}
+                       title={card.title}
+                       description={card.description || ''}
+                       date={getCardDate(card.due_date)}
+                       tag={card.labels || ''}
+                       status={getStatusLabel(card.status ?? col.status)}
+                       memberOptions={cardMemberOptions}
+                       assignedMembers={cardMemberOptions.filter((member) => card.assigned_to?.includes(member.id))}
+                       onSave={(payload) => handleUpdateCard(card.id, payload)}
+                       onDelete={() => handleDeleteCard(card.id)}
                      />
                    ))}
+                   {col.cards.length === 0 && !isLoading && (
+                     <div className="mt-6 rounded-xl border border-white/50 bg-white/35 px-4 py-3 text-center text-sm font-bold text-gray-600">
+                       کارتی وجود ندارد
+                     </div>
+                   )}
                 </div>
               </div>
             ))}
@@ -185,10 +465,10 @@ const BoardPage = () => {
             {isSidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           </button>
 
-          <aside className={`w-[280px] bg-red-50/60 backdrop-blur-md rounded-2xl border-2 border-red-200 p-6 m-4 mt-6 overflow-y-auto flex flex-col shrink-0 h-fit shadow-sm z-10 transition-all duration-300 ease-out ${isSidebarOpen ? 'translate-x-0 opacity-100' : 'translate-x-[232px] opacity-0 pointer-events-none'}`}>
+          <aside className={`w-[280px] rounded-2xl border-2 border-red-200 p-6 m-4 mt-6 overflow-y-auto flex flex-col shrink-0 h-fit shadow-sm z-10 transition-all duration-300 ease-out ${isSidebarOpen ? 'translate-x-0 opacity-100' : 'translate-x-[232px] opacity-0 pointer-events-none'}`}>
           <div className="flex items-center justify-center gap-2 mb-8 text-red-500 font-bold border-b border-red-200 pb-4 text-lg">
              <Edit size={20} className="cursor-pointer" />
-             <span>بورد شماره ۱۲</span>
+             <span>{project?.name || 'بورد شماره ۱۲'}</span>
           </div>
 
           <nav className="flex flex-col gap-6 text-red-400 text-sm mb-8 px-2">
@@ -207,12 +487,8 @@ const BoardPage = () => {
           </nav>
 
           <div className="flex flex-col gap-5 border-t border-red-200 pt-6 px-2">
-             {[
-               {name: 'حسن آقا'},
-               {name: 'علیرضا'},
-               {name: 'طیبه'}
-             ].map((profile, i) => (
-                <div key={i} className="flex items-center justify-between text-red-400 text-sm">
+             {sidebarProfiles.map((profile) => (
+                <div key={profile.id} className="flex items-center justify-between text-red-400 text-sm">
                   <div className="flex items-center gap-3">
                     <Edit size={14} className="cursor-pointer opacity-70 hover:opacity-100 transition-opacity" />
                     <span>{profile.name}</span>

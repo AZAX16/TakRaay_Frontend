@@ -1,7 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "https://karboard.chbkn.run/api",
   headers: {
     "Content-Type": "application/json",
   },

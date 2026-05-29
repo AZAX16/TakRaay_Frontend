@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-type Member = {
+export type Member = {
   id: number;
   name: string;
 };
@@ -16,7 +16,21 @@ type CardProps = {
   tag?: string;
   description?: string;
   date?: string;
+  status?: string;
   colorScheme?: CardColorScheme;
+  memberOptions?: Member[];
+  assignedMembers?: Member[];
+  onSave?: (payload: CardUpdatePayload) => void | Promise<void>;
+  onDelete?: () => void | Promise<void>;
+};
+
+export type CardUpdatePayload = {
+  title: string;
+  tag: string;
+  description: string;
+  date: string;
+  status: string;
+  assignedMemberIds: number[];
 };
 
 const allMembers: Member[] = [
@@ -35,23 +49,31 @@ export default function Card({
   tag = "فرانت-اند",
   description = "طراحی تمامی مراحل login و signup شامل تمام جزئیات مربوط به ارسال رمز یکبار مصرف و فراموشی رمز و ...",
   date = "۱۴۰۵/۷/۲۳",
+  status: initialStatus = "برای انجام",
   colorScheme,
+  memberOptions = allMembers,
+  assignedMembers,
+  onSave,
+  onDelete,
 }: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [taskTitle, setTaskTitle] = useState(title);
   const [taskTag, setTaskTag] = useState(tag);
   const [taskDescription, setTaskDescription] = useState(description);
   const [taskDate, setTaskDate] = useState(date);
 
-  const [status, setStatus] = useState("برای انجام");
+  const [status, setStatus] = useState(initialStatus);
 
   const [members, setMembers] = useState<Member[]>([
-    allMembers[0],
-    allMembers[1],
-    allMembers[2],
-    allMembers[3],
-    allMembers[4],
+    ...(assignedMembers ?? [
+      allMembers[0],
+      allMembers[1],
+      allMembers[2],
+      allMembers[3],
+      allMembers[4],
+    ]),
   ]);
 
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
@@ -60,7 +82,7 @@ export default function Card({
   const memberDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
 
-  const availableMembers = allMembers.filter(
+  const availableMembers = memberOptions.filter(
     (m) => !members.find((x) => x.id === m.id)
   );
 
@@ -136,6 +158,41 @@ export default function Card({
     };
   }, []);
 
+  async function handleSaveClick() {
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      await onSave?.({
+        title: taskTitle.trim() || title,
+        tag: taskTag.trim(),
+        description: taskDescription,
+        date: taskDate.trim(),
+        status,
+        assignedMemberIds: members.map((member) => member.id),
+      });
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDeleteClick() {
+    if (!onDelete) return;
+
+    setIsSaving(true);
+
+    try {
+      await onDelete();
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div
       className="w-full max-w-[380px] h-[230px] rounded-[15px] border p-[10px] flex gap-[10px] overflow-visible"
@@ -152,7 +209,7 @@ export default function Card({
         <div className="h-[30px] flex gap-[10px]">
 
           <input
-            disabled={!isEditing}
+            disabled={!isEditing || isSaving}
             value={taskTitle}
             maxLength={20}
             onChange={(e) =>
@@ -165,7 +222,7 @@ export default function Card({
           />
 
           <input
-            disabled={!isEditing}
+            disabled={!isEditing || isSaving}
             value={taskTag}
             maxLength={10}
             onChange={(e) =>
@@ -187,7 +244,7 @@ export default function Card({
           </div>
 
           <textarea
-            disabled={!isEditing}
+            disabled={!isEditing || isSaving}
             value={taskDescription}
             maxLength={100}
             onChange={(e) =>
@@ -213,7 +270,7 @@ export default function Card({
             ref={statusDropdownRef}
           >
             <button
-              disabled={!isEditing}
+              disabled={!isEditing || isSaving}
               onClick={() =>
                 setShowStatusDropdown(!showStatusDropdown)
               }
@@ -270,6 +327,9 @@ export default function Card({
         <div className="flex gap-[10px] mt-auto h-[30px]">
 
           <button
+            type="button"
+            disabled={isSaving || !onDelete}
+            onClick={handleDeleteClick}
             className="flex-1 h-[30px] rounded-[10px] border text-[11px] font-[500] transition-all duration-300"
             style={{
               borderColor: colors.text,
@@ -290,7 +350,9 @@ export default function Card({
           </button>
 
           <button
-            onClick={() => setIsEditing(!isEditing)}
+            type="button"
+            disabled={isSaving}
+            onClick={handleSaveClick}
             className="flex-1 h-[30px] rounded-[10px] border text-[11px] font-[500] transition-all duration-300"
             style={{
               borderColor: colors.text,
@@ -307,7 +369,7 @@ export default function Card({
               e.currentTarget.style.color = colors.text;
             }}
           >
-            {isEditing ? "ثبت" : "ویرایش"}
+            {isSaving ? "..." : isEditing ? "ثبت" : "ویرایش"}
           </button>
         </div>
       </div>
@@ -407,7 +469,7 @@ export default function Card({
         </div>
 
         <input
-          disabled={!isEditing}
+          disabled={!isEditing || isSaving}
           value={taskDate}
           maxLength={10}
           onChange={(e) =>
