@@ -1,0 +1,632 @@
+.tak-header {
+  --tak-primary: #0081a7;
+  --tak-text: #ffffff;
+  --tak-secondary: #05a8d9;
+  --tak-page: #f7f8fc;
+  --tak-shadow: rgba(0, 84, 110, 0.22);
+
+  width: 100%;
+  padding: 0 18px 24px;
+  background: var(--tak-page);
+  color: var(--tak-text);
+  font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+}
+
+.tak-header.is-night-mode {
+  --tak-page: #053442;
+  --tak-shadow: rgba(0, 0, 0, 0.28);
+}
+
+.tak-header-stage {
+  position: relative;
+  width: min(100%, 1320px);
+  height: 92px;
+  margin: 0 auto;
+  padding: 0 136px 0 92px;
+}
+
+.tak-header-pill {
+  position: relative;
+  z-index: 2;
+  direction: ltr;
+  height: 72px;
+  min-width: 0;
+  margin-top: 25px;
+  padding: 0 22px 0 15px;
+  display: grid;
+  grid-template-columns: 0 minmax(215px, auto) 1fr auto;
+  align-items: center;
+  gap: 22px;
+  background: var(--tak-primary);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 999px;
+  box-shadow:
+    0 18px 34px rgb(0 84 110 / 0.26),
+    0 6px 14px rgb(0 129 167 / 0.18);
+  overflow: visible;
+  transform: translateX(10px);
+  will-change: grid-template-columns;
+  transition:
+    grid-template-columns 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    gap 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tak-header-stage:not(.is-search-open) .tak-header-pill {
+  padding-left: 15px;
+}
+
+.tak-header-stage.is-search-open .tak-header-pill {
+  grid-template-columns: 245px minmax(215px, auto) 1fr auto;
+  padding-left: 15px;
+}
+
+.tak-search-orb {
+  position: absolute;
+  left: 7px;
+  top: -5px;
+  z-index: 1;
+  background: var(--tak-primary) !important;
+  box-shadow:
+    0 18px 32px rgb(0 84 110 / 0.26),
+    0 6px 14px rgb(0 129 167 / 0.18);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tak-search-wrapper {
+  display: flex;
+  overflow: hidden;
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  transform: translateX(-30px);
+  pointer-events: none;
+  margin-left: -22px;
+  margin-right: 0;
+  transition:
+    width 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    margin-left 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    margin-right 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tak-search-wrapper.is-open {
+  width: 245px;
+  min-width: 245px;
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  margin-left: 0;
+  margin-right: 22px;
+}
+
+.tak-search-orb > span {
+  background: var(--tak-text) !important;
+}
+
+.tak-search-orb > span > span {
+  background: var(--tak-secondary) !important;
+}
+
+.tak-search-orb svg circle,
+.tak-search-orb svg path {
+  stroke: var(--tak-text);
+}
+
+.tak-search-orb::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  top: 29px;
+  width: 48px;
+  height: 30px;
+  background: var(--tak-primary);
+  border-radius: 999px;
+  z-index: -1;
+}
+
+.tak-search-panel {
+  position: relative;
+  direction: rtl;
+  width: 100%;
+  max-width: 245px;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 12px;
+  background: var(--tak-secondary);
+  color: var(--tak-text);
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.tak-header-stage.is-search-open .tak-search-panel {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.tak-search-input {
+  width: 100%;
+  height: 100%;
+  padding: 0 46px 0 16px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--tak-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.tak-search-input::placeholder {
+  color: rgb(255 255 255 / 0.86);
+}
+
+.tak-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.tak-search-panel-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  display: flex;
+  color: var(--tak-text);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.tak-board {
+  position: relative;
+  direction: rtl;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  transition: transform 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tak-board-button {
+  min-width: 0;
+  width: max-content;
+  height: 54px;
+  padding: 0 4px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--tak-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: clamp(19px, 2vw, 27px);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tak-board-button svg {
+  flex: 0 0 auto;
+  color: var(--tak-text);
+  opacity: 0.86;
+}
+
+.tak-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: clamp(178px, 19vw, 260px);
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transform: translate(-50%, calc(-50% - 1px));
+  transition: transform 0.36s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tak-logo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 0 rgb(0 77 99 / 0.32));
+}
+
+.tak-menu-wrap {
+  position: relative;
+  justify-self: end;
+}
+
+.tak-header-stage.is-search-open .tak-board {
+  transform: translateX(-30px);
+}
+
+.tak-header-stage.is-search-open .tak-logo {
+  transform: translate(calc(-50% + 36px), calc(-50% - 1px));
+}
+
+.tak-menu-button {
+  width: 72px;
+  height: 60px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--tak-text);
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tak-menu-button:hover {
+  color: rgb(255 255 255 / 0.88);
+  transform: translateY(-1px);
+}
+
+.tak-profile {
+  position: absolute;
+  right: 0;
+  top: -5px;
+  z-index: 3;
+  width: 86px;
+  height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--tak-primary);
+  box-shadow:
+    0 18px 32px rgb(0 84 110 / 0.26),
+    0 6px 14px rgb(0 129 167 / 0.18);
+  text-decoration: none;
+}
+
+.tak-profile-photo {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  border: 4px solid var(--tak-text);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 48% 30%, #ffe0c1 0 13px, transparent 14px),
+    linear-gradient(135deg, #e9f3ff 0 48%, #c9dbf6 49% 100%);
+}
+
+.tak-profile-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.tak-profile-face {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 24px;
+  height: 28px;
+  border-radius: 50% 50% 46% 46%;
+  background: #f5c798;
+  box-shadow: 0 -9px 0 -4px #b4774d;
+  transform: translateX(-50%);
+}
+
+.tak-profile-shirt {
+  position: absolute;
+  left: 50%;
+  bottom: -17px;
+  width: 58px;
+  height: 48px;
+  border-radius: 18px 18px 0 0;
+  background:
+    linear-gradient(90deg, transparent 43%, #ffffff 44% 56%, transparent 57%),
+    linear-gradient(135deg, #0081a7 0 50%, #05a8d9 51% 100%);
+  transform: translateX(-50%);
+}
+
+.tak-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  min-width: 205px;
+  padding: 8px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 14px;
+  background: var(--tak-secondary);
+  box-shadow: 0 18px 40px var(--tak-shadow);
+  z-index: 8;
+  left: 0;
+}
+
+.tak-board-dropdown {
+  right: auto;
+  left: 0;
+}
+
+.tak-dropdown-item {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--tak-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: right;
+  text-decoration: none;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.tak-dropdown-item:hover,
+.tak-dropdown-item.is-active {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.tak-menu-popover {
+  position: absolute;
+  top: calc(100% + 16px);
+  right: -14px;
+  z-index: 10;
+  width: min(392px, calc(100vw - 28px));
+  filter: drop-shadow(0 14px 22px var(--tak-shadow));
+}
+
+.tak-menu-section {
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: 16px;
+  background: var(--tak-secondary);
+}
+
+.tak-menu-section + .tak-menu-section {
+  margin-top: 3px;
+}
+
+.tak-menu-row {
+  width: 100%;
+  min-height: 58px;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--tak-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.tak-menu-row:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.tak-menu-row:active {
+  transform: translateY(1px);
+}
+
+.tak-menu-label {
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tak-menu-icon-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tak-text);
+  opacity: 0.92;
+}
+
+.tak-menu-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(255 255 255 / 0.72);
+}
+
+.tak-night-switch {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  justify-self: end;
+  border: 2px solid rgb(255 255 255 / 0.86);
+  border-radius: 999px;
+  background: rgb(0 129 167 / 0.45);
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.tak-night-switch span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--tak-text);
+  box-shadow: 0 2px 5px rgb(0 0 0 / 0.2);
+  transition: transform 0.22s ease;
+}
+
+.tak-night-row {
+  grid-template-columns: 30px minmax(0, 1fr) 68px;
+}
+
+.tak-night-row .tak-menu-label {
+  padding-left: 18px;
+}
+
+.tak-night-switch.is-on {
+  background: var(--tak-primary);
+  border-color: var(--tak-text);
+}
+
+.tak-night-switch.is-on span {
+  transform: translateX(20px);
+}
+
+@media (max-width: 900px) {
+  .tak-header {
+    padding-inline: 10px;
+  }
+
+  .tak-header-stage {
+    height: 84px;
+    padding-right: 112px;
+    padding-left: 84px;
+  }
+
+  .tak-header-pill {
+    height: 64px;
+    margin-top: 20px;
+    padding-right: 14px;
+    padding-left: 12px;
+    gap: 10px;
+    transform: translateX(4px);
+  }
+
+  .tak-header-stage.is-search-open .tak-header-pill {
+    grid-template-columns: 0 auto minmax(110px, 1fr) auto;
+  }
+
+  .tak-search-panel {
+    display: none;
+  }
+
+  .tak-search-orb,
+  .tak-profile {
+    width: 76px;
+    height: 76px;
+  }
+
+  .tak-header-stage.is-search-open .tak-board,
+  .tak-header-stage.is-search-open .tak-logo {
+    transform: none;
+  }
+
+  .tak-search-orb::after {
+    top: 25px;
+  }
+
+  .tak-search-orb > span,
+  .tak-profile-photo {
+    transform: scale(0.86);
+  }
+
+  .tak-board-button {
+    min-width: 0;
+    max-width: 185px;
+    font-size: 19px;
+  }
+
+  .tak-logo {
+    width: 178px;
+    height: 64px;
+  }
+
+  .tak-menu-button {
+    width: 58px;
+  }
+
+  .tak-menu-popover {
+    right: -76px;
+  }
+}
+
+@media (max-width: 560px) {
+  .tak-header-stage {
+    padding-right: 86px;
+    padding-left: 64px;
+  }
+
+  .tak-header-pill {
+    grid-template-columns: auto minmax(80px, 1fr) auto;
+    gap: 6px;
+    padding-inline: 10px;
+    transform: translateX(0);
+  }
+
+  .tak-header-stage.is-search-open .tak-header-pill {
+    grid-template-columns: auto minmax(80px, 1fr) auto;
+  }
+
+  .tak-search-orb,
+  .tak-profile {
+    width: 64px;
+    height: 64px;
+  }
+
+  .tak-header-stage.is-search-open .tak-board,
+  .tak-header-stage.is-search-open .tak-logo {
+    transform: none;
+  }
+
+  .tak-search-orb > span,
+  .tak-profile-photo {
+    transform: scale(0.74);
+  }
+
+  .tak-search-orb::after {
+    top: 25px;
+    right: -24px;
+    width: 34px;
+  }
+
+  .tak-board-button {
+    max-width: 140px;
+    font-size: 16px;
+  }
+
+  .tak-logo {
+    width: 128px;
+    height: 48px;
+  }
+
+  .tak-menu-button {
+    width: 42px;
+  }
+
+  .tak-menu-button svg {
+    width: 42px;
+  }
+
+  .tak-menu-popover {
+    right: -66px;
+    width: min(392px, calc(100vw - 20px));
+  }
+
+  .tak-menu-row {
+    min-height: 54px;
+    padding-inline: 18px;
+    font-size: 16px;
+  }
+}
