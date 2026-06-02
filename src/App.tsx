@@ -1,8 +1,7 @@
-import './index.css';
-import TestCard from "./pages/TestCard.tsx";
+import BoardPage from "./pages/BoardPage";
 
 function App() {
-  return <TestCard />;
+  return <BoardPage />;
 }
 
 export default App;
