@@ -58,11 +58,7 @@ const footerLinks = [
     label: "سوالات متداول",
     icon: <CircleHelp aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
   },
-  {
-    href: "#",
-    label: "ارتباط با ما",
-    icon: <Mail aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
-  },
+  
 ];
 
 export default function Footer() {
