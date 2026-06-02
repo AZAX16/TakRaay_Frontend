@@ -133,13 +133,14 @@
 .tak-footer-copy,
 .tak-footer-brand {
   flex-direction: column;
-  gap: 30px;
+  gap: 25px;
   text-align: center;
 }
 
 .tak-footer-copy-detail,
 .tak-footer-logo-caption {
   line-height: 1.75;
+  padding-bottom: 16px;
   opacity: 0.9;
 }
 
