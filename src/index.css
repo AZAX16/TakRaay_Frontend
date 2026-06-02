@@ -63,6 +63,15 @@ textarea {
   transition: color 0.3s ease;
 }
 
+.faq-frame-bg {
+  background-image:
+    linear-gradient(rgba(247, 248, 252, 0.78), rgba(247, 248, 252, 0.78)),
+    url("/images/faq-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 /* Dark mode trigger from Header */
 body:has(.tak-header.is-night-mode) {
   --tak-page: var(--app-page-dark);
