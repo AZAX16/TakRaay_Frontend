@@ -5,7 +5,7 @@ import { Button, SegmentButton } from '../components/ui-kit/Button';
 // import Checkbox from "../components/CheckBox";
 import api from '../services/api';
 import ForgotPasswordModal from "../components/forgot-password/ForgotPasswordModal";
-import {getSignupErrorMessage, getLoginErrorMessage} from '../utils/apiErrors';
+import {getSignupErrorMessage, getLoginErrorMessage} from '../utils/SignupApiErrors';
 import ErrorModal from '../components/modals/ErrorModal';
 
 
@@ -205,8 +205,12 @@ export default function SignupPage() {
 
       console.log("Success:", response.data);
 
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
+      if (response.data.access && response.data.refresh) {
+        localStorage.setItem("access_token", response.data.access);
+        localStorage.setItem("refresh_token", response.data.refresh);
+      }
+      else{
+        showError("خطا در ورود")
       }
 
       alert("ورود با موفقیت انجام شد.");
@@ -218,13 +222,23 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
+  const handlePhoneChange = (e) => {
+    let value = e.target.value;
+    value = normalizeDigits(value); 
+    value = value.replace(/\D/g, '');
+
+    if (value.length <= 11) {
+      setPhone(value);
+    }
+  };
+
 
   return (
     <div
-      className="min-h-screen w-full bg-[url('/images/background3.jpg')] flex items-center justify-center p-4 font-sans"
+      className="min-h-screen w-full bg-[url('/images/background3.jpg')] bg-cover bg-center bg-no-repeat flex items-center justify-center p-4 font-sans"
       dir="rtl"
     >
-      <div className="w-[450px] min-h-[500px] bg-white rounded-[20px] shadow-lg flex flex-col items-center py-8 px-6">
+      <div className="w-full max-w-md min-h-[500px] bg-white rounded-[20px] shadow-lg flex flex-col items-center py-8 px-6">
 
         {/* Toggles */}
         <div className="flex flex-col items-center gap-4 mb-8">
@@ -252,8 +266,9 @@ export default function SignupPage() {
                 type="tel"
                 value={phone}
                 placeholder='۰۹۱۲۳۴۵۶۷۸۹'
+                maxLength={11}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setPhone(e.target.value);
+                  handlePhoneChange(e);
                   setPhoneError("");
                 }}
               />
@@ -371,8 +386,9 @@ export default function SignupPage() {
                 type="tel"
                 value={phone}
                 placeholder='۰۹۱۲۳۴۵۶۷۸۹'
+                maxLength={11}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setPhone(e.target.value);
+                  handlePhoneChange(e);
                   setPhoneError("");
                 }}
               />
