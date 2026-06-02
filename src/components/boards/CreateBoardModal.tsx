@@ -121,19 +121,25 @@ const CreateBoardModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="ساخت برد جدید">
-      <form onSubmit={handleSubmit} className="w-[315px] space-y-5" dir="rtl">
+      <form
+        onSubmit={handleSubmit}
+        className="mx-auto w-full max-w-[395px] space-y-5"
+        dir="rtl"
+      >
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-[#387FA3]">
             نام برد
           </label>
 
-          <Input
-            variant="grayLarge"
-            placeholder="نام برد را وارد کنید"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            ariaLabel="نام برد"
-          />
+          <div className="w-full [&_input]:!w-full [&_input]:!max-w-full">
+            <Input
+              variant="grayLarge"
+              placeholder="نام برد را وارد کنید"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              ariaLabel="نام برد"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -145,8 +151,10 @@ const CreateBoardModal = ({
             dir={isDescriptionLeftAligned ? "ltr" : "rtl"}
             placeholder="توضیحات برد را وارد کنید"
             value={description}
-            onChange={(event) => setDescription(toPersianDigits(event.target.value))}
-            className={`h-[90px] w-[300px] resize-none rounded-[10px] border-none bg-[#EFEFEF] px-4 py-3 text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:cursor-not-allowed disabled:opacity-50 ${
+            onChange={(event) =>
+              setDescription(toPersianDigits(event.target.value))
+            }
+            className={`h-[110px] w-full resize-none rounded-[10px] border-none bg-[#EFEFEF] px-4 py-3 text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:cursor-not-allowed disabled:opacity-50 ${
               isDescriptionLeftAligned ? "text-left" : "text-right"
             }`}
             aria-label="توضیحات برد"
@@ -184,7 +192,7 @@ const CreateBoardModal = ({
             variant="pillDark"
             loading={isSubmitting}
             disabled={!title.trim() || isSubmitting}
-            className="!w-[200px] !h-[45px] !text-[16px]"
+            className="!h-[45px] !w-full !max-w-[250px] !text-[16px]"
           >
             ساخت
           </Button>
