@@ -1,4 +1,5 @@
 import Header from "../components/Header/Header";
+import Footer from "../components/Footer/Footer";
 import TeamSection from "../components/about/TeamSection";
 import AboutSidePanel from "../components/about/AboutSidePanel";
 
@@ -44,11 +45,11 @@ const AboutUsPage = () => {
   return (
     <div
       dir="rtl"
-      className="about-page min-h-screen text-right transition-colors duration-300"
+      className="about-page flex min-h-screen flex-col text-right transition-colors duration-300"
     >
       <Header />
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
           <aside className="flex w-full shrink-0 flex-col lg:w-[330px]">
             <div className="about-section-title mb-4 flex h-7 items-center justify-start gap-2">
@@ -134,11 +135,13 @@ const AboutUsPage = () => {
           </section>
         </div>
 
-        <div className="mt-8 flex items-center justify-start gap-2 rounded-2xl bg-[#B8EAED] px-5 py-4 text-right text-lg font-bold text-[#E07D73]">
+        {/* <div className="mt-8 flex items-center justify-start gap-2 rounded-2xl bg-[#B8EAED] px-5 py-4 text-right text-lg font-bold text-[#E07D73]">
           <HeartIcon />
           <span>از انتخاب کاربورد سپاسگزاریم!</span>
-        </div>
+        </div> */}
       </main>
+
+      <Footer />
     </div>
   );
 };
