@@ -6,9 +6,14 @@ export default {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ["Vazirmatn", "sans-serif"],
+      colors: {
+        takraay: {
+          footer: '#0081a7'
+        }
       },
+      fontFamily: {
+        sans: ['Vazirmatn', 'sans-serif'],
+      }
     },
   },
   plugins: [],

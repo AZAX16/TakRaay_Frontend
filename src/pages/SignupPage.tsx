@@ -222,7 +222,7 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
-  const handlePhoneChange = (e) => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
     value = normalizeDigits(value); 
     value = value.replace(/\D/g, '');
@@ -261,12 +261,10 @@ export default function SignupPage() {
                 شماره موبایل خود را وارد کنید:
               </label>
               <Input
-                dir="ltr"
                 variant="grayLarge"
                 type="tel"
                 value={phone}
                 placeholder='۰۹۱۲۳۴۵۶۷۸۹'
-                maxLength={11}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   handlePhoneChange(e);
                   setPhoneError("");
@@ -381,12 +379,10 @@ export default function SignupPage() {
                 شماره موبایل:
               </label>
               <Input
-                dir="ltr"
                 variant="grayLarge"
                 type="tel"
                 value={phone}
                 placeholder='۰۹۱۲۳۴۵۶۷۸۹'
-                maxLength={11}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   handlePhoneChange(e);
                   setPhoneError("");
