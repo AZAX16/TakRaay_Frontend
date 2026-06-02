@@ -1,20 +1,11 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}"
   ],
   theme: {
-    extend: {
-      colors: {
-        takraay: {
-          footer: '#0081a7'
-        }
-      },
-      fontFamily: {
-        sans: ['Vazirmatn', 'sans-serif'],
-      }
-    },
+    extend: {},
   },
   plugins: [],
-};
+}
