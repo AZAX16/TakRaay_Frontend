@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { MoonStar } from "lucide-react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { MoonStar, PanelsTopLeft } from "lucide-react";
 import { Button, ToggleSwitch } from "../ui-kit/Button";
 import { SearchInput } from "../ui-kit/Input";
+
 import {
   fetchHeaderBoards,
   fetchHeaderProfile,
@@ -18,6 +20,11 @@ const compactSearchQuery = "(max-width: 980px)";
 function getBoardTitle(board: HeaderBoardResponse): string {
   if (typeof board === "string") return board;
   return board.name || board.title || String(board.id || "");
+}
+
+function getBoardId(board: HeaderBoardResponse): string {
+  if (typeof board === "string") return "";
+  return board.id ? String(board.id) : "";
 }
 
 function getBoardKey(board: HeaderBoardResponse, index: number): string {
@@ -84,19 +91,19 @@ function UserIcon() {
   );
 }
 
-function HomeIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M4 10.8L12 4L20 10.8V20H6.5V13.5H11V20"
-        fill="none"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
+// function HomeIcon() {
+//   return (
+//     <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+//       <path
+//         d="M4 10.8L12 4L20 10.8V20H6.5V13.5H11V20"
+//         fill="none"
+//         stroke="currentColor"
+//         strokeLinejoin="round"
+//         strokeWidth="1.8"
+//       />
+//     </svg>
+//   );
+// }
 
 function HelpIcon() {
   return (
@@ -121,22 +128,68 @@ function HelpIcon() {
   );
 }
 
+function AboutIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <circle
+        cx="12"
+        cy="7.5"
+        r="3.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M6 20C6.9 16.8 9 15.2 12 15.2C15 15.2 17.1 16.8 18 20"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M4 5.5C3.1 6.7 2.5 8.2 2.5 10C2.5 11.7 3 13.2 4 14.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M20 5.5C20.9 6.7 21.5 8.2 21.5 10C21.5 11.7 21 13.2 20 14.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
 export default function Header() {
+  const navigate = useNavigate();
+
   const [activeBoard, setActiveBoard] = useState(defaultBoardLabel);
   const [boards, setBoards] = useState<HeaderBoardResponse[]>([]);
   const [isBoardsLoading, setIsBoardsLoading] = useState(true);
   const [boardsError, setBoardsError] = useState("");
   const [profile, setProfile] = useState<HeaderProfile | null>(null);
+
   const [isSearchOpen, setIsSearchOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     return !window.matchMedia(compactSearchQuery).matches;
   });
+
   const [isBoardOpen, setIsBoardOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+
   const headerRef = useRef<HTMLDivElement | null>(null);
+
+  const closeMenus = () => {
+    setIsBoardOpen(false);
+    setIsMenuOpen(false);
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -144,13 +197,16 @@ export default function Header() {
     async function loadBoards() {
       setIsBoardsLoading(true);
       setBoardsError("");
+
       try {
         const boardData = await fetchHeaderBoards();
 
         if (ignore) return;
 
         const nextBoards = boardData.filter((board) => getBoardTitle(board));
+
         setBoards(nextBoards);
+
         setActiveBoard((currentBoard) => {
           const currentExists = nextBoards.some(
             (board) => getBoardTitle(board) === currentBoard,
@@ -158,7 +214,9 @@ export default function Header() {
 
           if (currentExists) return currentBoard;
 
-          return nextBoards[0] ? getBoardTitle(nextBoards[0]) : defaultBoardLabel;
+          return nextBoards[0]
+            ? getBoardTitle(nextBoards[0])
+            : defaultBoardLabel;
         });
       } catch {
         if (!ignore) {
@@ -190,6 +248,7 @@ export default function Header() {
 
   useEffect(() => {
     const compactSearchMedia = window.matchMedia(compactSearchQuery);
+
     const syncSearchLayout = () => {
       setIsSearchOpen(!compactSearchMedia.matches);
     };
@@ -209,193 +268,250 @@ export default function Header() {
         headerRef.current &&
         !headerRef.current.contains(event.target)
       ) {
-        setIsBoardOpen(false);
-        setIsMenuOpen(false);
+        closeMenus();
       }
     }
 
     document.addEventListener("mousedown", closeFloatingPanels);
-    return () => document.removeEventListener("mousedown", closeFloatingPanels);
+
+    return () => {
+      document.removeEventListener("mousedown", closeFloatingPanels);
+    };
   }, []);
 
-  return (
+    return (
     <>
       <header
-        className={`tak-header ${isNightMode ? "is-night-mode" : ""} bg-[var(--tak-page)] text-[var(--tak-text)]`}
+        className={`tak-header ${
+          isNightMode ? "is-night-mode" : ""
+        } bg-[var(--tak-page)] text-[var(--tak-text)]`}
         dir="rtl"
       >
         <div
-          className={`tak-header-stage ${isSearchOpen ? "is-search-open" : ""}`}
+          className={`tak-header-stage ${
+            isSearchOpen ? "is-search-open" : ""
+          }`}
           ref={headerRef}
         >
-        <Button
-          variant="doubleCircleSearch"
-          aria-label={isSearchOpen ? "بستن جستجو" : "باز کردن جستجو"}
-          aria-controls="tak-header-search"
-          aria-expanded={isSearchOpen}
-          className="tak-search-orb"
-          onClick={() => {
-            setIsSearchOpen((open) => !open);
-            setIsBoardOpen(false);
-            setIsMenuOpen(false);
-          }}
-        />
+          <Button
+            variant="doubleCircleSearch"
+            aria-label={isSearchOpen ? "بستن جستجو" : "باز کردن جستجو"}
+            aria-controls="tak-header-search"
+            aria-expanded={isSearchOpen}
+            className="tak-search-orb"
+            onClick={() => {
+              setIsSearchOpen((open) => !open);
+              closeMenus();
+            }}
+          />
 
-        <div className="tak-header-pill">
-          <div
-            id="tak-header-search"
-            className={`tak-search-wrapper flex overflow-hidden transition-all duration-[360ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]${isSearchOpen ? " is-open" : ""}`}
-          >
-            <SearchInput
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="جستجو"
-              ariaLabel="جستجو"
-            />
-          </div>
-
-          <div className="tak-board" dir="rtl">
-            <button
-              className="tak-board-button"
-              type="button"
-              aria-expanded={isBoardOpen}
-              onClick={() => {
-                setIsBoardOpen((open) => !open);
-                setIsMenuOpen(false);
-              }}
+          <div className="tak-header-pill">
+            <div
+              id="tak-header-search"
+              className={`tak-search-wrapper flex overflow-hidden transition-all duration-[360ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]${
+                isSearchOpen ? " is-open" : ""
+              }`}
             >
-              <ChevronDownIcon />
-              <span>{activeBoard}</span>
-            </button>
+              <SearchInput
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                placeholder="جستجو"
+                ariaLabel="جستجو"
+              />
+            </div>
 
-            {isBoardOpen && (
-              <div className="tak-dropdown tak-board-dropdown">
-                {isBoardsLoading && (
-                  <div className="tak-dropdown-state">در حال بارگذاری...</div>
-                )}
+            <div className="tak-board" dir="rtl">
+              <button
+                className="tak-board-button"
+                type="button"
+                aria-expanded={isBoardOpen}
+                onClick={() => {
+                  setIsBoardOpen((open) => !open);
+                  setIsMenuOpen(false);
+                }}
+              >
+                <ChevronDownIcon />
+                <span>{activeBoard}</span>
+              </button>
 
-                {!isBoardsLoading && boardsError && (
-                  <div className="tak-dropdown-state">{boardsError}</div>
-                )}
+              {isBoardOpen && (
+                <div className="tak-dropdown tak-board-dropdown">
+                  {isBoardsLoading && (
+                    <div className="tak-dropdown-state">
+                      در حال بارگذاری...
+                    </div>
+                  )}
 
-                {!isBoardsLoading && !boardsError && boards.length === 0 && (
-                  <div className="tak-dropdown-state">بردی پیدا نشد</div>
-                )}
+                  {!isBoardsLoading && boardsError && (
+                    <div className="tak-dropdown-state">{boardsError}</div>
+                  )}
 
-                {!isBoardsLoading &&
-                  !boardsError &&
-                  boards.map((board, index) => {
-                    const boardTitle = getBoardTitle(board);
+                  {!isBoardsLoading && !boardsError && boards.length === 0 && (
+                    <div className="tak-dropdown-state">بردی پیدا نشد</div>
+                  )}
 
-                    return (
-                      <button
-                        className={`tak-dropdown-item ${
-                          boardTitle === activeBoard ? "is-active" : ""
-                        }`}
-                        key={getBoardKey(board, index)}
-                        type="button"
-                        onClick={() => {
-                          setActiveBoard(boardTitle);
-                          setIsBoardOpen(false);
-                        }}
-                      >
-                        {boardTitle}
-                      </button>
-                    );
-                  })}
-              </div>
-            )}
-          </div>
+                  {!isBoardsLoading &&
+                    !boardsError &&
+                    boards.map((board, index) => {
+                      const boardTitle = getBoardTitle(board);
+                      const boardId = getBoardId(board);
 
-          <a className="tak-logo" href="/" aria-label="کاربورد">
-            <img className="tak-logo-image" src={logoUrl} alt="" />
-          </a>
+                      return (
+                        <button
+                          className={`tak-dropdown-item ${
+                            boardTitle === activeBoard ? "is-active" : ""
+                          }`}
+                          key={getBoardKey(board, index)}
+                          type="button"
+                          onClick={() => {
+                            setActiveBoard(boardTitle);
+                            closeMenus();
 
-          <div className="tak-menu-wrap">
-            <button
-              className="tak-menu-button"
-              type="button"
-              aria-expanded={isMenuOpen}
-              aria-label="باز کردن منو"
-              onClick={() => {
-                setIsMenuOpen((open) => !open);
-                setIsBoardOpen(false);
-              }}
-            >
-              <MenuIcon />
-            </button>
+                            if (boardId) {
+                              navigate(`/boards/${boardId}`);
+                            } else {
+                              navigate("/boards");
+                            }
+                          }}
+                        >
+                          {boardTitle}
+                        </button>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
 
-            {isMenuOpen && (
-              <div className="tak-menu-popover">
-                <div className="tak-menu-section tak-menu-section-static">
-                  <a className="tak-menu-row" href="#">
-                    <span className="tak-menu-icon-slot">
-                      <UserIcon />
-                    </span>
-                    <span className="tak-menu-label">داشبورد</span>
-                    <span className="tak-menu-arrow">
-                      <ArrowIcon />
-                    </span>
-                  </a>
-                  <a className="tak-menu-row" href="#">
-                    <span className="tak-menu-icon-slot">
-                      <HomeIcon />
-                    </span>
-                    <span className="tak-menu-label">بورد های من</span>
-                    <span className="tak-menu-arrow">
-                      <ArrowIcon />
-                    </span>
-                  </a>
-                  <a className="tak-menu-row" href="#">
-                    <span className="tak-menu-icon-slot">
-                      <HelpIcon />
-                    </span>
-                    <span className="tak-menu-label">سوالات متداول</span>
-                    <span className="tak-menu-arrow">
-                      <ArrowIcon />
-                    </span>
-                  </a>
+            <Link className="tak-logo" to="/about-us" aria-label="کاربورد">
+              <img className="tak-logo-image" src={logoUrl} alt="" />
+            </Link>
 
-                  <div className="tak-menu-row tak-night-row">
-                    <span className="tak-menu-icon-slot">
-                      <MoonStar aria-hidden="true" size={22} strokeWidth={2.2} />
-                    </span>
-                    <span className="tak-menu-label">حالت شب/روز</span>
-                    <ToggleSwitch
-                      checked={isNightMode}
-                      onChange={setIsNightMode}
-                      aria-label="تغییر حالت شب/روز"
-                    />
+            <div className="tak-menu-wrap">
+              <button
+                className="tak-menu-button"
+                type="button"
+                aria-expanded={isMenuOpen}
+                aria-label="باز کردن منو"
+                onClick={() => {
+                  setIsMenuOpen((open) => !open);
+                  setIsBoardOpen(false);
+                }}
+              >
+                <MenuIcon />
+              </button>
+
+              {isMenuOpen && (
+                <div className="tak-menu-popover">
+                  <div className="tak-menu-section tak-menu-section-static">
+                    <NavLink
+                      to="/dashboard"
+                      className={({ isActive }) =>
+                        `tak-menu-row ${isActive ? "is-active" : ""}`
+                      }
+                      onClick={closeMenus}
+                    >
+                      <span className="tak-menu-icon-slot">
+                        <UserIcon />
+                      </span>
+                      <span className="tak-menu-label">داشبورد</span>
+                      <span className="tak-menu-arrow">
+                        <ArrowIcon />
+                      </span>
+                    </NavLink>
+
+                    <NavLink
+                      to="/boards"
+                      className={({ isActive }) =>
+                        `tak-menu-row ${isActive ? "is-active" : ""}`
+                      }
+                      onClick={closeMenus}
+                    >
+                      <span className="tak-menu-icon-slot">
+                        <PanelsTopLeft
+                          aria-hidden="true"
+                          size={22}
+                          strokeWidth={2.2}
+                        />
+                      </span>
+                      <span className="tak-menu-label">بردهای من</span>
+                      <span className="tak-menu-arrow">
+                        <ArrowIcon />
+                      </span>
+                    </NavLink>
+
+                    <NavLink
+                      to="/faq"
+                      className={({ isActive }) =>
+                        `tak-menu-row ${isActive ? "is-active" : ""}`
+                      }
+                      onClick={closeMenus}
+                    >
+                      <span className="tak-menu-icon-slot">
+                        <HelpIcon />
+                      </span>
+                      <span className="tak-menu-label">سوالات متداول</span>
+                      <span className="tak-menu-arrow">
+                        <ArrowIcon />
+                      </span>
+                    </NavLink>
+
+                    <NavLink
+                      to="/about-us"
+                      className={({ isActive }) =>
+                        `tak-menu-row ${isActive ? "is-active" : ""}`
+                      }
+                      onClick={closeMenus}
+                    >
+                      <span className="tak-menu-icon-slot">
+                        <AboutIcon />
+                      </span>
+                      <span className="tak-menu-label">درباره ما</span>
+                      <span className="tak-menu-arrow">
+                        <ArrowIcon />
+                      </span>
+                    </NavLink>
+
+                    <div className="tak-menu-row tak-night-row">
+                      <span className="tak-menu-icon-slot">
+                        <MoonStar
+                          aria-hidden="true"
+                          size={22}
+                          strokeWidth={2.2}
+                        />
+                      </span>
+                      <span className="tak-menu-label">حالت شب/روز</span>
+                      <ToggleSwitch
+                        checked={isNightMode}
+                        onChange={setIsNightMode}
+                        aria-label="تغییر حالت شب/روز"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
 
-        <Button
-          variant="doubleCircle"
-          className="tak-profile"
-          aria-label="پروفایل"
-          aria-haspopup="dialog"
-          aria-expanded={isProfileOpen}
-          onClick={() => {
-            setIsProfileOpen(true);
-            setIsBoardOpen(false);
-            setIsMenuOpen(false);
-          }}
-        >
-          <span className="tak-profile-photo">
-            {profile?.avatarUrl ? (
-              <img src={profile.avatarUrl} alt="" />
-            ) : (
-              <>
-                <span className="tak-profile-face" />
-                <span className="tak-profile-shirt" />
-              </>
-            )}
-          </span>
-        </Button>
+          <Button
+            variant="doubleCircle"
+            className="tak-profile"
+            aria-label="پروفایل"
+            onClick={() => {
+              setIsProfileOpen(true);
+              closeMenus();
+            }}
+          >
+            <span className="tak-profile-photo">
+              {profile?.avatarUrl ? (
+                <img src={profile.avatarUrl} alt="" />
+              ) : (
+                <>
+                  <span className="tak-profile-face" />
+                  <span className="tak-profile-shirt" />
+                </>
+              )}
+            </span>
+          </Button>
         </div>
       </header>
 

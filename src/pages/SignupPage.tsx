@@ -7,9 +7,11 @@ import api from '../services/api';
 import ForgotPasswordModal from "../components/forgot-password/ForgotPasswordModal";
 import {getSignupErrorMessage, getLoginErrorMessage} from '../utils/SignupApiErrors';
 import ErrorModal from '../components/modals/ErrorModal';
+import { useNavigate } from "react-router-dom";
 
 
 export default function SignupPage() {
+  const navigate = useNavigate();
   const [authType, setAuthType] = useState<"signup" | "login">("signup");
   
   const [phone, setPhone] = useState<string>("");
@@ -145,10 +147,9 @@ export default function SignupPage() {
     const normalizedOtp = normalizeDigits(otpValues.join(""));
 
     if (normalizedOtp.length !== 6) {
-    setOtpError("کد تایید باید ۶ رقم باشد.");
-    return;
+      setOtpError("کد تایید باید ۶ رقم باشد.");
+      return;
     }
-
 
     setPasswordError("");
     setOtpError("");
@@ -156,69 +157,79 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-    // Send register request
-    const response = await api.post("/auth/register/", {
-      phone: normalizedPhone,
-      otp: normalizedOtp,
-      password: password,
-      confirm_password: confirmPassword,
-    });
+      const response = await api.post("/auth/register/", {
+        phone: normalizedPhone,
+        otp: normalizedOtp,
+        password: password,
+        confirm_password: confirmPassword,
+      });
 
-    console.log("Success:", response.data);
+      console.log("Signup success:", response.data);
 
-    alert("ثبت نام با موفقیت انجام شد.");
-
+      setAuthType("login");
+      setPassword("");
+      setConfirmPassword("");
+      setOtpValues(["", "", "", "", "", ""]);
+      setOtpSendMessage("");
+      setOtpError("");
+      setPasswordError("");
     } catch (error: unknown) {
-      showError(getSignupErrorMessage(error))
-    } finally{
+      showError(getSignupErrorMessage(error));
+    } finally {
       setLoading(false);
     }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // validate phone
+
     const phoneErr = validatePhone(phone);
     if (phoneErr) {
       setPhoneError(phoneErr);
       return;
     }
 
-    // validate password
     const error = validatePassword(password);
     if (error) {
       setPasswordError(error);
       return;
     }
+
     const normalizedPhone = normalizeDigits(phone);
 
     setPhoneError("");
+    setPasswordError("");
     setLoading(true);
 
     try {
-      // 3) Send request to backend
       const response = await api.post("/auth/login/", {
         phone: normalizedPhone,
         password: password,
       });
 
-      console.log("Success:", response.data);
+      console.log("Login success:", response.data);
 
-      if (response.data.access && response.data.refresh) {
-        localStorage.setItem("access_token", response.data.access);
-        localStorage.setItem("refresh_token", response.data.refresh);
+      const accessToken =
+        response.data.access ||
+        response.data.access_token ||
+        response.data.token;
+
+      const refreshToken =
+        response.data.refresh ||
+        response.data.refresh_token;
+
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
       }
-      else{
-        showError("خطا در ورود")
+
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
       }
 
-      alert("ورود با موفقیت انجام شد.");
-
+      navigate("/dashboard", { replace: true });
     } catch (error: unknown) {
-      showError(getLoginErrorMessage(error))
-    }
-    finally {
+      showError(getLoginErrorMessage(error));
+    } finally {
       setLoading(false);
     }
   };

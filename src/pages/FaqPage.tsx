@@ -17,7 +17,7 @@ const FaqPage = () => {
             سوالات متداول:
           </h1>
 
-          <div className="faq-scroll max-h-[470px] overflow-y-auto pl-0">
+          <div className="faq-scroll max-h-[470px] overflow-y-auto pl-2">
             <div className="space-y-3">
               {faqData.map((item) => (
                 <FaqItem key={item.id} item={item} />

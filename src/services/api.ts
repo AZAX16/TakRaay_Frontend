@@ -9,12 +9,12 @@ const api = axios.create({
 
 // اضافه کردن token به هر request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem("access_token");
+
   if (token) {
-    config.headers.Authorization = token.startsWith("Bearer ")
-      ? token
-      : `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
