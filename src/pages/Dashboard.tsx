@@ -100,22 +100,22 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#efefef] flex flex-col font-sans dir-rtl">
+    <div className="dashboard-page min-h-screen flex flex-col font-sans dir-rtl">
       {/* هدر */}
       <Header />
 
       {/* محتوای اصلی */}
-      <main className="flex-grow p-8 flex flex-col">
-        <div className="max-w-[1400px] mx-auto w-full flex-grow flex gap-6 lg:flex-row h-auto">
+      <main className="flex-grow px-4 py-6 sm:px-6 lg:p-8 flex flex-col">
+        <div className="max-w-[1400px] mx-auto w-full flex-grow flex flex-col gap-6 lg:flex-row h-auto">
           
           {/* ستون راست: اطلاعات شخصی */}
-          <section className="flex-1 flex flex-col h-full">
-            <h2 className="text-xl font-bold text-black mb-4 text-right mr-4">داشبورد</h2>
-            <div className="bg-white rounded-2xl shadow-sm flex-1 p-6 flex flex-col overflow-y-visible mb-4">
+          <section className="w-full flex flex-col lg:flex-1 lg:h-full">
+            <h2 className="dashboard-page-title text-xl font-bold mb-4 text-right mr-4">داشبورد</h2>
+            <div className="dashboard-surface rounded-2xl shadow-sm flex-1 p-4 sm:p-6 flex flex-col overflow-y-visible mb-4">
 
             {profile ? (
               <div className="flex flex-col gap-2">
-                <div className="flex flex-row items-center gap-6">
+                <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
                   <div className="w-[100px] h-[100px] shrink-0 rounded-full border-4 border-[#b8eaed] overflow-hidden mb-2">
                     {profile?.profile?.avatar? (
                       <img src={`https://karboard.chbkn.run${profile.profile.avatar}`} alt="Profile" className="w-full h-full object-cover" />
@@ -169,9 +169,9 @@ export default function Dashboard() {
           </section>
 
           {/* ستون وسط: در دست انجام */}
-          <section className="flex-1 flex flex-col">
-            <h2 className="text-xl font-bold text-black mb-4 text-right mr-4">در دست انجام</h2>
-            <div className="bg-white rounded-2xl shadow-sm flex-1 p-6 flex flex-col overflow-y-visible mb-4">
+          <section className="w-full flex flex-col lg:flex-1">
+            <h2 className="dashboard-page-title text-xl font-bold mb-4 text-right mr-4">در دست انجام</h2>
+            <div className="dashboard-surface rounded-2xl shadow-sm flex-1 p-4 sm:p-6 flex flex-col overflow-y-visible mb-4">
               <div className="flex-grow overflow-y-auto">
                 {inProgressTasks.length === 0 ? (
                     <p className="text-gray-400 text-sm text-center">
@@ -187,9 +187,9 @@ export default function Dashboard() {
           </section>
 
           {/* ستون چپ: برای انجام */}
-          <section className="flex-1 flex flex-col">
-            <h2 className="text-xl font-bold text-black mb-4 text-right mr-4">برای انجام</h2>
-            <div className="bg-white rounded-2xl shadow-sm flex-1 p-6 flex flex-col overflow-y-visible mb-4">
+          <section className="w-full flex flex-col lg:flex-1">
+            <h2 className="dashboard-page-title text-xl font-bold mb-4 text-right mr-4">برای انجام</h2>
+            <div className="dashboard-surface rounded-2xl shadow-sm flex-1 p-4 sm:p-6 flex flex-col overflow-y-visible mb-4">
               <div className="flex-grow overflow-y-auto task-scrollbar">
                 {todoTasks.length === 0 ? (
                     <p className="text-gray-400 text-sm text-center">
@@ -223,3 +223,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
