@@ -1,5 +1,5 @@
 {
-  "name": "takraay",
+  "name": "karboard-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "lucide-react": "^0.478.0",
     "@date-io/date-fns-jalali": "^3.2.0",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
@@ -20,7 +21,6 @@
     "@mui/x-date-pickers": "^9.3.0",
     "axios": "^1.16.1",
     "date-fns-jalali": "^3.2.0-0",
-    "lucide-react": "^0.478.0",
     "react": "^19.2.6",
     "react-date-object": "^2.1.9",
     "react-dom": "^19.2.6",
