@@ -24,7 +24,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             ✕
           </button>
         </div>
-        <div className="p-5 text-[#387FA3] max-w-[800px] min-w-[175px]">
+        <div className="p-5 text-[#387FA3] max-w-[600px] min-w-[175px]">
           {children}
         </div>
       </div>
