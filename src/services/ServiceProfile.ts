@@ -15,7 +15,6 @@ export const getProfile = async (): Promise<Profile> => {
   return response.data;
 };
 
-// تابع برای گرفتن پروفایل عضو دیگر در یک پروژه
 export const getMemberProfile = async (projectId: string, userId: string): Promise<Profile> => {
   const response = await api.get(`/projects/${projectId}/members/${userId}/profile/`);
   return response.data;
