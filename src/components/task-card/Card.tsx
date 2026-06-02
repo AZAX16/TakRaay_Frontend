@@ -3,61 +3,104 @@ import { FiTrash2 } from "react-icons/fi";
 import defaultProfile from "../../assets/default-profile-picture.jpeg";
 import CustomeDatePicker from "../calender/DatePicker";
 
-
-
 type Member = {
   id: number;
   name: string;
-  image?: string;
+  image?: string | null;
+};
+
+type ApiMember = {
+  id: number;
+  full_name: string;
+  avatar: string | null;
 };
 
 type CardProps = {
-  title?: string;
-  tag?: string;
-  description?: string;
+  title?: string | null;
+  labels?: string | null;
+  description?: string | null;
+  status?: string | null;
+  assigned_to?: ApiMember[] | null;
+  available_members?: ApiMember[] | null;
   date?: string;
   onDelete?: () => void;
 };
 
-const allMembers: Member[] = [
-  { id: 1, name: "محیا معینی", image: "" },
-  { id: 2, name: "علیرضا پویان", image: "" },
-  { id: 3, name: "زینب فلاحی", image: "" },
-  { id: 4, name: "امین شیروانی", image: "" },
-  { id: 5, name: "نرگس طایفی", image: "" },
-  { id: 6, name: "محدثه واحدی", image: "" },
-  { id: 7, name: "حسین مجیدی", image: "" },
-  { id: 8, name: "یکتا شریفپور", image: "" },
-];
-
 export default function Card({
-  title = "دیزاین صفحه لاگین",
-  tag = "فرانت-اند",
-  description = "طراحی تمامی مراحل login و signup شامل تمام جزئیات مربوط به ارسال رمز یکبار مصرف و فراموشی رمز و...",
+  title,
+  labels,
+  description,
+  status,
+  assigned_to,
+  available_members,
+  date,
   onDelete,
 }: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [taskTitle, setTaskTitle] = useState(title);
-  const [taskTag, setTaskTag] = useState(tag);
-  const [taskDescription, setTaskDescription] = useState(description);
+  const [taskTitle, setTaskTitle] = useState(title ?? "...");
+  const [taskTag, setTaskTag] = useState(labels ?? "...");
+  const [taskDescription, setTaskDescription] = useState(description ?? "...");
   const [taskDate, setTaskDate] = useState(new Date());
-  const [status, setStatus] = useState("برای انجام");
-  const [members, setMembers] = useState<Member[]>([
-    allMembers[0],
-    allMembers[1],
-    allMembers[2],
-    allMembers[3],
-    allMembers[4],
-  ]);
+  const [taskStatus, setTaskStatus] = useState("برای انجام");
+  const [members, setMembers] = useState<Member[]>([]);
+
+  useEffect(() => {
+    setTaskTitle(title ?? "...");
+  }, [title]);
+
+  useEffect(() => {
+    setTaskTag(labels ?? "...");
+  }, [labels]);
+
+  useEffect(() => {
+    setTaskDescription(description ?? "...");
+  }, [description]);
+
+  useEffect(() => {
+    const statusMap: Record<string, string> = {
+      todo: "برای انجام",
+      doing: "در دست انجام",
+      review: "برای بررسی",
+      done: "تمام شده",
+    };
+
+    setTaskStatus(
+      status && statusMap[status]
+        ? statusMap[status]
+        : "برای انجام"
+    );
+  }, [status]);
+
+  useEffect(() => {
+    setMembers(
+      (assigned_to ?? []).map((member) => ({
+        id: member.id,
+        name: member.full_name || "...",
+        image: member.avatar,
+      }))
+    );
+
+    setAvailableMembers(
+      (available_members ?? []).map((member) => ({
+        id: member.id,
+        name: member.full_name || "...",
+        image: member.avatar,
+      }))
+    );
+  }, [assigned_to, available_members]);
+
+  useEffect(() => {
+    if (!date) return;
+
+    console.log("date from api:", date);
+  }, [date]);
 
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const memberDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
 
-  const availableMembers = allMembers.filter(
-    (m) => !members.find((x) => x.id === m.id)
-  );
+  const [availableMembers, setAvailableMembers] = useState<Member[]>([]);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -74,11 +117,11 @@ export default function Card({
   }
 
   function getCardColor() {
-    if (status === "برای انجام")
+    if (taskStatus === "برای انجام")
       return { light: "#F3C8C7", dark: "#F07167", text: "#ffffff" };
-    if (status === "در دست انجام")
+    if (taskStatus === "در دست انجام")
       return { light: "#FFFEE8", dark: "#FFFC9C", text: "#9b5930" };
-    if (status === "برای بررسی")
+    if (taskStatus === "برای بررسی")
       return { light: "#B8EAED", dark: "#00AFB9", text: "#ffffff" };
     return { light: "#FEECDB", dark: "#FED9B7", text: "#9b5930" };
   }
@@ -129,7 +172,7 @@ export default function Card({
                 onChange={(e) =>
                   handlePersianInput(setTaskTitle, e.target.value)
                 }
-                className="flex-1 min-w-0 h-[30px] rounded-[10px] border bg-transparent text-right text-[15px] font-[700] outline-none px-[10px] truncate"
+                className="flex-1 min-w-0 h-[30px] rounded-[10px] border bg-transparent text-right text-[14px] font-[700] outline-none px-[10px] truncate"
                 style={{ borderColor: colors.text }}
               />
               <input
@@ -171,7 +214,7 @@ export default function Card({
                   className="w-full h-[30px] rounded-[10px] text-[11px] font-[500]"
                   style={{ background: colors.text, color: colors.dark }}
                 >
-                  {status}
+                  {taskStatus}
                 </button>
                 {showStatusDropdown && isEditing && (
                   <div
@@ -182,7 +225,7 @@ export default function Card({
                       <div
                         key={item}
                         onClick={() => {
-                          setStatus(item);
+                          setTaskStatus(item);
                           setShowStatusDropdown(false);
                         }}
                         className="px-[15px] py-[10px] text-[11px] font-[500] cursor-pointer text-center whitespace-nowrap transition-all duration-200"
@@ -256,7 +299,12 @@ export default function Card({
                   key={member.id}
                   onClick={() => {
                     if (!isEditing) return;
-                    setMembers((prev) => prev.filter((m) => m.id !== member.id));
+
+                    setMembers((prev) =>
+                      prev.filter((m) => m.id !== member.id)
+                    );
+
+                    setAvailableMembers((prev) => [...prev, member]);
                   }}
                   className={`h-[20px] flex items-center justify-between transition-all duration-200 ${
                     isEditing ? "cursor-pointer hover:opacity-70" : "cursor-default"
@@ -284,7 +332,7 @@ export default function Card({
                 <div className="relative mt-[3px] flex justify-center overflow-visible" ref={memberDropdownRef}>
                   <button
                     onClick={() => setShowMemberDropdown(!showMemberDropdown)}
-                    className="w-[65px] h-[30px] rounded-[10px] text-[15px] font-[500] transition-all duration-500 hover:-translate-y-[0.5px]"
+                    className="w-[65px] h-[30px] rounded-[10px] text-[14px] font-[500] transition-all duration-500 hover:-translate-y-[0.5px]"
                     style={{ background: colors.text, color: colors.dark }}
                   >
                     +
@@ -298,7 +346,14 @@ export default function Card({
                         <div
                           key={member.id}
                           onClick={() => {
+                            if (!isEditing) return;
+
                             setMembers((prev) => [...prev, member]);
+
+                            setAvailableMembers((prev) =>
+                              prev.filter((m) => m.id !== member.id)
+                            );
+
                             setShowMemberDropdown(false);
                           }}
                           className="px-[15px] py-[10px] text-[11px] font-[500] cursor-pointer text-center whitespace-nowrap transition-all duration-200"
