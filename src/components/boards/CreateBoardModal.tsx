@@ -123,7 +123,7 @@ const CreateBoardModal = ({
     <Modal isOpen={isOpen} onClose={handleClose} title="ساخت برد جدید">
       <form
         onSubmit={handleSubmit}
-        className="mx-auto w-full max-w-[395px] space-y-5"
+        className="w-[min(315px,calc(100vw-48px))] max-w-full space-y-5"
         dir="rtl"
       >
         <div className="space-y-2">
@@ -131,7 +131,7 @@ const CreateBoardModal = ({
             نام برد
           </label>
 
-          <div className="w-full [&_input]:!w-full [&_input]:!max-w-full">
+          <div className="w-full [&_input]:w-full">
             <Input
               variant="grayLarge"
               placeholder="نام برد را وارد کنید"
@@ -154,7 +154,7 @@ const CreateBoardModal = ({
             onChange={(event) =>
               setDescription(toPersianDigits(event.target.value))
             }
-            className={`h-[110px] w-full resize-none rounded-[10px] border-none bg-[#EFEFEF] px-4 py-3 text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`h-[90px] w-full resize-none rounded-[10px] border-none bg-[#EFEFEF] px-4 py-3 text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:cursor-not-allowed disabled:opacity-50 ${
               isDescriptionLeftAligned ? "text-left" : "text-right"
             }`}
             aria-label="توضیحات برد"
@@ -192,7 +192,7 @@ const CreateBoardModal = ({
             variant="pillDark"
             loading={isSubmitting}
             disabled={!title.trim() || isSubmitting}
-            className="!h-[45px] !w-full !max-w-[250px] !text-[16px]"
+            className="!h-[45px] !w-full !max-w-[200px] !text-[16px]"
           >
             ساخت
           </Button>
