@@ -7,96 +7,132 @@ import {
   Mail,
 } from "lucide-react";
 import karbordLogo from "../../assets/karbord_logo.webp";
+import "./Footer.css";
 
-const footerIconClass = "w-[20px] h-[20px] shrink-0";
+const footerIconClass = "tak-footer-icon";
+
+function XIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="tak-footer-x-icon"
+      viewBox="0 0 1200 1227"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+const socialLinks = [
+  { href: "#", label: "x.com/takraay", icon: <XIcon /> },
+  {
+    href: "#",
+    label: "linkedin.com/takraay",
+    icon: <Linkedin aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+  },
+  {
+    href: "#",
+    label: "instagram.com/takraay",
+    icon: <Instagram aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+  },
+];
+
+const footerLinks = [
+  {
+    href: "#",
+    label: "داشبورد",
+    icon: <LayoutDashboard aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+  },
+  {
+    href: "#",
+    label: "درباره‌ی ما",
+    icon: <Info aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+  },
+  {
+    href: "#",
+    label: "سوالات متداول",
+    icon: <CircleHelp aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+  },
+  {
+    href: "#",
+    label: "ارتباط با ما",
+    icon: <Mail aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-takraay-footer text-white py-10 w-full mt-auto rounded-[32px] mx-4 max-w-[calc(100%-2rem)] md:mx-10 md:max-w-[calc(100%-5rem)] xl:mx-auto xl:max-w-7xl font-sans">
-      <div className="container mx-auto px-4 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-y-10 md:gap-y-0 text-sm">
+    <footer className="tak-footer">
+      <div className="tak-footer-inner">
+        <div className="tak-footer-grid">
+          <section className="tak-footer-section tak-footer-social" aria-label="شبکه‌های اجتماعی">
+            <div className="tak-footer-social-stack">
+              <div className="tak-footer-heading">دنبال کنید:</div>
 
-          {/* Section 1: Socials */}
-          <div className="flex flex-col items-center justify-center w-full md:w-[25%] pr-0 md:pr-4">
-            <div className="w-[235px] h-[164px] flex flex-col items-start justify-between text-[17px]">
-              <div className="font-bold w-full text-right mb-2">دنبال کنید:</div>
-
-              <a href="#" className="flex items-center w-full justify-between hover:opacity-80 transition-opacity flex-row-reverse">
-                <span className="font-sans text-left flex-1" dir="ltr">x.com/takraay</span>
-                {/* Using a placeholder character for X (Twitter) since lucide doesn't have an exact match that looks like the X logo, or we can use Twitter icon */}
-                <div className="w-[20px] h-[20px] flex items-center justify-center ml-2">
-                    <svg width="16" height="16" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="white"/>
-                    </svg>
-                </div>
-              </a>
-
-              <a href="#" className="flex items-center w-full justify-between hover:opacity-80 transition-opacity flex-row-reverse">
-                <span className="font-sans text-left flex-1" dir="ltr">linkedin.com/takraay</span>
-                <div className="w-[20px] h-[20px] flex items-center justify-center ml-2">
-                  <Linkedin aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />
-                </div>
-              </a>
-
-              <a href="#" className="flex items-center w-full justify-between hover:opacity-80 transition-opacity flex-row-reverse">
-                <span className="font-sans text-left flex-1" dir="ltr">instagram.com/takraay</span>
-                <div className="w-[20px] h-[20px] flex items-center justify-center ml-2">
-                  <Instagram aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />
-                </div>
-              </a>
+              <div className="tak-footer-social-links">
+                {socialLinks.map((link) => (
+                  <a
+                    aria-label={link.label}
+                    className="tak-footer-link tak-footer-social-link"
+                    href={link.href}
+                    key={link.label}
+                    title={link.label}
+                  >
+                    <span className="tak-footer-social-text" dir="ltr">
+                      {link.label}
+                    </span>
+                    <span className="tak-footer-icon-box">{link.icon}</span>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div className="hidden md:block w-[5px] h-32 bg-white/50"></div>
+          <div className="tak-footer-divider" aria-hidden="true" />
 
-          {/* Section 2: Copyright */}
-          <div className="flex flex-col items-center justify-center gap-y-4 w-full md:w-[25%] text-center text-[17px]">
-            <div>© ۱۴۰۵ تک‌رای</div>
-            <div className="opacity-90 leading-relaxed">
+          <section className="tak-footer-section tak-footer-copy">
+            <div className="tak-footer-copy-year">© ۱۴۰۵ تک‌رای</div>
+            <div className="tak-footer-copy-detail">
               کلیه حقوق مادی و معنوی
               <br />
               این وب‌سایت برای تیم
               <br />
               تک‌رای محفوظ است.
             </div>
-          </div>
+          </section>
 
-          <div className="hidden md:block w-[5px] h-32 bg-white/50"></div>
+          <div className="tak-footer-divider" aria-hidden="true" />
 
-          {/* Section 3: Logo and subtitle */}
-          <div className="flex flex-col items-center justify-center gap-y-4 w-full md:w-[30%] text-center text-[17px]">
-            <img src={karbordLogo} alt="کاربرد" className="w-[260px] md:w-[300px] object-contain" />
-            <div className="opacity-90 leading-relaxed">
+          <section className="tak-footer-section tak-footer-brand">
+            <img className="tak-footer-logo" src={karbordLogo} alt="کاربرد" />
+            <div className="tak-footer-logo-caption">
               تولید شده توسط تیم تک‌رای
               <br />
               بهار ۱۴۰۵
             </div>
-          </div>
+          </section>
 
-          <div className="hidden md:block w-[5px] h-32 bg-white/50"></div>
+          <div className="tak-footer-divider" aria-hidden="true" />
 
-          {/* Section 4: Links */}
-          <div className="flex flex-col items-center justify-center w-full md:w-[20%] text-[17px]">
-            <div className="flex flex-col items-end gap-y-4">
-              <a href="#" className="flex items-center justify-end gap-x-2 hover:opacity-80 transition-opacity w-full">
-                <span>داشبورد</span>
-                <LayoutDashboard aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />
+          <nav className="tak-footer-section tak-footer-nav" aria-label="پیوندهای پاورقی">
+            {footerLinks.map((link) => (
+              <a
+                aria-label={link.label}
+                className="tak-footer-link tak-footer-nav-link"
+                href={link.href}
+                key={link.label}
+                title={link.label}
+              >
+                <span className="tak-footer-nav-text">{link.label}</span>
+                <span className="tak-footer-icon-box">{link.icon}</span>
               </a>
-              <a href="#" className="flex items-center justify-end gap-x-2 hover:opacity-80 transition-opacity w-full">
-                <span>درباره‌ی ما</span>
-                <Info aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />
-              </a>
-              <a href="#" className="flex items-center justify-end gap-x-2 hover:opacity-80 transition-opacity w-full">
-                <span>سوالات متداول</span>
-                <CircleHelp aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />
-              </a>
-              <a href="#" className="flex items-center justify-end gap-x-2 hover:opacity-80 transition-opacity w-full">
-                <span>ارتباط با ما</span>
-                <Mail aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />
-              </a>
-            </div>
-          </div>
-
+            ))}
+          </nav>
         </div>
       </div>
     </footer>
