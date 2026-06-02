@@ -20,17 +20,6 @@
 
   --tak-page: var(--app-page-light);
   --tak-text: #24344c;
-body {
-  margin: 0;
-  font-family: "Vazirmatn", sans-serif;
-}
-
-.css-1m8qzkt {
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 9999 !important;
 }
 
 html {
@@ -41,6 +30,7 @@ html {
 
 body {
   margin: 0;
+  font-family: "Vazirmatn", sans-serif;
   background-color: var(--app-page-light);
 }
 
@@ -81,7 +71,6 @@ body:has(.tak-header.is-night-mode) {
   background-color: var(--app-page-dark);
 }
 
-body:has(.tak-header.is-night-mode) html,
 body:has(.tak-header.is-night-mode) #root {
   background-color: var(--app-page-dark);
 }
@@ -116,13 +105,13 @@ body:has(.tak-header.is-night-mode) .about-surface {
 body:has(.tak-header.is-night-mode) .about-surface p,
 body:has(.tak-header.is-night-mode) .about-surface span {
   color: #dbeafe;
-.css-137m4ck{
-  border-radius: 25px !important;
 }
 
-  font-family: "Vazirmatn", sans-serif;
+body:has(.tak-header.is-night-mode) .about-surface h3 {
+  color: #f3c8c7;
 }
 
+/* Date picker / modal custom styles */
 .css-1m8qzkt {
   position: absolute !important;
   top: 50% !important;
@@ -131,7 +120,7 @@ body:has(.tak-header.is-night-mode) .about-surface span {
   z-index: 9999 !important;
 }
 
-.css-137m4ck{
+.css-137m4ck {
   border-radius: 25px !important;
 }
 
@@ -139,86 +128,22 @@ body:has(.tak-header.is-night-mode) .about-surface span {
   border-radius: 100% !important;
 }
 
-.zm-IconNextButton{
-    border-radius: 100% !important;
+.zm-IconNextButton {
+  border-radius: 100% !important;
 }
 
-.zm-IconPrevButton{
-    border-radius: 100% !important;
+.zm-IconPrevButton {
+  border-radius: 100% !important;
 }
 
-.zm-YearPickerButton{
-    border-radius: 8px !important;
+.zm-YearPickerButton {
+  border-radius: 8px !important;
 }
-.zm-MonthPickerButton{
-    border-radius: 8px !important;
+
+.zm-MonthPickerButton {
+  border-radius: 8px !important;
 }
 
 .zm-MonthYearButton {
-    border-radius: 8px !important;
-}
-
-body:has(.tak-header.is-night-mode) .about-surface h3 {
-  color: #f3c8c7;
-}
-
-/* About overview icons */
-body:has(.tak-header.is-night-mode) .about-overview-icons svg,
-body:has(.tak-header.is-night-mode) .about-overview-icons p {
-  color: #dbeafe !important;
-}
-
-/* FAQ scrollbar */
-.faq-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #4f6689 #b8eaed;
-}
-
-.faq-scroll::-webkit-scrollbar {
-  width: 10px;
-}
-
-.faq-scroll::-webkit-scrollbar-track {
-  background: #b8eaed;
-  border-radius: 999px;
-}
-
-.faq-scroll::-webkit-scrollbar-thumb {
-  background: #4f6689;
-  border-radius: 999px;
-  border: 2px solid #b8eaed;
-}
-
-.faq-frame {
-  border-color: #4a5575;
-}
-
-body:has(.tak-header.is-night-mode) .faq-frame {
-  border-color: rgba(255, 255, 255, 0.85);
-}
-
-.faq-frame-bg {
-  background-image:
-    linear-gradient(rgba(247, 248, 252, 0.78), rgba(247, 248, 252, 0.78)),
-    url("/images/faq-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-body:has(.tak-header.is-night-mode) .faq-frame-bg {
-  background-image:
-    linear-gradient(rgba(5, 52, 66, 0.82), rgba(5, 52, 66, 0.82)),
-    url("/images/faq-bg.jpg");
-}
-
-.create-board-card {
-  background-color: #ffffff;
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
-}
-
-body:has(.tak-header.is-night-mode) .create-board-card {
-  background-color: #dbeafe;
+  border-radius: 8px !important;
 }
