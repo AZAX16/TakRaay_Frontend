@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MoonStar, PanelsTopLeft } from "lucide-react";
+import { MoonStar } from "lucide-react";
 import { Button, ToggleSwitch } from "../ui-kit/Button";
 import { SearchInput } from "../ui-kit/Input";
 import {
@@ -8,6 +8,7 @@ import {
   type HeaderBoardResponse,
   type HeaderProfile,
 } from "../../services/headerApi";
+import MyProfile from "../profile/MyProfile";
 import logoUrl from "../../assets/white1.webp";
 import "./Header.css";
 
@@ -132,6 +133,7 @@ export default function Header() {
   });
   const [isBoardOpen, setIsBoardOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const headerRef = useRef<HTMLDivElement | null>(null);
@@ -217,14 +219,15 @@ export default function Header() {
   }, []);
 
   return (
-    <header
-      className={`tak-header ${isNightMode ? "is-night-mode" : ""} bg-[var(--tak-page)] text-[var(--tak-text)]`}
-      dir="rtl"
-    >
-      <div
-        className={`tak-header-stage ${isSearchOpen ? "is-search-open" : ""}`}
-        ref={headerRef}
+    <>
+      <header
+        className={`tak-header ${isNightMode ? "is-night-mode" : ""} bg-[var(--tak-page)] text-[var(--tak-text)]`}
+        dir="rtl"
       >
+        <div
+          className={`tak-header-stage ${isSearchOpen ? "is-search-open" : ""}`}
+          ref={headerRef}
+        >
         <Button
           variant="doubleCircleSearch"
           aria-label={isSearchOpen ? "بستن جستجو" : "باز کردن جستجو"}
@@ -374,7 +377,13 @@ export default function Header() {
           variant="doubleCircle"
           className="tak-profile"
           aria-label="پروفایل"
-          onClick={() => window.location.href = "/profile"}
+          aria-haspopup="dialog"
+          aria-expanded={isProfileOpen}
+          onClick={() => {
+            setIsProfileOpen(true);
+            setIsBoardOpen(false);
+            setIsMenuOpen(false);
+          }}
         >
           <span className="tak-profile-photo">
             {profile?.avatarUrl ? (
@@ -387,7 +396,13 @@ export default function Header() {
             )}
           </span>
         </Button>
-      </div>
-    </header>
+        </div>
+      </header>
+
+      <MyProfile
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
+    </>
   );
 }
