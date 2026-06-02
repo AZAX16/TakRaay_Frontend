@@ -3,7 +3,7 @@ import Modal from "../modals/NormalModal";
 import { Input, OtpInputGroup, PasswordInput } from "../ui-kit/Input";
 import { Button } from "../ui-kit/Button";
 import api from "../../services/api";
-import { getForgotPasswordSendOtpErrorMessage, getResetPasswordErrorMessage, getVerifyResetOtpErrorMessage} from "../../utils/apiErrors";
+import { getForgotPasswordSendOtpErrorMessage, getResetPasswordErrorMessage, getVerifyResetOtpErrorMessage} from "../../utils/SignupApiErrors";
 
 type Props = {
   isOpen: boolean;
