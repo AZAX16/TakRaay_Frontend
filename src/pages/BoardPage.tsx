@@ -21,6 +21,7 @@ import {
   type ProjectCard,
   type ProjectMember,
 } from '../services/projectApi';
+import { useParams } from "react-router-dom";
 
 type IconProps = SVGProps<SVGSVGElement> & {
   size?: number;
@@ -250,6 +251,8 @@ function getCardDate(date?: string | null) {
 }
 
 const BoardPage = () => {
+  const { boardId } = useParams<{ boardId: string }>();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeProjectId, setActiveProjectId] = useState<number | string | null>(null);
   const [project, setProject] = useState<Project | null>(null);
@@ -257,6 +260,7 @@ const BoardPage = () => {
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  
 
   async function loadBoard(projectId?: number | string) {
     setIsLoading(true);
@@ -304,11 +308,11 @@ const BoardPage = () => {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      void loadBoard();
+      void loadBoard(boardId);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [boardId]);
 
   const cardMemberOptions: CardMember[] = members.map((member) => ({
     id: member.id,

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/SignupPage";
 import DashboardPage from "./pages/Dashboard";
 import BoardsPage from "./pages/BoardsPage";
+import BoardPage from "./pages/BoardPage";
 import FaqPage from "./pages/FaqPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -27,6 +28,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <BoardsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/boards/:boardId"
+        element={
+          <ProtectedRoute>
+            <BoardPage />
           </ProtectedRoute>
         }
       />

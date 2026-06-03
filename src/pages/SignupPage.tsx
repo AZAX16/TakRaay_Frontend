@@ -189,12 +189,6 @@ export default function SignupPage() {
       return;
     }
 
-    const error = validatePassword(password);
-    if (error) {
-      setPasswordError(error);
-      return;
-    }
-
     const normalizedPhone = normalizeDigits(phone);
 
     setPhoneError("");
@@ -218,9 +212,12 @@ export default function SignupPage() {
         response.data.refresh ||
         response.data.refresh_token;
 
-      if (accessToken) {
-        localStorage.setItem("access_token", accessToken);
+      if (!accessToken) {
+        showError("توکن ورود از سمت سرور دریافت نشد.");
+        return;
       }
+
+      localStorage.setItem("access_token", accessToken);
 
       if (refreshToken) {
         localStorage.setItem("refresh_token", refreshToken);
@@ -228,11 +225,18 @@ export default function SignupPage() {
 
       navigate("/dashboard", { replace: true });
     } catch (error: unknown) {
+      console.log("LOGIN ERROR FULL:", error);
+
+      if (error && typeof error === "object" && "response" in error) {
+        console.log("LOGIN ERROR STATUS:", (error as any).response?.status);
+        console.log("LOGIN ERROR DATA:", (error as any).response?.data);
+      }
+
       showError(getLoginErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  };
+};
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
     value = normalizeDigits(value); 
