@@ -33,7 +33,6 @@ html {
 }
 
 body {
-  min-height: 100vh;
   margin: 0;
   font-family: Vazirmatn, Tahoma, Arial, sans-serif;
   background-color: var(--app-page-light);
@@ -171,7 +170,8 @@ body:has(.tak-header.is-night-mode) .about-overview-icons p {
 .create-board-card {
   transition:
     background-color 0.3s ease,
-    color 0.3s ease;
+    color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 body:has(.tak-header.is-night-mode) .create-board-card {
@@ -208,4 +208,51 @@ body:has(.tak-header.is-night-mode) .create-board-card p {
 .zm-MonthPickerButton,
 .zm-MonthYearButton {
   border-radius: 8px !important;
+}
+
+
+/* Dashboard page */
+.dashboard-page {
+  min-height: 100vh;
+  background-color: var(--app-page-light);
+  transition: background-color 0.3s ease;
+}
+
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Dark mode */
+body:has(.tak-header.is-night-mode) .dashboard-page {
+  background-color: var(--app-page-dark);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-page-title {
+  color: var(--app-text-dark);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface {
+  background-color: #21465c;
+  color: #ffffff;
+  box-shadow: 0 16px 34px rgb(0 0 0 / 0.18);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface .text-black {
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
+  color: #dbeafe;
 }

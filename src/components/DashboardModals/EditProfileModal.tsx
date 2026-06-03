@@ -3,14 +3,23 @@ import Modal from '../modals/NormalModal';
 import { Input, TextArea } from '../ui-kit/Input';
 import { Button } from '../ui-kit/Button';
 import apiClient from '../../services/api';
+import defaultProfilePic from '../../assets/default-profile-picture.jpeg';
 
 type UserProfileData = {
-  full_name?: string;
-  student_id?: string;
-  job_title?: string;
-  skills?: string;
-  bio?: string;
-  avatar?: string;
+  full_name?: string | null;
+  student_id?: string | null;
+  job_title?: string | null;
+  skills?: string | null;
+  bio?: string | null;
+  avatar?: string | null;
+};
+
+type UserProfileFormData = {
+  full_name: string;
+  student_id: string;
+  job_title: string;
+  skills: string;
+  bio: string;
 };
 
 type EditProfileModalProps = {
@@ -20,12 +29,20 @@ type EditProfileModalProps = {
   onSuccessRefresh: () => void;
 };
 
+const getAvatarSrc = (avatar?: string | null) => {
+  if (!avatar) return defaultProfilePic;
+  if (avatar.startsWith('blob:') || avatar.startsWith('data:') || avatar.startsWith('http')) {
+    return avatar;
+  }
+  return `https://karboard.chbkn.run${avatar}`;
+};
+
 export default function EditProfileModal({ isOpen, onClose, initialData, onSuccessRefresh }: EditProfileModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [isLoading, setIsLoading] = useState(false);
 
   // استیت فرم
-  const [formData, setFormData] = useState<UserProfileData>({
+  const [formData, setFormData] = useState<UserProfileFormData>({
     full_name: initialData?.full_name ?? "",
     student_id: initialData?.student_id ?? "",
     job_title: initialData?.job_title ?? "",
@@ -122,25 +139,31 @@ export default function EditProfileModal({ isOpen, onClose, initialData, onSucce
             {/* ستون راست */}
             <div className="flex flex-col gap-7 flex-1 justify-center items-center">
           {/* بخش تغییر عکس پروفایل */}
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-black">عکس پروفایل:</label>
-              <Button 
-                variant="pillDark" // یا هر استایل دیگری که برای دکمه‌های کوچک دارید
+          <div className="flex w-full items-center justify-start gap-4">
+            <div className="h-[86px] w-[86px] shrink-0 overflow-hidden rounded-full border-4 border-[#b8eaed] bg-[#EFEFEF]">
+              <img
+                src={getAvatarSrc(avatarPreview)}
+                alt="عکس پروفایل"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col items-start gap-2">
+              <button
+                className="text-sm font-bold text-[#0081a7] transition-colors hover:text-[#05a8d9] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0081a7]/40"
                 onClick={() => fileInputRef.current?.click()}
                 type="button"
               >
-                تغییر عکس
-              </Button>
-              <input 
-                type="file" 
-                accept="image/*" 
-                hidden 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
+                تغییر عکس پروفایل
+              </button>
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                ref={fileInputRef}
+                onChange={handleFileChange}
               />
             </div>
-          </div>          
+          </div>
 
               <div>
                 <label className="block text-sm font-bold text-black mb-1">نام و نام خانوادگی:</label>
