@@ -7,19 +7,23 @@
 :root {
   font-family: Vazirmatn, Tahoma, Arial, sans-serif;
   color: #24344c;
-  background: #f7f8fc;
+  background: #efefef;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --app-page-light: #f7f8fc;
+  --app-page-light: #efefef;
   --app-page-dark: #053442;
   --app-text-light: #000000;
   --app-text-dark: #ffffff;
 
   --tak-page: var(--app-page-light);
   --tak-text: #24344c;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 html {
@@ -30,7 +34,7 @@ html {
 
 body {
   margin: 0;
-  font-family: "Vazirmatn", sans-serif;
+  font-family: Vazirmatn, Tahoma, Arial, sans-serif;
   background-color: var(--app-page-light);
 }
 
@@ -63,20 +67,46 @@ textarea {
   transition: color 0.3s ease;
 }
 
+/* FAQ frame background */
 .faq-frame-bg {
   background-image:
-    linear-gradient(rgba(247, 248, 252, 0.78), rgba(247, 248, 252, 0.78)),
+    linear-gradient(rgba(239, 239, 239, 0.78), rgba(239, 239, 239, 0.78)),
     url("/images/faq-bg.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
+/* FAQ scrollbar */
+.faq-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4f6689 #b8eaed;
+}
+
+.faq-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.faq-scroll::-webkit-scrollbar-track {
+  background: #b8eaed;
+  border-radius: 999px;
+}
+
+.faq-scroll::-webkit-scrollbar-thumb {
+  background: #4f6689;
+  border-radius: 999px;
+  border: 2px solid #b8eaed;
+}
+
+/* FAQ frame */
+.faq-frame {
+  border-color: #4a5575;
+}
+
 /* Dark mode trigger from Header */
 body:has(.tak-header.is-night-mode) {
   --tak-page: var(--app-page-dark);
   --tak-text: var(--app-text-dark);
-
   background-color: var(--app-page-dark);
 }
 
@@ -95,6 +125,16 @@ body:has(.tak-header.is-night-mode) .about-page-title,
 body:has(.tak-header.is-night-mode) .about-section-title,
 body:has(.tak-header.is-night-mode) .faq-page-title {
   color: var(--app-text-dark);
+}
+
+body:has(.tak-header.is-night-mode) .faq-frame {
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+body:has(.tak-header.is-night-mode) .faq-frame-bg {
+  background-image:
+    linear-gradient(rgba(5, 52, 66, 0.82), rgba(5, 52, 66, 0.82)),
+    url("/images/faq-bg.jpg");
 }
 
 /* About page cards */
@@ -120,6 +160,31 @@ body:has(.tak-header.is-night-mode) .about-surface h3 {
   color: #f3c8c7;
 }
 
+/* About overview icons */
+body:has(.tak-header.is-night-mode) .about-overview-icons svg,
+body:has(.tak-header.is-night-mode) .about-overview-icons p {
+  color: #dbeafe !important;
+}
+
+/* Create board card dark mode */
+.create-board-card {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #21465c;
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card svg,
+body:has(.tak-header.is-night-mode) .create-board-card span,
+body:has(.tak-header.is-night-mode) .create-board-card p {
+  color: #ffffff;
+}
+
 /* Date picker / modal custom styles */
 .css-1m8qzkt {
   position: absolute !important;
@@ -133,26 +198,14 @@ body:has(.tak-header.is-night-mode) .about-surface h3 {
   border-radius: 25px !important;
 }
 
-.zm-DaysButton {
-  border-radius: 100% !important;
-}
-
-.zm-IconNextButton {
-  border-radius: 100% !important;
-}
-
+.zm-DaysButton,
+.zm-IconNextButton,
 .zm-IconPrevButton {
   border-radius: 100% !important;
 }
 
-.zm-YearPickerButton {
-  border-radius: 8px !important;
-}
-
-.zm-MonthPickerButton {
-  border-radius: 8px !important;
-}
-
+.zm-YearPickerButton,
+.zm-MonthPickerButton,
 .zm-MonthYearButton {
   border-radius: 8px !important;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import Header from '../components/Header/Header'; // مسیر را تنظیم کنید
-import { Button } from '../components/ui-kit/Button'; // مسیر را تنظیم کنید
+import Header from '../components/Header/Header';
+import { Button } from '../components/ui-kit/Button';
 import { fetchDashboardData, type DashboardResponse, logoutUser} from '../services/DashboardApi';
 import Footer from '../components/Footer/Footer';
 import EditProfileModal from '../components/DashboardModals/EditProfileModal';
@@ -23,7 +23,7 @@ export default function Dashboard() {
 
 
   const loadData = async () => {
-    setIsLoading(true); // برای زمانی که از رفرش صدا زده میشه
+    setIsLoading(true);
     try {
       const profileData = await fetchDashboardData();
       setProfile(profileData);
@@ -114,7 +114,7 @@ export default function Dashboard() {
             {profile ? (
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
-                  <div className="w-[100px] h-[100px] shrink-0 rounded-full border-4 border-[#b8eaed] overflow-hidden mb-2">
+                  <div className="w-[100px] h-[100px] shrink-0 rounded-full border-4 border-[#e0786c] overflow-hidden mb-2">
                     {profile?.profile?.avatar? (
                       <img src={`https://karboard.chbkn.run${profile.profile.avatar}`} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -215,7 +215,7 @@ export default function Dashboard() {
       <ChangePasswordModal 
         isOpen={isChangePasswordOpen} 
         onClose={() => setIsChangePasswordOpen(false)} 
-        showError={(msg) => alert(msg)} // یا استفاده از توست (Toast) اختصاصی خودتان
+        showError={(msg) => alert(msg)}
       />
 
     </div>

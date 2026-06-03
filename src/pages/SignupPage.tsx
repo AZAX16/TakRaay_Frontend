@@ -5,11 +5,13 @@ import { Button, SegmentButton } from '../components/ui-kit/Button';
 // import Checkbox from "../components/CheckBox";
 import api from '../services/api';
 import ForgotPasswordModal from "../components/forgot-password/ForgotPasswordModal";
-import {getSignupErrorMessage, getLoginErrorMessage} from '../utils/apiErrors';
+import {getSignupErrorMessage, getLoginErrorMessage} from '../utils/SignupApiErrors';
 import ErrorModal from '../components/modals/ErrorModal';
+import { useNavigate } from "react-router-dom";
 
 
 export default function SignupPage() {
+  const navigate = useNavigate();
   const [authType, setAuthType] = useState<"signup" | "login">("signup");
   
   const [phone, setPhone] = useState<string>("");
@@ -145,10 +147,9 @@ export default function SignupPage() {
     const normalizedOtp = normalizeDigits(otpValues.join(""));
 
     if (normalizedOtp.length !== 6) {
-    setOtpError("کد تایید باید ۶ رقم باشد.");
-    return;
+      setOtpError("کد تایید باید ۶ رقم باشد.");
+      return;
     }
-
 
     setPasswordError("");
     setOtpError("");
@@ -156,75 +157,103 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-    // Send register request
-    const response = await api.post("/auth/register/", {
-      phone: normalizedPhone,
-      otp: normalizedOtp,
-      password: password,
-      confirm_password: confirmPassword,
-    });
+      const response = await api.post("/auth/register/", {
+        phone: normalizedPhone,
+        otp: normalizedOtp,
+        password: password,
+        confirm_password: confirmPassword,
+      });
 
-    console.log("Success:", response.data);
+      console.log("Signup success:", response.data);
 
-    alert("ثبت نام با موفقیت انجام شد.");
-
+      setAuthType("login");
+      setPassword("");
+      setConfirmPassword("");
+      setOtpValues(["", "", "", "", "", ""]);
+      setOtpSendMessage("");
+      setOtpError("");
+      setPasswordError("");
     } catch (error: unknown) {
-      showError(getSignupErrorMessage(error))
-    } finally{
+      showError(getSignupErrorMessage(error));
+    } finally {
       setLoading(false);
     }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // validate phone
+
     const phoneErr = validatePhone(phone);
     if (phoneErr) {
       setPhoneError(phoneErr);
       return;
     }
 
-    // validate password
-    const error = validatePassword(password);
-    if (error) {
-      setPasswordError(error);
-      return;
-    }
     const normalizedPhone = normalizeDigits(phone);
 
     setPhoneError("");
+    setPasswordError("");
     setLoading(true);
 
     try {
-      // 3) Send request to backend
       const response = await api.post("/auth/login/", {
         phone: normalizedPhone,
         password: password,
       });
 
-      console.log("Success:", response.data);
+      console.log("Login success:", response.data);
 
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
+      const accessToken =
+        response.data.access ||
+        response.data.access_token ||
+        response.data.token;
+
+      const refreshToken =
+        response.data.refresh ||
+        response.data.refresh_token;
+
+      if (!accessToken) {
+        showError("توکن ورود از سمت سرور دریافت نشد.");
+        return;
       }
 
-      alert("ورود با موفقیت انجام شد.");
+      localStorage.setItem("access_token", accessToken);
 
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+      }
+
+      navigate("/dashboard", { replace: true });
     } catch (error: unknown) {
-      showError(getLoginErrorMessage(error))
-    }
-    finally {
+      console.log("LOGIN ERROR FULL:", error);
+
+      if (error && typeof error === "object" && "response" in error) {
+        console.log("LOGIN ERROR STATUS:", (error as any).response?.status);
+        console.log("LOGIN ERROR DATA:", (error as any).response?.data);
+      }
+
+      showError(getLoginErrorMessage(error));
+    } finally {
       setLoading(false);
+    }
+};
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    value = normalizeDigits(value); 
+    value = value.replace(/\D/g, '');
+
+    if (value.length <= 11) {
+      setPhone(value);
     }
   };
 
+
   return (
     <div
-      className="min-h-screen w-full bg-[url('/images/background3.jpg')] flex items-center justify-center p-4 font-sans"
+      className="min-h-screen w-full bg-[url('/images/background3.jpg')] bg-cover bg-center bg-no-repeat flex items-center justify-center p-4 font-sans"
       dir="rtl"
     >
-      <div className="w-[450px] min-h-[500px] bg-white rounded-[20px] shadow-lg flex flex-col items-center py-8 px-6">
+      <div className="w-full max-w-md min-h-[500px] bg-white rounded-[20px] shadow-lg flex flex-col items-center py-8 px-6">
 
         {/* Toggles */}
         <div className="flex flex-col items-center gap-4 mb-8">
@@ -247,13 +276,12 @@ export default function SignupPage() {
                 شماره موبایل خود را وارد کنید:
               </label>
               <Input
-                dir="ltr"
                 variant="grayLarge"
                 type="tel"
                 value={phone}
                 placeholder='۰۹۱۲۳۴۵۶۷۸۹'
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setPhone(e.target.value);
+                  handlePhoneChange(e);
                   setPhoneError("");
                 }}
               />
@@ -366,13 +394,12 @@ export default function SignupPage() {
                 شماره موبایل:
               </label>
               <Input
-                dir="ltr"
                 variant="grayLarge"
                 type="tel"
                 value={phone}
                 placeholder='۰۹۱۲۳۴۵۶۷۸۹'
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setPhone(e.target.value);
+                  handlePhoneChange(e);
                   setPhoneError("");
                 }}
               />
