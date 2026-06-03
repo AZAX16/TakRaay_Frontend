@@ -6,7 +6,6 @@ import Footer from '../components/Footer/Footer';
 import EditProfileModal from '../components/DashboardModals/EditProfileModal';
 import ChangePasswordModal from '../components/DashboardModals/ChangePasswordModal';
 import defaultProfilePic from '../assets/default-profile-picture.jpeg';
-// import { useNavigate } from 'react-router-dom';
 
 const toPersianDigits = (str: string | number | undefined | null) => {
   if (str === null || str === undefined || str === '') return '';
@@ -22,7 +21,6 @@ export default function Dashboard() {
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // const navigate = useNavigate();
 
   const loadData = async () => {
     setIsLoading(true); // برای زمانی که از رفرش صدا زده میشه
@@ -73,28 +71,28 @@ export default function Dashboard() {
       else {console.log("no refresh token");}
     } catch (error) {
       console.error("مشکلی در ارتباط با سرور برای خروج پیش آمد", error);
-    } finally {
-      // در هر صورت (حتی اگر سرور خطا داد) کاربر از مرورگر پاک شده و بیرون انداخته شود
-      // localStorage.removeItem('access_token');
-      // localStorage.removeItem('refresh_token');
-      // navigate('/login'); 
+    } finally { 
       setIsLoggingOut(false);
     }
   };
 
   if (isLoading) {
   return (
-    <div className="flex items-center justify-center h-screen">
-      در حال بارگذاری...
-    </div>
+    <div className="dashboard-page min-h-screen flex flex-col items-center font-sans dir-rtl">
+        <Header />
+          <div className="flex justify-center text-xl font-bold text-[#4eacb7] p-4 max-w-[700px] rounded-xl ">
+            درحال بارگذاری اظلاعات داشبورد
+          </div>
+      </div>
   );}
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="bg-red-100 text-red-600 p-4 rounded-xl">
-          {error}
-        </div>
+    <div className="dashboard-page min-h-screen flex flex-col items-center font-sans dir-rtl">
+        <Header />
+          <div className="flex justify-center text-xl font-bold text-[#e0786c] p-4 max-w-[700px] rounded-xl ">
+            {error}
+          </div>
       </div>
     );
   }

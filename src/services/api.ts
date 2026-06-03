@@ -1,31 +1,21 @@
-import axios from "axios";
+import axios from 'axios';
 
 const api = axios.create({
-  baseURL: "https://karboard.chbk.dev/api",
-const defaultBaseURL = import.meta.env.DEV
-  ? "/api"
-  : "https://karboard.chbkn.run/api";
-const tokenStorageKeys = ["takraay_token", "access_token", "access", "token"];
-
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || defaultBaseURL,
+  baseURL: 'https://karboard.chbkn.run/api',
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = tokenStorageKeys
-    .map((key) => localStorage.getItem(key))
-    .find((value): value is string => Boolean(value));
-
+// اضافه کردن token به هر request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = token.startsWith("Bearer ")
       ? token
       : `Bearer ${token}`;
   }
-
   return config;
 });
 
-export default apiClient;
+export default api;
