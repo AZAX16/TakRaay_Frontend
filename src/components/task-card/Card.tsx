@@ -161,13 +161,17 @@ const handleDelete = async () => {
 };
 
   function getCardColor() {
-    if (taskStatus === "برای انجام")
-      return { light: "#F3C8C7", dark: "#F07167", text: "#ffffff" };
-    if (taskStatus === "در دست انجام")
-      return { light: "#FFFEE8", dark: "#FFFC9C", text: "#9b5930" };
-    if (taskStatus === "برای بررسی")
-      return { light: "#B8EAED", dark: "#00AFB9", text: "#ffffff" };
-    return { light: "#FEECDB", dark: "#FED9B7", text: "#9b5930" };
+    // To Do (Red/Pink)
+    if (taskStatus === "برای انجام") return { light: "#F3C8C7", dark: "#F07167", text: "#ffffff" };
+    
+    // Doing (Peach/Orange - Swapped to match column)
+    if (taskStatus === "در دست انجام") return { light: "#FEECDB", dark: "#FED9B7", text: "#9b5930" };
+    
+    // Review (Teal)
+    if (taskStatus === "برای بررسی") return { light: "#B8EAED", dark: "#00AFB9", text: "#ffffff" };
+    
+    // Done (Yellow - Default fallback, swapped to match column)
+    return { light: "#FFFEE8", dark: "#FFFC9C", text: "#9b5930" }; 
   }
 
   const colors = getCardColor();
