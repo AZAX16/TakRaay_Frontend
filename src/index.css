@@ -256,3 +256,69 @@ body:has(.tak-header.is-night-mode) .dashboard-surface .text-black {
 body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
   color: #dbeafe;
 }
+
+
+
+/* Main Board Page Background (Light Mode) */
+.board-page {
+  background-color: #efefef !important; /* Explicitly #efefef */
+  transition: background-color 0.3s ease;
+}
+
+/* Main Board Page Background (Dark Mode) */
+body:has(.tak-header.is-night-mode) .board-page {
+  background-color: var(--app-page-dark) !important;
+}
+
+/* Sidebar Toggle Button (Chevron) */
+body:has(.tak-header.is-night-mode) .board-page > div > button.bg-red-50 {
+  background-color: #0081a7 !important;
+  color: #ffffff !important;
+  border-color: #0081a7 !important;
+}
+
+/* Sidebar Container */
+.board-sidebar {
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar {
+  background-color: #042530 !important;
+  border-color: #0081a7 !important;
+}
+
+/* Sidebar Header (Project Name) */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-b {
+  border-color: #0081a7 !important;
+  color: #05a8d9 !important;
+}
+
+/* Sidebar Navigation Links */
+body:has(.tak-header.is-night-mode) .board-sidebar nav a {
+  color: #ffffff !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar nav a:hover {
+  color: #05a8d9 !important;
+}
+
+/* Sidebar Profiles Container Border */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t {
+  border-color: #0081a7 !important;
+}
+
+/* Sidebar Profile Names */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t .text-red-400 {
+  color: #ffffff !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t > div:hover {
+  background-color: rgba(0, 129, 167, 0.2) !important;
+}
+
+/* Empty Card Placeholder Text */
+body:has(.tak-header.is-night-mode) .board-page .text-gray-600 {
+  color: #dbeafe !important; 
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
