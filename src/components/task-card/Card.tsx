@@ -26,6 +26,7 @@ type CardProps = {
   available_members?: ApiMember[] | null;
   due_date?: string;
   onDelete?: () => void;
+  onUpdate?: () => void;
 };
 
 export default function Card({
@@ -38,6 +39,7 @@ export default function Card({
   available_members,
   due_date,
   onDelete,
+  onUpdate,
 }: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [taskTitle, setTaskTitle] = useState(title ?? "...");
@@ -141,7 +143,7 @@ const payload = {
 };
 
     const updatedCard = await updateCard(id, payload);
-
+    onUpdate?.();
     console.log("updated:", updatedCard);
 
     setIsEditing(false);
