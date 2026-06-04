@@ -10,6 +10,9 @@
   background: var(--tak-page);
   color: var(--tak-text);
   font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+  
+  /* ✅ Add this line to match the rest of the app's dark mode animation */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .tak-header.is-night-mode {
