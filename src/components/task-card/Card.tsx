@@ -24,7 +24,7 @@ type CardProps = {
   status?: string | null;
   assigned_to?: ApiMember[] | null;
   available_members?: ApiMember[] | null;
-  date?: string;
+  due_date?: string;
   onDelete?: () => void;
 };
 
@@ -36,14 +36,14 @@ export default function Card({
   status,
   assigned_to,
   available_members,
-  date,
+  due_date,
   onDelete,
 }: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [taskTitle, setTaskTitle] = useState(title ?? "...");
   const [taskTag, setTaskTag] = useState(labels ?? "...");
   const [taskDescription, setTaskDescription] = useState(description ?? "...");
-  const [taskDate, setTaskDate] = useState(new Date());
+  const [taskDate, setTaskDate] = useState(due_date ? new Date(due_date) : new Date());
   const [taskStatus, setTaskStatus] = useState("برای انجام");
   const [members, setMembers] = useState<Member[]>([]);
 
@@ -93,12 +93,12 @@ export default function Card({
   }, [assigned_to, available_members]);
 
 useEffect(() => {
-  if (!date) return;
+  if (!due_date) return;
 
-  const [year, month, day] = date.split("-").map(Number);
+  const [year, month, day] = due_date.split("-").map(Number);
 
   setTaskDate(new Date(year, month - 1, day));
-}, [date]);
+}, [due_date]);
 
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
