@@ -1,20 +1,19 @@
 import { useEffect, useState, type SVGProps } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../components/Header/Header';
-import Card, { type CardUpdatePayload } from '../components/task-card/Card';
+import Card from '../components/task-card/Card';
 import OthersProfile from '../components/profile/OthersProfile';
 import MyProfile from '../components/profile/MyProfile'; 
 import { fetchHeaderProfile } from '../services/headerApi'; 
+import { getCardById } from '../services/ServiceCard'; // ✅ Detailed single card API fetch
 import {
   createBoardList,
   createListCard,
-  deleteProjectCard,
   fetchBoardLists,
   fetchListCards,
   fetchProject,
   fetchProjectMembers,
   fetchProjects,
-  updateProjectCard,
   type BoardList,
   type BoardStatus,
   type Project,
@@ -57,12 +56,11 @@ const fallbackSidebarProfiles = [
 ];
 
 const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-const englishDigitByPersianDigit: Record<string, string> = { '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9', '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
 function toPersianDigits(value: number | string) { return String(value).replace(/[0-9]/g, (digit) => persianNumbers[Number(digit)]); }
-function toEnglishDigits(value: string) { return value.replace(/[۰-۹٠-٩]/g, (digit) => englishDigitByPersianDigit[digit] ?? digit); }
-function getStatusFromLabel(label: string): BoardStatus { return columnDefinitions.find((column) => column.label === label)?.status ?? 'todo'; }
-function getMemberName(member: ProjectMember) { return member.phone || `کاربر ${toPersianDigits(member.id)}`; }
-function sortByOrder<T extends { order?: number }>(items: T[]) { return [...items].sort((first, second) => (first.order ?? 0) - (second.order ?? 0)); }
+function getMemberName(member: any) { 
+  return member.full_name || member.first_name || member.name || member.phone || `کاربر ${toPersianDigits(member.id)}`;
+}function sortByOrder<T extends { order?: number }>(items: T[]) { return [...items].sort((first, second) => (first.order ?? 0) - (second.order ?? 0)); }
+
 function createBoardColumns(lists: BoardList[] = [], cardsByList: Record<number, ProjectCard[]> = {}): BoardColumn[] {
   const activeLists = lists.filter((list) => !list.is_archived);
   return columnDefinitions.map((definition) => {
@@ -90,7 +88,7 @@ const BoardPage = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [myUserId, setMyUserId] = useState<number | null>(null);
 
-  // Fetch current user to identify "Me"
+  // Fetch current user identity
   useEffect(() => {
     fetchHeaderProfile().then(profile => {
       if (profile && (profile as any).id) {
@@ -122,8 +120,23 @@ const BoardPage = () => {
         fetchProjectMembers(nextProjectId),
       ]);
 
+      // ✅ Fetch full, detailed data for every card sequentially using getCardById
       const cardEntries = await Promise.all(
-        listData.filter((list) => !list.is_archived).map(async (list) => [list.id, await fetchListCards(list.id)] as const),
+        listData
+          .filter((list) => !list.is_archived)
+          .map(async (list) => {
+            const basicCards = await fetchListCards(list.id);
+            const detailedCards = await Promise.all(
+              basicCards.map(async (card: ProjectCard) => {
+                try {
+                  return await getCardById(card.id);
+                } catch (err) {
+                  return card; 
+                }
+              })
+            );
+            return [list.id, detailedCards] as const;
+          }),
       );
 
       setProject(projectData);
@@ -143,9 +156,12 @@ const BoardPage = () => {
     const timeoutId = window.setTimeout(() => void loadBoard(boardId), 0);
     return () => window.clearTimeout(timeoutId);
   }, [boardId]);
-
-  const apiMembers: ApiMember[] = members.map((member) => ({ id: member.id, full_name: getMemberName(member), avatar: null }));
-  const sidebarProfiles = members.length > 0 ? members.map((member) => ({ id: member.id, name: getMemberName(member) })) : fallbackSidebarProfiles;
+const apiMembers: ApiMember[] = members.map((member: any) => ({ 
+  id: member.id, 
+  full_name: getMemberName(member), 
+  avatar: member.avatar || member.image || member.profile_image || null 
+}));
+const sidebarProfiles = members.length > 0 ? members.map((member) => ({ id: member.id, name: getMemberName(member) })) : fallbackSidebarProfiles;
 
   async function handleCreateCard(column: BoardColumn) {
     if (!activeProjectId) { setMessage('برای ساخت کارت، ابتدا باید یک برد انتخاب شود.'); return; }
@@ -161,28 +177,8 @@ const BoardPage = () => {
     } catch { setMessage('ساخت کارت انجام نشد.'); }
   }
 
-  async function handleUpdateCard(cardId: number, payload: CardUpdatePayload) {
-    if (!activeProjectId) return;
-    setMessage(null);
-    try {
-      await updateProjectCard(cardId, { title: payload.title, description: payload.description, due_date: toEnglishDigits(payload.date) || null, labels: payload.tag, status: getStatusFromLabel(payload.status), assigned_to: payload.assignedMemberIds });
-      await loadBoard(activeProjectId);
-    } catch { setMessage('ذخیره کارت انجام نشد.'); }
-  }
-
-  async function handleDeleteCard(cardId: number) {
-    if (!activeProjectId) return;
-    setMessage(null);
-    try {
-      await deleteProjectCard(cardId);
-      await loadBoard(activeProjectId);
-    } catch { setMessage('حذف کارت انجام نشد.'); }
-  }
-
   return (
-    // Added "board-page" class so you can target this in your CSS for dark mode
     <div className="board-page h-screen transition-colors duration-300 flex flex-col font-['Vazirmatn'] overflow-hidden" dir="rtl">      
-      {/* Z-Index Fix: Wrapped Header in relative z-50 */}
       <div className="relative z-50">
         <Header />
       </div>
@@ -206,19 +202,22 @@ const BoardPage = () => {
                   </button>
                 </div>
                 <div className={`${col.bgColor} bg-opacity-30 backdrop-blur-md flex-1 rounded-2xl border ${col.borderColor} border-opacity-50 p-4 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center gap-4 pb-5 shadow-sm mt-3 pt-4`}>
-                   {col.cards.map((card) => (
+                   {col.cards.map((card: any) => (
                      <Card
-                       key={card.id}
-                       title={card.title}
-                       description={card.description || ''}
-                       date={card.due_date || undefined}
-                       labels={card.labels || ''}
-                       status={col.status} 
-                       available_members={apiMembers}
-                       assigned_to={apiMembers.filter((m) => card.assigned_to?.includes(m.id))}
-                       onSave={(payload) => handleUpdateCard(card.id, payload)}
-                       onDelete={() => handleDeleteCard(card.id)}
-                     />
+                        key={card.id}
+                        {...card} /* ✅ This automatically passes the perfect assigned_to data from the API! */
+                        
+                        date={card.date || card.due_date || undefined}
+                        labels={card.labels || card.tag || ''}
+                        status={col.status} 
+                        
+                        /* Keep this so the "+" dropdown knows who else is on the project */
+                        available_members={apiMembers} 
+                        
+                        /* Walkie-talkies to refresh the board */
+                        onUpdate={() => loadBoard(activeProjectId)}
+                        onDelete={() => loadBoard(activeProjectId)}
+                      />
                    ))}
                    {col.cards.length === 0 && !isLoading && (
                      <div className="mt-6 rounded-xl border border-white/50 bg-white/35 px-4 py-3 text-center text-sm font-bold text-gray-600">
@@ -236,7 +235,6 @@ const BoardPage = () => {
             {isSidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           </button>
           
-          {/* Added "board-sidebar" class so you can target this in your CSS for dark mode */}
           <aside className={`board-sidebar w-[280px] rounded-2xl border-2 border-red-200 bg-transparent p-6 m-4 mt-6 overflow-y-auto flex flex-col shrink-0 h-fit shadow-sm z-10 transition-all duration-300 ease-out ${isSidebarOpen ? 'translate-x-0 opacity-100' : 'translate-x-[232px] opacity-0 pointer-events-none'}`}>
             <div className="flex items-center justify-center gap-2 mb-8 text-red-500 font-bold border-b border-red-200 pb-4 text-lg">
                <Edit size={20} className="cursor-pointer" />
@@ -253,7 +251,6 @@ const BoardPage = () => {
                   <div 
                     key={profile.id} 
                     onClick={() => {
-                      // Profile Check: Opens "MyProfile" if the ID matches you, otherwise "OthersProfile"
                       if (myUserId && profile.id === myUserId) {
                         setIsMyProfileOpen(true);
                       } else {
@@ -277,7 +274,6 @@ const BoardPage = () => {
         </div>
       </div>
       
-      {/* Modals rendered conditionally */}
       <MyProfile 
         isOpen={isMyProfileOpen} 
         onClose={() => setIsMyProfileOpen(false)} 
