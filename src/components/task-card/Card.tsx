@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import defaultProfile from "../../assets/default-profile-picture.jpeg";
 import CustomeDatePicker from "../calender/DatePicker";
+import { updateCard, deleteCard } from "../../services/ServiceCard";
 
 type Member = {
   id: number;
@@ -16,6 +17,7 @@ type ApiMember = {
 };
 
 type CardProps = {
+  id: number;
   title?: string | null;
   labels?: string | null;
   description?: string | null;
@@ -27,6 +29,7 @@ type CardProps = {
 };
 
 export default function Card({
+  id,
   title,
   labels,
   description,
@@ -89,11 +92,13 @@ export default function Card({
     );
   }, [assigned_to, available_members]);
 
-  useEffect(() => {
-    if (!date) return;
+useEffect(() => {
+  if (!date) return;
 
-    console.log("date from api:", date);
-  }, [date]);
+  const [year, month, day] = date.split("-").map(Number);
+
+  setTaskDate(new Date(year, month - 1, day));
+}, [date]);
 
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -115,6 +120,52 @@ export default function Card({
   ) {
     setter(toPersianNumbers(value));
   }
+
+const reverseStatusMap: Record<string, string> = {
+  "برای انجام": "todo",
+  "در دست انجام": "doing",
+  "برای بررسی": "review",
+  "تمام شده": "done",
+};
+
+const formatDateForApi = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const handleSave = async () => {
+  try {
+const payload = {
+  title: taskTitle,
+  labels: taskTag,
+  description: taskDescription,
+  status: reverseStatusMap[taskStatus] || "todo",
+  assigned_to: members.map((member) => member.id),
+  due_date: formatDateForApi(taskDate),
+};
+
+    const updatedCard = await updateCard(id, payload);
+
+    console.log("updated:", updatedCard);
+
+    setIsEditing(false);
+  } catch (error) {
+    console.error("Update card failed:", error);
+  }
+};
+
+const handleDelete = async () => {
+  try {
+    await deleteCard(id);
+
+    onDelete?.();
+  } catch (error) {
+    console.error("Delete card failed:", error);
+  }
+};
 
   function getCardColor() {
     if (taskStatus === "برای انجام")
@@ -249,7 +300,7 @@ export default function Card({
             {/* BUTTONS */}
             <div className="flex gap-[10px] mt-auto h-[30px]">
               <button
-                onClick={onDelete}
+                onClick={handleDelete}
                 className="flex-1 h-[30px] rounded-[10px] border text-[11px] font-[500] transition-all duration-300"
                 style={{ borderColor: colors.text, background: "rgba(255,255,255,0.3)", color: colors.text }}
                 onMouseEnter={(e) => {
@@ -264,11 +315,16 @@ export default function Card({
                 حذف
               </button>
               <button
-                onClick={() => {
-                  setIsEditing(!isEditing);
-                  setShowMemberDropdown(false);
-                  setShowStatusDropdown(false);
-                }}
+onClick={() => {
+  if (isEditing) {
+    handleSave();
+  } else {
+    setIsEditing(true);
+  }
+
+  setShowMemberDropdown(false);
+  setShowStatusDropdown(false);
+}}
                 className="flex-1 h-[30px] rounded-[10px] border text-[11px] font-[500] transition-all duration-300"
                 style={{ borderColor: colors.text, background: "rgba(255,255,255,0.3)", color: colors.text }}
                 onMouseEnter={(e) => {
