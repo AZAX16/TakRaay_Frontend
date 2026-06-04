@@ -1,4 +1,5 @@
 import { useEffect, useState, type SVGProps } from 'react';
+import { useParams } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import Card, { type CardUpdatePayload } from '../components/task-card/Card';
 import OthersProfile from '../components/profile/OthersProfile';
@@ -74,6 +75,7 @@ function createBoardColumns(lists: BoardList[] = [], cardsByList: Record<number,
 type ApiMember = { id: number; full_name: string; avatar: string | null; };
 
 const BoardPage = () => {
+  const { boardId } = useParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeProjectId, setActiveProjectId] = useState<number | string | null>(null);
   const [project, setProject] = useState<Project | null>(null);
@@ -138,9 +140,9 @@ const BoardPage = () => {
   }
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => void loadBoard(), 0);
+    const timeoutId = window.setTimeout(() => void loadBoard(boardId), 0);
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [boardId]);
 
   const apiMembers: ApiMember[] = members.map((member) => ({ id: member.id, full_name: getMemberName(member), avatar: null }));
   const sidebarProfiles = members.length > 0 ? members.map((member) => ({ id: member.id, name: getMemberName(member) })) : fallbackSidebarProfiles;
