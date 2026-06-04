@@ -128,13 +128,6 @@ const reverseStatusMap: Record<string, string> = {
   "تمام شده": "done",
 };
 
-const formatDateForApi = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
 
 const handleSave = async () => {
   try {
@@ -144,7 +137,7 @@ const payload = {
   description: taskDescription,
   status: reverseStatusMap[taskStatus] || "todo",
   assigned_to: members.map((member) => member.id),
-  due_date: formatDateForApi(taskDate),
+  due_date: taskDate.toISOString().split("T")[0]
 };
 
     const updatedCard = await updateCard(id, payload);

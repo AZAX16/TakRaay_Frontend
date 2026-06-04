@@ -13,7 +13,7 @@ export const updateCard = async (
     description?: string;
     status?: string;
     assigned_to?: number[];
-    date?: string;
+    due_date?: string;
   }
 ) => {
   const response = await api.patch(
