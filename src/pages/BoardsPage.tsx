@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Header from "../components/Header/Header";
+import Footer from "../components/Footer/Footer";
 import BoardCard from "../components/boards/BoardCard";
 import CreateBoardCard from "../components/boards/CreateBoardCard";
 import CreateBoardModal from "../components/boards/CreateBoardModal";
@@ -10,10 +11,13 @@ const BoardsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
-    <div dir="rtl" className="boards-page min-h-screen bg-[var(--tak-page)] transition-colors duration-300">
+    <div
+      dir="rtl"
+      className="boards-page flex min-h-screen flex-col bg-[var(--tak-page)] transition-colors duration-300"
+    >
       <Header />
 
-      <main className="mx-auto max-w-7xl px-6 py-14">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-14">
         <section className="mb-10 flex w-full justify-start">
           <h1 className="boards-page-title flex flex-row-reverse items-center gap-2 text-2xl font-bold">
             <span>بردهای شخصی</span>
@@ -58,10 +62,13 @@ const BoardsPage = () => {
                 onDelete={removeBoard}
               />
             ))}
+
             <CreateBoardCard onClick={() => setIsCreateModalOpen(true)} />
           </section>
         )}
       </main>
+
+      <Footer />
 
       <CreateBoardModal
         isOpen={isCreateModalOpen}

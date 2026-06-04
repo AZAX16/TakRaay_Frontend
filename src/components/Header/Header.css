@@ -2,7 +2,7 @@
   --tak-primary: #0081a7;
   --tak-text: #ffffff;
   --tak-secondary: #05a8d9;
-  --tak-page: #f7f8fc;
+  --tak-page: #efefef;
   --tak-shadow: rgba(0, 84, 110, 0.22);
 
   width: 100%;
@@ -10,6 +10,9 @@
   background: var(--tak-page);
   color: var(--tak-text);
   font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+  
+  /* ✅ Add this line to match the rest of the app's dark mode animation */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .tak-header.is-night-mode {

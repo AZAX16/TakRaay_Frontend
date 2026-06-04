@@ -121,42 +121,60 @@ const CreateBoardModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="ساخت برد جدید">
-      <form onSubmit={handleSubmit} className="w-[315px] space-y-5" dir="rtl">
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#387FA3]">
-            نام برد
-          </label>
+      <form
+        onSubmit={handleSubmit}
+        className="w-[430px] max-w-[calc(100vw-72px)] space-y-5"
+        dir="rtl"
+      >
+        <div className="rounded-2xl bg-white/35 p-4 shadow-sm">
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-[#387FA3]">
+              نام برد
+            </label>
 
-          <Input
-            variant="grayLarge"
-            placeholder="نام برد را وارد کنید"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            ariaLabel="نام برد"
-          />
+            <div className="w-full [&_input]:!w-full [&_input]:!max-w-full">
+              <Input
+                variant="grayLarge"
+                placeholder="نام برد را وارد کنید"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                ariaLabel="نام برد"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <label className="block text-sm font-semibold text-[#387FA3]">
+              توضیحات
+            </label>
+
+            <textarea
+              dir={isDescriptionLeftAligned ? "ltr" : "rtl"}
+              placeholder="توضیحات برد را وارد کنید"
+              value={description}
+              onChange={(event) =>
+                setDescription(toPersianDigits(event.target.value))
+              }
+              className={`h-[105px] w-full resize-none rounded-[12px] border-none bg-[#EFEFEF] px-4 py-3 text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:cursor-not-allowed disabled:opacity-50 ${
+                isDescriptionLeftAligned ? "text-left" : "text-right"
+              }`}
+              aria-label="توضیحات برد"
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#387FA3]">
-            توضیحات
-          </label>
+        <div className="rounded-2xl bg-white/25 p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-[#387FA3]">رنگ برد</p>
 
-          <textarea
-            dir={isDescriptionLeftAligned ? "ltr" : "rtl"}
-            placeholder="توضیحات برد را وارد کنید"
-            value={description}
-            onChange={(event) => setDescription(toPersianDigits(event.target.value))}
-            className={`h-[90px] w-[300px] resize-none rounded-[10px] border-none bg-[#EFEFEF] px-4 py-3 text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:cursor-not-allowed disabled:opacity-50 ${
-              isDescriptionLeftAligned ? "text-left" : "text-right"
-            }`}
-            aria-label="توضیحات برد"
-          />
-        </div>
+            <span
+              className="h-7 w-7 rounded-full border-2 border-white shadow-sm"
+              style={{ backgroundColor: selectedColor }}
+              aria-hidden="true"
+            />
+          </div>
 
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-[#387FA3]">رنگ برد</p>
-
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-5 gap-3">
             {boardColors.map((color) => {
               const isActive = selectedColor === color;
 
@@ -165,7 +183,7 @@ const CreateBoardModal = ({
                   key={color}
                   type="button"
                   onClick={() => setSelectedColor(color)}
-                  className={`h-8 w-8 rounded-full border-2 transition ${
+                  className={`mx-auto h-9 w-9 rounded-full border-2 transition hover:scale-105 ${
                     isActive
                       ? "border-[#387FA3] ring-2 ring-[#387FA3]/40"
                       : "border-white"
@@ -178,13 +196,13 @@ const CreateBoardModal = ({
           </div>
         </div>
 
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center pt-1">
           <Button
             type="submit"
             variant="pillDark"
             loading={isSubmitting}
             disabled={!title.trim() || isSubmitting}
-            className="!w-[200px] !h-[45px] !text-[16px]"
+            className="!h-[45px] !w-full !max-w-[240px] !text-[16px]"
           >
             ساخت
           </Button>

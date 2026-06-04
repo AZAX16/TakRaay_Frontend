@@ -6,7 +6,7 @@
   width: calc(100% - 2rem);
   max-width: 80rem;
   margin: auto 1rem 0;
-  padding: 40px 0;
+  padding: 0px 0;
   border-radius: 32px;
   background: #0081a7;
   color: #ffffff;
@@ -20,7 +20,7 @@
 }
 
 .tak-footer-grid {
-  min-height: 164px;
+  min-height: 134px;
   display: grid;
   grid-template-columns:
     minmax(172px, 1fr)
@@ -46,7 +46,7 @@
 .tak-footer-social-stack {
   width: 235px;
   min-width: 0;
-  min-height: 164px;
+  min-height: 124px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -65,7 +65,7 @@
 .tak-footer-nav {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .tak-footer-social-links {
@@ -124,8 +124,8 @@
 }
 
 .tak-footer-divider {
-  width: 2px;
-  height: 128px;
+  width: 3px;
+  height: 96px;
   justify-self: center;
   background: rgb(255 255 255 / 0.5);
 }
@@ -133,13 +133,14 @@
 .tak-footer-copy,
 .tak-footer-brand {
   flex-direction: column;
-  gap: 16px;
+  gap: 25px;
   text-align: center;
 }
 
 .tak-footer-copy-detail,
 .tak-footer-logo-caption {
   line-height: 1.75;
+  padding-bottom: 16px;
   opacity: 0.9;
 }
 
@@ -200,7 +201,7 @@
 
   .tak-footer-divider {
     width: 1px;
-    height: 118px;
+    height: 98px;
   }
 
   .tak-footer-nav {
@@ -238,7 +239,7 @@
   }
 
   .tak-footer-grid {
-    min-height: 142px;
+    min-height: 112px;
     grid-template-columns:
       40px
       1px
@@ -290,11 +291,11 @@
     --footer-pad-x: 8px;
     --footer-gap: 5px;
 
-    padding-block: 24px;
+    padding-block: 16px;
   }
 
   .tak-footer-grid {
-    min-height: 106px;
+    min-height: 88px;
     grid-template-columns:
       minmax(36px, 3fr)
       1px
@@ -306,7 +307,7 @@
   }
 
   .tak-footer-divider {
-    height: 92px;
+    height: 72px;
   }
 
   .tak-footer-copy,

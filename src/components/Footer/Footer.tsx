@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import {
   CircleHelp,
   Info,
@@ -33,36 +34,62 @@ const socialLinks = [
   {
     href: "#",
     label: "linkedin.com/takraay",
-    icon: <Linkedin aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+    icon: (
+      <Linkedin
+        aria-hidden="true"
+        className={footerIconClass}
+        strokeWidth={2.2}
+      />
+    ),
   },
   {
     href: "#",
     label: "instagram.com/takraay",
-    icon: <Instagram aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+    icon: (
+      <Instagram
+        aria-hidden="true"
+        className={footerIconClass}
+        strokeWidth={2.2}
+      />
+    ),
   },
 ];
 
 const footerLinks = [
   {
-    href: "#",
+    to: "/dashboard",
     label: "داشبورد",
-    icon: <LayoutDashboard aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+    icon: (
+      <LayoutDashboard
+        aria-hidden="true"
+        className={footerIconClass}
+        strokeWidth={2.2}
+      />
+    ),
   },
   {
-    href: "#",
+    to: "/about-us",
     label: "درباره‌ی ما",
-    icon: <Info aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+    icon: (
+      <Info
+        aria-hidden="true"
+        className={footerIconClass}
+        strokeWidth={2.2}
+      />
+    ),
   },
   {
-    href: "#",
+    to: "/faq",
     label: "سوالات متداول",
-    icon: <CircleHelp aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
+    icon: (
+      <CircleHelp
+        aria-hidden="true"
+        className={footerIconClass}
+        strokeWidth={2.2}
+      />
+    ),
   },
-  {
-    href: "#",
-    label: "ارتباط با ما",
-    icon: <Mail aria-hidden="true" className={footerIconClass} strokeWidth={2.2} />,
-  },
+  
 ];
 
 export default function Footer() {
@@ -70,7 +97,10 @@ export default function Footer() {
     <footer className="tak-footer">
       <div className="tak-footer-inner">
         <div className="tak-footer-grid">
-          <section className="tak-footer-section tak-footer-social" aria-label="شبکه‌های اجتماعی">
+          <section
+            className="tak-footer-section tak-footer-social"
+            aria-label="شبکه‌های اجتماعی"
+          >
             <div className="tak-footer-social-stack">
               <div className="tak-footer-heading">دنبال کنید:</div>
 
@@ -82,6 +112,8 @@ export default function Footer() {
                     href={link.href}
                     key={link.label}
                     title={link.label}
+                    target="_blank"
+                    rel="noreferrer"
                   >
                     <span className="tak-footer-social-text" dir="ltr">
                       {link.label}
@@ -119,18 +151,25 @@ export default function Footer() {
 
           <div className="tak-footer-divider" aria-hidden="true" />
 
-          <nav className="tak-footer-section tak-footer-nav" aria-label="پیوندهای پاورقی">
+          <nav
+            className="tak-footer-section tak-footer-nav"
+            aria-label="پیوندهای پاورقی"
+          >
             {footerLinks.map((link) => (
-              <a
+              <NavLink
                 aria-label={link.label}
-                className="tak-footer-link tak-footer-nav-link"
-                href={link.href}
+                className={({ isActive }) =>
+                  `tak-footer-link tak-footer-nav-link ${
+                    isActive ? "is-active" : ""
+                  }`
+                }
+                to={link.to}
                 key={link.label}
                 title={link.label}
               >
                 <span className="tak-footer-nav-text">{link.label}</span>
                 <span className="tak-footer-icon-box">{link.icon}</span>
-              </a>
+              </NavLink>
             ))}
           </nav>
         </div>

@@ -1,9 +1,9 @@
 type ModalProps = {
-  isOpen: boolean
-  onClose: () => void
-  title: string
-  children: React.ReactNode
-}
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+};
 
 export default function Modal({
   isOpen,
@@ -17,7 +17,7 @@ export default function Modal({
     <>
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[900]"
+        className="fixed inset-0 z-[900] bg-black/40 backdrop-blur-sm"
       />
 
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#B8EAED] rounded-2xl shadow-xl z-[1000] w-[500px] max-w-[90%] max-h-[80vh] flex flex-col">
@@ -28,8 +28,10 @@ export default function Modal({
           </h2>
 
           <button
+            type="button"
             onClick={onClose}
-            className="text-[#387FA3] text-xl"
+            className="text-xl text-[#387FA3]"
+            aria-label="بستن"
           >
             ✕
           </button>
