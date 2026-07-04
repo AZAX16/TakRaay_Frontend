@@ -13,6 +13,7 @@ export type HeaderBoard = {
 export type HeaderBoardResponse = HeaderBoard | string;
 
 export type HeaderProfile = {
+  id?: number | string;
   avatarUrl?: string;
   name?: string;
 };
@@ -25,12 +26,14 @@ export async function fetchHeaderBoards(): Promise<HeaderBoardResponse[]> {
 export async function fetchHeaderProfile(): Promise<HeaderProfile | null> {
   const { data } = await apiClient.get<
     | {
+        id?: number | string;
         avatar?: string | null;
         avatarUrl?: string | null;
         full_name?: string;
         name?: string;
       }
     | Array<{
+        id?: number | string;
         avatar?: string | null;
         avatarUrl?: string | null;
         full_name?: string;
@@ -42,6 +45,7 @@ export async function fetchHeaderProfile(): Promise<HeaderProfile | null> {
   if (!profile) return null;
 
   return {
+    id: profile.id,
     avatarUrl: profile.avatarUrl || profile.avatar || undefined,
     name: profile.name || profile.full_name,
   };

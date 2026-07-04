@@ -1,9 +1,13 @@
-import { useEffect, useState, type SVGProps } from 'react';
+import { useEffect, useState, type FormEvent, type SVGProps } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import Card from '../components/task-card/Card';
 import OthersProfile from '../components/profile/OthersProfile';
 import MyProfile from '../components/profile/MyProfile'; 
+import Modal from '../components/modals/NormalModal';
+import { Button } from '../components/ui-kit/Button';
+import defaultProfile from '../assets/default-profile-picture.jpeg';
+import { fetchCurrentUser } from '../services/authApi';
 import { fetchHeaderProfile } from '../services/headerApi'; 
 import { getCardById } from '../services/ServiceCard'; // ✅ Detailed single card API fetch
 import {
@@ -12,8 +16,11 @@ import {
   fetchBoardLists,
   fetchListCards,
   fetchProject,
+  fetchProjectMemberProfile,
   fetchProjectMembers,
   fetchProjects,
+  inviteProjectMember,
+  removeProjectMember,
   type BoardList,
   type BoardStatus,
   type Project,
@@ -26,7 +33,6 @@ function IconBase({ size = 18, strokeWidth = 2, children, ...props }: IconProps)
 function Search(props: IconProps) { return <IconBase {...props}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></IconBase>; }
 function Filter(props: IconProps) { return <IconBase {...props}><path d="M4 6h16" /><path d="M7 12h10" /><path d="M10 18h4" /></IconBase>; }
 function Palette(props: IconProps) { return <IconBase {...props}><circle cx="13.5" cy="6.5" r=".7" /><circle cx="17.5" cy="10.5" r=".7" /><circle cx="8.5" cy="7.5" r=".7" /><circle cx="6.5" cy="12.5" r=".7" /><path d="M12 3a9 9 0 0 0 0 18h1.5a2.5 2.5 0 0 0 1.8-4.2 1.6 1.6 0 0 1 1.1-2.8H18a3 3 0 0 0 3-3 8 8 0 0 0-9-8Z" /></IconBase>; }
-function Edit(props: IconProps) { return <IconBase {...props}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></IconBase>; }
 function Plus(props: IconProps) { return <IconBase {...props}><path d="M12 5v14" /><path d="M5 12h14" /></IconBase>; }
 function ChevronLeft(props: IconProps) { return <IconBase {...props}><path d="m15 18-6-6 6-6" /></IconBase>; }
 function ChevronRight(props: IconProps) { return <IconBase {...props}><path d="m9 18 6-6-6-6" /></IconBase>; }
@@ -49,17 +55,185 @@ const headerColors: Record<number, { title: string; button: string }> = {
   4: { title: 'text-white', button: 'border-white/80 text-white hover:text-white hover:bg-white/10' },
 };
 
-const fallbackSidebarProfiles = [
-  { id: 1, name: 'حسن آقا' },
-  { id: 2, name: 'علیرضا' },
-  { id: 3, name: 'طیبه' },
-];
-
 const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
 function toPersianDigits(value: number | string) { return String(value).replace(/[0-9]/g, (digit) => persianNumbers[Number(digit)]); }
-function getMemberName(member: any) { 
-  return member.full_name || member.first_name || member.name || member.phone || `کاربر ${toPersianDigits(member.id)}`;
-}function sortByOrder<T extends { order?: number }>(items: T[]) { return [...items].sort((first, second) => (first.order ?? 0) - (second.order ?? 0)); }
+function resolveMediaUrl(value?: string | null) {
+  if (!value) return null;
+  if (/^(https?:)?\/\//.test(value) || value.startsWith('data:') || value.startsWith('blob:')) return value;
+
+  return `https://karboard.chbkn.run${value.startsWith('/') ? '' : '/'}${value}`;
+}
+function isPhoneNumberLike(value: string) {
+  return /^(\+|00)?[\d۰-۹٠-٩][\d۰-۹٠-٩\s\-()]{6,}$/.test(value.trim());
+}
+function getMemberName(member: ProjectMember) {
+  const firstAndLastName = [member.first_name, member.last_name].filter(Boolean).join(' ').trim();
+  const candidates = [member.full_name, firstAndLastName, member.name];
+
+  for (const candidate of candidates) {
+    const name = candidate?.trim();
+    if (name && !isPhoneNumberLike(name)) {
+      return name;
+    }
+  }
+
+  return `کاربر ${toPersianDigits(member.id)}`;
+}
+function getMemberAvatar(member: ProjectMember) {
+  return resolveMediaUrl(member.avatar || member.image || member.profile_image);
+}
+function normalizeDigits(value: string) {
+  const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+  const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
+
+  return value.replace(/[۰-۹٠-٩]/g, (digit) => {
+    const persianIndex = persianDigits.indexOf(digit);
+    if (persianIndex >= 0) return String(persianIndex);
+
+    const arabicIndex = arabicDigits.indexOf(digit);
+    return arabicIndex >= 0 ? String(arabicIndex) : digit;
+  });
+}
+function sanitizePhone(value: string) {
+  const digits = normalizeDigits(value).replace(/[^\d]/g, '');
+
+  if (digits.startsWith('0098') && digits.length === 14) {
+    return `0${digits.slice(4)}`;
+  }
+
+  if (digits.startsWith('98') && digits.length === 12) {
+    return `0${digits.slice(2)}`;
+  }
+
+  if (digits.startsWith('9') && digits.length === 10) {
+    return `0${digits}`;
+  }
+
+  return digits;
+}
+function collectErrorMessages(value: unknown): string[] {
+  if (!value) return [];
+
+  if (typeof value === 'string') return [value];
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectErrorMessages(item));
+  }
+
+  if (typeof value === 'object') {
+    return Object.values(value).flatMap((item) => collectErrorMessages(item));
+  }
+
+  return [];
+}
+function collectFieldErrorMessages(value: unknown, fieldName: string): string[] {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectFieldErrorMessages(item, fieldName));
+  }
+
+  if (typeof value !== 'object') return [];
+
+  return Object.entries(value).flatMap(([key, item]) => {
+    const ownMessages = key === fieldName ? collectErrorMessages(item) : [];
+    return [...ownMessages, ...collectFieldErrorMessages(item, fieldName)];
+  });
+}
+function getInviteErrorMessage(error: unknown) {
+  const responseData = (error as { response?: { data?: unknown; status?: number } })?.response?.data;
+  const status = (error as { response?: { status?: number } })?.response?.status;
+  const message = collectErrorMessages(responseData).join(' ').toLowerCase();
+  const phoneMessage = collectFieldErrorMessages(responseData, 'phone').join(' ').toLowerCase();
+  const isPhoneRelatedMessage = message.includes('phone') || message.includes('شماره');
+  const isUserNotFoundMessage =
+    message.includes('no user') ||
+    message.includes('کاربری') ||
+    (
+      isPhoneRelatedMessage &&
+      (
+        message.includes('does not exist') ||
+        message.includes('not found') ||
+        message.includes('وجود ندارد')
+      )
+    );
+
+  if (
+    phoneMessage.includes('11-digit') ||
+    phoneMessage.includes('starting with 09') ||
+    phoneMessage.includes('invalid')
+  ) {
+    return 'شماره موبایل معتبر نیست.';
+  }
+
+  if (
+    phoneMessage.includes('does not exist') ||
+    phoneMessage.includes('not found') ||
+    phoneMessage.includes('no user') ||
+    phoneMessage.includes('وجود ندارد') ||
+    isUserNotFoundMessage
+  ) {
+    return 'کاربری با این شماره وجود ندارد.';
+  }
+
+  if (
+    message.includes('already') ||
+    message.includes('member') ||
+    message.includes('از قبل') ||
+    message.includes('قبلا')
+  ) {
+    return 'این کاربر از قبل در پروژه می‌باشد.';
+  }
+
+  if (status === 401 || status === 403) {
+    return 'برای افزودن عضو به این پروژه دسترسی ندارید.';
+  }
+
+  if (status === 404) {
+    return 'پروژه پیدا نشد یا اجازه افزودن عضو به این پروژه را ندارید.';
+  }
+
+  return 'افزودن عضو انجام نشد.';
+}
+function getRemoveMemberErrorMessage(error: unknown) {
+  const responseData = (error as { response?: { data?: unknown; status?: number } })?.response?.data;
+  const status = (error as { response?: { status?: number } })?.response?.status;
+  const message = collectErrorMessages(responseData).join(' ').toLowerCase();
+
+  if (status === 401 || status === 403) {
+    return 'برای حذف عضو از این پروژه دسترسی ندارید.';
+  }
+
+  if (
+    message.includes('owner') ||
+    message.includes('creator') ||
+    message.includes('مالک') ||
+    message.includes('سازنده')
+  ) {
+    return 'حذف مالک پروژه امکان‌پذیر نیست.';
+  }
+
+  if (
+    message.includes('yourself') ||
+    message.includes('self') ||
+    message.includes('leave') ||
+    message.includes('خود')
+  ) {
+    return 'برای خروج از پروژه باید از گزینه خروج استفاده کنید.';
+  }
+
+  if (
+    status === 404 ||
+    message.includes('not found') ||
+    message.includes('does not exist') ||
+    message.includes('وجود ندارد')
+  ) {
+    return 'این عضو در پروژه پیدا نشد.';
+  }
+
+  return 'حذف عضو انجام نشد.';
+}
+function sortByOrder<T extends { order?: number }>(items: T[]) { return [...items].sort((first, second) => (first.order ?? 0) - (second.order ?? 0)); }
 
 function createBoardColumns(lists: BoardList[] = [], cardsByList: Record<number, ProjectCard[]> = {}): BoardColumn[] {
   const activeLists = lists.filter((list) => !list.is_archived);
@@ -71,31 +245,80 @@ function createBoardColumns(lists: BoardList[] = [], cardsByList: Record<number,
 }
 
 type ApiMember = { id: number; full_name: string; avatar: string | null; };
+type SidebarProfile = { id: number; name: string; avatar: string | null };
+type CurrentSidebarProfile = { id: number | null; name: string; avatar: string | null };
 
 const BoardPage = () => {
   const { boardId } = useParams();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<number | string | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [columns, setColumns] = useState<BoardColumn[]>(() => createBoardColumns());
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [isMessageVisible, setIsMessageVisible] = useState(false);
   
   // Modal & Profile States
   const [isOthersProfileOpen, setIsOthersProfileOpen] = useState(false);
   const [isMyProfileOpen, setIsMyProfileOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [myUserId, setMyUserId] = useState<number | null>(null);
+  const [myProfileSummary, setMyProfileSummary] = useState<CurrentSidebarProfile | null>(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [invitePhone, setInvitePhone] = useState('');
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [isInvitingMember, setIsInvitingMember] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
 
   // Fetch current user identity
   useEffect(() => {
-    fetchHeaderProfile().then(profile => {
-      if (profile && (profile as any).id) {
-        setMyUserId((profile as any).id);
-      }
+    Promise.allSettled([fetchCurrentUser(), fetchHeaderProfile()]).then(([currentUserResult, profileResult]) => {
+      const currentUser = currentUserResult.status === 'fulfilled' ? currentUserResult.value : null;
+      const profile = profileResult.status === 'fulfilled' ? profileResult.value : null;
+      const currentUserId = currentUser?.id != null ? Number(currentUser.id) : null;
+      const profileId = profile?.id != null ? Number(profile.id) : null;
+      const validProfileId =
+        currentUserId != null && Number.isFinite(currentUserId)
+          ? currentUserId
+          : profileId != null && Number.isFinite(profileId)
+            ? profileId
+            : null;
+      const currentUserName = [currentUser?.first_name, currentUser?.last_name].filter(Boolean).join(' ').trim();
+
+      setMyUserId(validProfileId);
+      setMyProfileSummary(
+        profile || currentUser
+          ? {
+              id: validProfileId,
+              name: profile?.name || currentUserName || 'پروفایل من',
+              avatar: resolveMediaUrl(profile?.avatarUrl),
+            }
+          : null,
+      );
     }).catch(() => console.log("Could not fetch my profile"));
   }, []);
+
+  useEffect(() => {
+    if (!message || isLoading) {
+      if (!message) setIsMessageVisible(false);
+      return;
+    }
+
+    setIsMessageVisible(true);
+
+    const fadeTimer = window.setTimeout(() => {
+      setIsMessageVisible(false);
+    }, 3500);
+    const clearTimer = window.setTimeout(() => {
+      setMessage(null);
+    }, 4000);
+
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(clearTimer);
+    };
+  }, [message, isLoading]);
 
   async function loadBoard(projectId?: number | string) {
     setIsLoading(true);
@@ -119,6 +342,16 @@ const BoardPage = () => {
         fetchBoardLists(nextProjectId),
         fetchProjectMembers(nextProjectId),
       ]);
+      const enrichedMemberData = await Promise.all(
+        memberData.map(async (member) => {
+          try {
+            const profile = await fetchProjectMemberProfile(nextProjectId, member.id);
+            return { ...member, ...profile };
+          } catch {
+            return member;
+          }
+        }),
+      );
 
       // ✅ Fetch full, detailed data for every card sequentially using getCardById
       const cardEntries = await Promise.all(
@@ -140,7 +373,7 @@ const BoardPage = () => {
       );
 
       setProject(projectData);
-      setMembers(memberData);
+      setMembers(enrichedMemberData);
       setColumns(createBoardColumns(listData, Object.fromEntries(cardEntries)));
     } catch {
       setProject(null);
@@ -156,12 +389,134 @@ const BoardPage = () => {
     const timeoutId = window.setTimeout(() => void loadBoard(boardId), 0);
     return () => window.clearTimeout(timeoutId);
   }, [boardId]);
-const apiMembers: ApiMember[] = members.map((member: any) => ({ 
-  id: member.id, 
-  full_name: getMemberName(member), 
-  avatar: member.avatar || member.image || member.profile_image || null 
+const apiMembers: ApiMember[] = members.map((member) => ({
+  id: member.id,
+  full_name: getMemberName(member),
+  avatar: getMemberAvatar(member)
 }));
-const sidebarProfiles = members.length > 0 ? members.map((member) => ({ id: member.id, name: getMemberName(member) })) : fallbackSidebarProfiles;
+const sidebarProfiles: SidebarProfile[] = members.map((member) => ({
+  id: member.id,
+  name: getMemberName(member),
+  avatar: getMemberAvatar(member),
+}));
+const currentMemberProfile = myUserId !== null
+  ? sidebarProfiles.find((profile) => profile.id === myUserId)
+  : undefined;
+const currentUserProfile = currentMemberProfile ?? myProfileSummary;
+const otherSidebarProfiles = myUserId !== null
+  ? sidebarProfiles.filter((profile) => profile.id !== myUserId)
+  : sidebarProfiles;
+
+  function openOtherProfile(userId: number) {
+    setSelectedUserId(String(userId));
+    setIsOthersProfileOpen(true);
+  }
+
+  function closeInviteModal() {
+    setIsInviteModalOpen(false);
+    setInvitePhone('');
+    setInviteError(null);
+  }
+
+  async function handleInviteMember(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const projectId = project?.id ?? activeProjectId;
+    if (!projectId) return;
+
+    if (project?.owner != null && myUserId != null && Number(project.owner) !== myUserId) {
+      setInviteError('فقط مالک پروژه می‌تواند عضو اضافه کند.');
+      return;
+    }
+
+    const phone = sanitizePhone(invitePhone);
+    if (!phone) {
+      setInviteError('شماره موبایل را وارد کنید.');
+      return;
+    }
+
+    if (!/^09\d{9}$/.test(phone)) {
+      setInviteError('شماره موبایل معتبر نیست.');
+      return;
+    }
+
+    const isAlreadyInProject = members.some((member) => {
+      const memberPhone = sanitizePhone(member.phone ?? '');
+      return memberPhone === phone;
+    });
+
+    if (isAlreadyInProject) {
+      setInviteError('این کاربر از قبل در پروژه می‌باشد.');
+      return;
+    }
+
+    try {
+      setIsInvitingMember(true);
+      setInviteError(null);
+      await inviteProjectMember(projectId, { phone });
+      await loadBoard(projectId);
+      closeInviteModal();
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        const response = (error as { response?: { data?: unknown; status?: number } })?.response;
+        console.error('Invite member failed', {
+          projectId,
+          phone,
+          status: response?.status,
+          data: response?.data,
+        });
+      }
+      setInviteError(getInviteErrorMessage(error));
+    } finally {
+      setIsInvitingMember(false);
+    }
+  }
+
+  async function handleRemoveMember(userId: number) {
+    const projectId = project?.id ?? activeProjectId;
+    if (!projectId) return;
+
+    if (myUserId != null && userId === myUserId) {
+      setMessage('برای خروج از پروژه باید از گزینه خروج استفاده کنید.');
+      return;
+    }
+
+    if (project?.owner != null && myUserId != null && Number(project.owner) !== myUserId) {
+      setMessage('فقط مالک پروژه می‌تواند عضو حذف کند.');
+      return;
+    }
+
+    if (project?.owner != null && Number(project.owner) === userId) {
+      setMessage('حذف مالک پروژه امکان‌پذیر نیست.');
+      return;
+    }
+
+    try {
+      setRemovingMemberId(userId);
+      setMessage(null);
+      await removeProjectMember(projectId, userId);
+
+      if (selectedUserId === String(userId)) {
+        setIsOthersProfileOpen(false);
+        setSelectedUserId(null);
+      }
+
+      await loadBoard(projectId);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        const response = (error as { response?: { data?: unknown; status?: number } })?.response;
+        console.error('Remove member failed', {
+          projectId,
+          userId,
+          status: response?.status,
+          data: response?.data,
+        });
+      }
+      setMessage(getRemoveMemberErrorMessage(error));
+    } finally {
+      setRemovingMemberId(null);
+    }
+  }
 
   async function handleCreateCard(column: BoardColumn) {
     if (!activeProjectId) { setMessage('برای ساخت کارت، ابتدا باید یک برد انتخاب شود.'); return; }
@@ -185,7 +540,7 @@ const sidebarProfiles = members.length > 0 ? members.map((member) => ({ id: memb
 
       <div className="flex flex-1 overflow-hidden relative z-0">
         {(isLoading || message) && (
-          <div className="absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-xl bg-white/95 px-4 py-2 text-sm font-bold text-red-500 shadow-sm">
+          <div className={`absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-xl bg-white/95 px-4 py-2 text-sm font-bold text-red-500 shadow-sm transition-opacity duration-500 ${isLoading || isMessageVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
             {isLoading ? 'در حال دریافت اطلاعات برد...' : message}
           </div>
         )}
@@ -215,8 +570,8 @@ const sidebarProfiles = members.length > 0 ? members.map((member) => ({ id: memb
                         available_members={apiMembers} 
                         
                         /* Walkie-talkies to refresh the board */
-                        onUpdate={() => loadBoard(activeProjectId)}
-                        onDelete={() => loadBoard(activeProjectId)}
+                        onUpdate={() => loadBoard(activeProjectId ?? undefined)}
+                        onDelete={() => loadBoard(activeProjectId ?? undefined)}
                       />
                    ))}
                    {col.cards.length === 0 && !isLoading && (
@@ -236,39 +591,95 @@ const sidebarProfiles = members.length > 0 ? members.map((member) => ({ id: memb
           </button>
           
           <aside className={`board-sidebar w-[280px] rounded-2xl border-2 border-red-200 bg-transparent p-6 m-4 mt-6 overflow-y-auto flex flex-col shrink-0 h-fit shadow-sm z-10 transition-all duration-300 ease-out ${isSidebarOpen ? 'translate-x-0 opacity-100' : 'translate-x-[232px] opacity-0 pointer-events-none'}`}>
-            <div className="flex items-center justify-center gap-2 mb-8 text-red-500 font-bold border-b border-red-200 pb-4 text-lg">
-               <Edit size={20} className="cursor-pointer" />
+            <div className="flex items-center justify-center gap-2 mb-8 text-red-500 font-bold border-b border-red-200 pb-4 text-xl">
                <span>{project?.name || 'بورد شماره ۱۲'}</span>
             </div>
-            <nav className="flex flex-col gap-6 text-red-400 text-sm mb-8 px-2">
-              <a href="#" className="flex items-center justify-end gap-3 hover:text-red-500 transition-colors"><span>جستجو</span><Search size={18} /></a>
-              <a href="#" className="flex items-center justify-end gap-3 hover:text-red-500 transition-colors"><span>فیلتر</span><Filter size={18} /></a>
-              <a href="#" className="flex items-center justify-end gap-3 hover:text-red-500 transition-colors"><span>تنظیمات ظاهری</span><Palette size={18} /></a>
+
+            {currentUserProfile && (
+              <div className="mb-6 border-b border-red-200 px-2 pb-6">
+                <Button
+                  variant="whiteSmall"
+                  onClick={() => setIsMyProfileOpen(true)}
+                  className="!h-auto !min-h-[58px] !w-full !justify-start !rounded-[10px] !border-red-100 !bg-transparent !px-2 !text-red-400 hover:!bg-red-50"
+                >
+                  <span className="flex w-full items-center gap-3" dir="rtl">
+                    <span className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm border border-gray-300">
+                      <img
+                        src={currentUserProfile.avatar || defaultProfile}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(event) => {
+                          event.currentTarget.src = defaultProfile;
+                        }}
+                      />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-right text-base font-semibold">
+                      {currentUserProfile.name}
+                    </span>
+                  </span>
+                </Button>
+              </div>
+            )}
+
+            <nav className="flex flex-col gap-6 text-red-400 text-base mb-8 px-2" dir="rtl">
+              <a href="#" className="flex items-center justify-start gap-3 text-right hover:text-red-500 transition-colors"><Search size={18} /><span>جستجو</span></a>
+              <a href="#" className="flex items-center justify-start gap-3 text-right hover:text-red-500 transition-colors"><Filter size={18} /><span>فیلتر</span></a>
+              <a href="#" className="flex items-center justify-start gap-3 text-right hover:text-red-500 transition-colors"><Palette size={18} /><span>تنظیمات ظاهری</span></a>
             </nav>
             
-            <div className="flex flex-col gap-5 border-t border-red-200 pt-6 px-2">
-               {sidebarProfiles.map((profile) => (
+            <div className="flex flex-col gap-4 border-t border-red-200 pt-6 px-2">
+               {otherSidebarProfiles.map((profile) => (
                   <div 
                     key={profile.id} 
-                    onClick={() => {
-                      if (myUserId && profile.id === myUserId) {
-                        setIsMyProfileOpen(true);
-                      } else {
-                        setSelectedUserId(String(profile.id));
-                        setIsOthersProfileOpen(true);
-                      }
-                    }}
-                    className="flex items-center justify-between text-red-400 text-sm cursor-pointer hover:bg-red-50 p-2 rounded-lg transition-colors"
+                    className="relative min-h-[58px] rounded-[10px] border border-red-100 py-1 pl-9 pr-2 text-red-400 text-base hover:bg-red-50 transition-colors"
+                    dir="rtl"
                   >
-                    <div className="flex items-center gap-3">
-                      <Edit size={14} className="opacity-70 hover:opacity-100 transition-opacity" />
-                      <span>{profile.name}</span>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden shrink-0 shadow-sm border border-gray-400">
-                       <div className="w-full h-full bg-gray-500"></div>
-                    </div>
+                    <Button
+                      variant="whiteSmall"
+                      onClick={() => openOtherProfile(profile.id)}
+                      className="!h-auto !min-h-[54px] !w-full !justify-start !rounded-[10px] !border-transparent !bg-transparent !px-0 !text-red-400 hover:!bg-transparent"
+                    >
+                      <span className="flex w-full items-center gap-3" dir="rtl">
+                        <span className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm border border-gray-300">
+                          <img
+                            src={profile.avatar || defaultProfile}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            onError={(event) => {
+                              event.currentTarget.src = defaultProfile;
+                            }}
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-right text-base font-semibold">
+                          {profile.name}
+                        </span>
+                      </span>
+                    </Button>
+                    <Button
+                      variant="circleCloseDark"
+                      aria-label={`حذف ${profile.name}`}
+                      disabled={removingMemberId !== null}
+                      onClick={() => void handleRemoveMember(profile.id)}
+                      className="!absolute !left-1.5 !top-1/2 !h-7 !w-7 !-translate-y-1/2 rounded-full hover:!bg-red-100 [&>span]:!text-[24px] [&>span]:!text-red-400 hover:[&>span]:!text-red-500"
+                    />
                   </div>
                ))}
+               <Button
+                 variant="whiteSmall"
+                 aria-label="دعوت عضو"
+                 disabled={!activeProjectId}
+                 onClick={() => setIsInviteModalOpen(true)}
+                 className="!h-auto !min-h-[58px] !w-full !justify-start !rounded-[10px] !border-red-100 !bg-transparent !px-2 !text-red-400 hover:!bg-red-50"
+               >
+                 <span className="flex w-full items-center gap-3" dir="rtl">
+                   <span className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center shrink-0 shadow-sm border border-red-200 text-red-500">
+                     <Plus size={22} strokeWidth={2.5} />
+                   </span>
+                   <span className="min-w-0 flex-1 truncate text-right text-base font-semibold">
+                     دعوت عضو
+                   </span>
+                 </span>
+               </Button>
             </div>
           </aside>
         </div>
@@ -290,6 +701,56 @@ const sidebarProfiles = members.length > 0 ? members.map((member) => ({ id: memb
           userId={selectedUserId}
         />
       )}
+
+      <Modal
+        isOpen={isInviteModalOpen}
+        onClose={closeInviteModal}
+        title="افزودن عضو"
+      >
+        <form
+          onSubmit={handleInviteMember}
+          className="w-[360px] max-w-[calc(100vw-72px)] space-y-4"
+          dir="rtl"
+        >
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-[#387FA3]">
+              شماره موبایل
+            </label>
+            <div className="w-full" dir="rtl">
+              <input
+                dir="rtl"
+                type="text"
+                inputMode="tel"
+                placeholder="شماره موبایل عضو را وارد کنید"
+                value={invitePhone}
+                onChange={(event) => {
+                  setInvitePhone(event.target.value);
+                  setInviteError(null);
+                }}
+                aria-label="شماره موبایل عضو"
+                disabled={isInvitingMember}
+                className="h-[50px] w-full rounded-[10px] border-none bg-[#EFEFEF] px-4 text-right text-[14px] font-medium text-[#24344c] outline-none placeholder:text-[#777777] transition-all duration-200 focus-visible:ring-[3px] focus-visible:ring-[rgba(111,130,177,0.35)] disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          {inviteError && (
+            <p className="text-sm font-semibold text-red-500">{inviteError}</p>
+          )}
+
+          <div className="flex justify-center pt-2">
+            <Button
+              type="submit"
+              variant="pillDark"
+              loading={isInvitingMember}
+              disabled={!invitePhone.trim() || isInvitingMember}
+              className="!h-[45px] !w-full !max-w-[220px] !text-[16px]"
+            >
+              افزودن
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       <style dangerouslySetInnerHTML={{__html: `
         .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }

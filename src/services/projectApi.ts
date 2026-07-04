@@ -4,7 +4,14 @@ export type BoardStatus = "todo" | "doing" | "review" | "done";
 
 export type ProjectMember = {
   id: number;
-  phone: string;
+  phone?: string | null;
+  full_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  name?: string | null;
+  avatar?: string | null;
+  image?: string | null;
+  profile_image?: string | null;
 };
 
 export type Project = {
@@ -66,7 +73,7 @@ export type PublicProfile = {
   id: number;
   phone: string;
   full_name: string;
-  avatar: string;
+  avatar: string | null;
   bio: string;
   job_title: string;
 };

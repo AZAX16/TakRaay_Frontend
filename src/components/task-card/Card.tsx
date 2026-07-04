@@ -12,8 +12,14 @@ type Member = {
 
 type ApiMember = {
   id: number;
-  full_name: string;
-  avatar: string | null;
+  full_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  avatar?: string | null;
+  image?: string | null;
+  profile_image?: string | null;
 };
 
 type CardProps = {
@@ -27,6 +33,31 @@ type CardProps = {
   due_date?: string;
   onDelete?: () => void;
 };
+
+function isPhoneNumberLike(value: string) {
+  return /^(\+|00)?[\d۰-۹٠-٩][\d۰-۹٠-٩\s\-()]{6,}$/.test(value.trim());
+}
+
+function getMemberDisplayName(member: ApiMember) {
+  const firstAndLastName = [member.first_name, member.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  const candidates = [member.full_name, firstAndLastName, member.name];
+
+  for (const candidate of candidates) {
+    const name = candidate?.trim();
+    if (name && !isPhoneNumberLike(name)) {
+      return name;
+    }
+  }
+
+  return "...";
+}
+
+function getMemberImage(member: ApiMember) {
+  return member.avatar || member.image || member.profile_image || null;
+}
 
 export default function Card({
   id,
@@ -78,16 +109,16 @@ export default function Card({
     setMembers(
       (assigned_to ?? []).map((member) => ({
         id: member.id,
-        name: member.full_name || "...",
-        image: member.avatar,
+        name: getMemberDisplayName(member),
+        image: getMemberImage(member),
       }))
     );
 
     setAvailableMembers(
       (available_members ?? []).map((member) => ({
         id: member.id,
-        name: member.full_name || "...",
-        image: member.avatar,
+        name: getMemberDisplayName(member),
+        image: getMemberImage(member),
       }))
     );
   }, [assigned_to, available_members]);
