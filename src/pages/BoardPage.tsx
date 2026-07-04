@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type SVGProps } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import Header from '../components/Header/Header';
 import Card from '../components/task-card/Card';
 import OthersProfile from '../components/profile/OthersProfile';
@@ -20,6 +21,7 @@ import {
   fetchProjectMembers,
   fetchProjects,
   inviteProjectMember,
+  leaveProject,
   removeProjectMember,
   type BoardList,
   type BoardStatus,
@@ -233,6 +235,19 @@ function getRemoveMemberErrorMessage(error: unknown) {
 
   return 'حذف عضو انجام نشد.';
 }
+function getLeaveProjectErrorMessage(error: unknown) {
+  const status = (error as { response?: { status?: number } })?.response?.status;
+
+  if (status === 401 || status === 403) {
+    return 'برای ترک این پروژه دسترسی ندارید.';
+  }
+
+  if (status === 404) {
+    return 'پروژه پیدا نشد.';
+  }
+
+  return 'ترک پروژه انجام نشد.';
+}
 function sortByOrder<T extends { order?: number }>(items: T[]) { return [...items].sort((first, second) => (first.order ?? 0) - (second.order ?? 0)); }
 
 function createBoardColumns(lists: BoardList[] = [], cardsByList: Record<number, ProjectCard[]> = {}): BoardColumn[] {
@@ -250,6 +265,7 @@ type CurrentSidebarProfile = { id: number | null; name: string; avatar: string |
 
 const BoardPage = () => {
   const { boardId } = useParams();
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<number | string | null>(null);
   const [project, setProject] = useState<Project | null>(null);
@@ -269,6 +285,7 @@ const BoardPage = () => {
   const [invitePhone, setInvitePhone] = useState('');
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [isInvitingMember, setIsInvitingMember] = useState(false);
+  const [isLeavingProject, setIsLeavingProject] = useState(false);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
 
   // Fetch current user identity
@@ -406,6 +423,10 @@ const currentUserProfile = currentMemberProfile ?? myProfileSummary;
 const otherSidebarProfiles = myUserId !== null
   ? sidebarProfiles.filter((profile) => profile.id !== myUserId)
   : sidebarProfiles;
+const isProjectOwner =
+  project?.owner != null && myUserId != null && Number(project.owner) === myUserId;
+const canLeaveProject =
+  project?.owner != null && myUserId != null && !isProjectOwner;
 
   function openOtherProfile(userId: number) {
     setSelectedUserId(String(userId));
@@ -424,7 +445,7 @@ const otherSidebarProfiles = myUserId !== null
     const projectId = project?.id ?? activeProjectId;
     if (!projectId) return;
 
-    if (project?.owner != null && myUserId != null && Number(project.owner) !== myUserId) {
+    if (project?.owner != null && myUserId != null && !isProjectOwner) {
       setInviteError('فقط مالک پروژه می‌تواند عضو اضافه کند.');
       return;
     }
@@ -472,6 +493,33 @@ const otherSidebarProfiles = myUserId !== null
     }
   }
 
+  async function handleLeaveProject() {
+    const projectId = project?.id ?? activeProjectId;
+    if (!projectId || !canLeaveProject) return;
+
+    const shouldLeave = window.confirm('آیا از ترک پروژه مطمئن هستید؟');
+    if (!shouldLeave) return;
+
+    try {
+      setIsLeavingProject(true);
+      setMessage(null);
+      await leaveProject(projectId);
+      navigate('/boards', { replace: true });
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        const response = (error as { response?: { data?: unknown; status?: number } })?.response;
+        console.error('Leave project failed', {
+          projectId,
+          status: response?.status,
+          data: response?.data,
+        });
+      }
+      setMessage(getLeaveProjectErrorMessage(error));
+    } finally {
+      setIsLeavingProject(false);
+    }
+  }
+
   async function handleRemoveMember(userId: number) {
     const projectId = project?.id ?? activeProjectId;
     if (!projectId) return;
@@ -481,7 +529,7 @@ const otherSidebarProfiles = myUserId !== null
       return;
     }
 
-    if (project?.owner != null && myUserId != null && Number(project.owner) !== myUserId) {
+    if (project?.owner != null && myUserId != null && !isProjectOwner) {
       setMessage('فقط مالک پروژه می‌تواند عضو حذف کند.');
       return;
     }
@@ -655,32 +703,58 @@ const otherSidebarProfiles = myUserId !== null
                         </span>
                       </span>
                     </Button>
-                    <Button
-                      variant="circleCloseDark"
-                      aria-label={`حذف ${profile.name}`}
-                      disabled={removingMemberId !== null}
-                      onClick={() => void handleRemoveMember(profile.id)}
-                      className="!absolute !left-1.5 !top-1/2 !h-7 !w-7 !-translate-y-1/2 rounded-full hover:!bg-red-100 [&>span]:!text-[24px] [&>span]:!text-red-400 hover:[&>span]:!text-red-500"
-                    />
+                    {isProjectOwner && (
+                      <Button
+                        variant="circleCloseDark"
+                        aria-label={`حذف ${profile.name}`}
+                        disabled={removingMemberId !== null}
+                        onClick={() => void handleRemoveMember(profile.id)}
+                        className="!absolute !left-1.5 !top-1/2 !h-7 !w-7 !-translate-y-1/2 rounded-full hover:!bg-red-100 [&>span]:!text-[24px] [&>span]:!text-red-400 hover:[&>span]:!text-red-500"
+                      />
+                    )}
                   </div>
                ))}
-               <Button
-                 variant="whiteSmall"
-                 aria-label="دعوت عضو"
-                 disabled={!activeProjectId}
-                 onClick={() => setIsInviteModalOpen(true)}
-                 className="!h-auto !min-h-[58px] !w-full !justify-start !rounded-[10px] !border-red-100 !bg-transparent !px-2 !text-red-400 hover:!bg-red-50"
-               >
-                 <span className="flex w-full items-center gap-3" dir="rtl">
-                   <span className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center shrink-0 shadow-sm border border-red-200 text-red-500">
-                     <Plus size={22} strokeWidth={2.5} />
+               {isProjectOwner && (
+                 <Button
+                   variant="whiteSmall"
+                   aria-label="دعوت عضو"
+                   disabled={!activeProjectId}
+                   onClick={() => setIsInviteModalOpen(true)}
+                   className="!h-auto !min-h-[58px] !w-full !justify-start !rounded-[10px] !border-red-100 !bg-transparent !px-2 !text-red-400 hover:!bg-red-50"
+                 >
+                   <span className="flex w-full items-center gap-3" dir="rtl">
+                     <span className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center shrink-0 shadow-sm border border-red-200 text-red-500">
+                       <Plus size={22} strokeWidth={2.5} />
+                     </span>
+                     <span className="min-w-0 flex-1 truncate text-right text-base font-semibold">
+                       دعوت عضو
+                     </span>
                    </span>
-                   <span className="min-w-0 flex-1 truncate text-right text-base font-semibold">
-                     دعوت عضو
-                   </span>
-                 </span>
-               </Button>
+                 </Button>
+               )}
             </div>
+
+            {canLeaveProject && (
+              <div className="mt-4 border-t border-red-200 px-2 pt-4">
+                <Button
+                  variant="whiteSmall"
+                  aria-label="ترک پروژه"
+                  loading={isLeavingProject}
+                  disabled={!activeProjectId || isLeavingProject}
+                  onClick={() => void handleLeaveProject()}
+                  className="!h-auto !min-h-[58px] !w-full !justify-start !rounded-[10px] !border-red-200 !bg-red-50/40 !px-2 !text-red-500 hover:!bg-red-50"
+                >
+                  <span className="flex w-full items-center gap-3" dir="rtl">
+                    <span className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center shrink-0 shadow-sm border border-red-200 text-red-500">
+                      <LogOut size={20} strokeWidth={2.4} />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-right text-base font-semibold">
+                      ترک پروژه
+                    </span>
+                  </span>
+                </Button>
+              </div>
+            )}
           </aside>
         </div>
       </div>
@@ -709,14 +783,14 @@ const otherSidebarProfiles = myUserId !== null
       >
         <form
           onSubmit={handleInviteMember}
-          className="w-[360px] max-w-[calc(100vw-72px)] space-y-4"
-          dir="rtl"
+          className="mx-auto flex w-[360px] max-w-[calc(100vw-72px)] flex-col items-center gap-4 text-center"
+          dir="ltr"
         >
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-[#387FA3]">
+          <div className="w-full space-y-2">
+            <label className="block text-center text-sm font-semibold text-[#387FA3]">
               شماره موبایل
             </label>
-            <div className="w-full" dir="rtl">
+            <div className="w-full">
               <input
                 dir="rtl"
                 type="text"
@@ -735,10 +809,10 @@ const otherSidebarProfiles = myUserId !== null
           </div>
 
           {inviteError && (
-            <p className="text-sm font-semibold text-red-500">{inviteError}</p>
+            <p className="w-full text-center text-sm font-semibold text-red-500">{inviteError}</p>
           )}
 
-          <div className="flex justify-center pt-2">
+          <div className="flex w-full justify-center pt-2">
             <Button
               type="submit"
               variant="pillDark"
