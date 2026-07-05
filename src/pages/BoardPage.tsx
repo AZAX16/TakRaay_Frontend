@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type SVGProps } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Keyboard, LogOut, X } from 'lucide-react';
 import Header from '../components/Header/Header';
 import Card from '../components/task-card/Card';
@@ -306,6 +306,7 @@ type CurrentSidebarProfile = { id: number | null; name: string; avatar: string |
 
 const BoardPage = () => {
   const { boardId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<number | string | null>(null);
@@ -491,6 +492,37 @@ useEffect(() => {
 
   return () => window.clearTimeout(transitionTimer);
 }, [cardSearchTerm]);
+
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const headerCardSearch = params.get('cardSearch');
+
+  if (!headerCardSearch) return;
+
+  const syncTimer = window.setTimeout(() => {
+    setCardSearchQuery(headerCardSearch);
+    setIsSidebarOpen(true);
+    setIsSidebarSearchOpen(true);
+    setIsAppearanceOpen(false);
+  }, 0);
+
+  return () => window.clearTimeout(syncTimer);
+}, [location.search]);
+
+useEffect(() => {
+  if (!isSidebarOpen || !isSidebarSearchOpen) return;
+
+  const frameId = window.requestAnimationFrame(() => {
+    const buttonRect = sidebarSearchButtonRef.current?.getBoundingClientRect();
+
+    if (buttonRect) {
+      setSearchPopoverPosition(getSidebarPopoverPosition(buttonRect, 220));
+    }
+  });
+
+  return () => window.cancelAnimationFrame(frameId);
+}, [isSidebarOpen, isSidebarSearchOpen]);
+
 const visibleColumns = renderedCardSearchTerm
   ? columns.map((column) => {
       const cards = column.cards.filter((card) =>

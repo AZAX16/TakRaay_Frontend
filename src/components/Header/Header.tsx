@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { MoonStar, PanelsTopLeft } from "lucide-react";
 import { Button, ToggleSwitch } from "../ui-kit/Button";
@@ -7,8 +7,12 @@ import { SearchInput } from "../ui-kit/Input";
 import {
   fetchHeaderBoards,
   fetchHeaderProfile,
+  searchProjects,
+  type BoardSearchResult,
+  type CardSearchResult,
   type HeaderBoardResponse,
   type HeaderProfile,
+  type ProjectSearchResponse,
 } from "../../services/headerApi";
 import MyProfile from "../profile/MyProfile";
 import logoUrl from "../../assets/white1.webp";
@@ -17,6 +21,7 @@ import "./Header.css";
 
 const defaultBoardLabel = "بردها";
 const compactSearchQuery = "(max-width: 980px)";
+const headerSearchDelayMs = 220;
 
 function getBoardTitle(board: HeaderBoardResponse): string {
   if (typeof board === "string") return board;
@@ -36,6 +41,23 @@ function getBoardKey(board: HeaderBoardResponse, index: number): string {
 function getBoardIdFromPath(pathname: string): string {
   const match = pathname.match(/^\/boards\/([^/]+)/);
   return match?.[1] ? decodeURIComponent(match[1]) : "";
+}
+
+function createEmptySearchResults(query = ""): ProjectSearchResponse {
+  return { query, boards: [], cards: [] };
+}
+
+function getSearchResultBoardPathId(result: BoardSearchResult | CardSearchResult): string {
+  const id = result.project_id ?? result.board_id ?? result.id;
+  return id != null ? String(id) : "";
+}
+
+function getSearchBoardTitle(result: BoardSearchResult): string {
+  return result.board_title || result.project_name || (result.id != null ? String(result.id) : "");
+}
+
+function getSearchCardTitle(result: CardSearchResult): string {
+  return result.title || result.match_excerpt || (result.id != null ? String(result.id) : "");
 }
 
 function ChevronDownIcon() {
@@ -186,6 +208,11 @@ export default function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState<ProjectSearchResponse>(() =>
+    createEmptySearchResults(),
+  );
+  const [isHeaderSearchLoading, setIsHeaderSearchLoading] = useState(false);
+  const [headerSearchError, setHeaderSearchError] = useState("");
 
   const headerRef = useRef<HTMLDivElement | null>(null);
   const activeBoardId = getBoardIdFromPath(location.pathname);
@@ -193,11 +220,55 @@ export default function Header() {
     ? boards.find((board) => getBoardId(board) === activeBoardId)
     : undefined;
   const activeBoardLabel = activeBoard ? getBoardTitle(activeBoard) : defaultBoardLabel;
+  const searchResultBoards = searchResults.boards ?? [];
+  const searchResultCards = searchResults.cards ?? [];
+  const hasHeaderSearchResults = searchResultBoards.length > 0 || searchResultCards.length > 0;
+  const shouldShowHeaderSearchResults = isSearchOpen && searchValue.trim().length > 0;
 
   const closeMenus = () => {
     setIsBoardOpen(false);
     setIsMenuOpen(false);
   };
+
+  function resetHeaderSearch() {
+    setSearchValue("");
+    setSearchResults(createEmptySearchResults());
+    setHeaderSearchError("");
+    setIsHeaderSearchLoading(false);
+    setIsSearchOpen(false);
+    closeMenus();
+  }
+
+  function handleHeaderSearchChange(event: ChangeEvent<HTMLInputElement>) {
+    const nextValue = event.target.value;
+    const nextQuery = nextValue.trim();
+
+    setSearchValue(nextValue);
+    setSearchResults(createEmptySearchResults(nextQuery));
+    setHeaderSearchError("");
+    setIsHeaderSearchLoading(Boolean(nextQuery));
+  }
+
+  function handleBoardSearchResultClick(result: BoardSearchResult) {
+    const boardId = getSearchResultBoardPathId(result);
+
+    if (!boardId) return;
+
+    resetHeaderSearch();
+    navigate(`/boards/${encodeURIComponent(boardId)}`);
+  }
+
+  function handleCardSearchResultClick(result: CardSearchResult) {
+    const boardId = getSearchResultBoardPathId(result);
+    const cardTitle = getSearchCardTitle(result);
+
+    if (!boardId || !cardTitle) return;
+
+    const params = new URLSearchParams({ cardSearch: cardTitle });
+
+    resetHeaderSearch();
+    navigate(`/boards/${encodeURIComponent(boardId)}?${params.toString()}`);
+  }
 
   useEffect(() => {
     let ignore = false;
@@ -259,6 +330,36 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    const query = searchValue.trim();
+
+    if (!query) return;
+
+    let ignore = false;
+    const searchTimer = window.setTimeout(async () => {
+      try {
+        const nextResults = await searchProjects(query);
+
+        if (!ignore) {
+          setSearchResults(nextResults);
+          setHeaderSearchError("");
+        }
+      } catch {
+        if (!ignore) {
+          setSearchResults(createEmptySearchResults(query));
+          setHeaderSearchError("جستجو انجام نشد");
+        }
+      } finally {
+        if (!ignore) setIsHeaderSearchLoading(false);
+      }
+    }, headerSearchDelayMs);
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(searchTimer);
+    };
+  }, [searchValue]);
+
+  useEffect(() => {
     function closeFloatingPanels(event: MouseEvent) {
       if (
         event.target instanceof Node &&
@@ -311,11 +412,85 @@ export default function Header() {
             >
               <SearchInput
                 value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
+                onChange={handleHeaderSearchChange}
                 placeholder="جستجو"
                 ariaLabel="جستجو"
               />
             </div>
+
+            {shouldShowHeaderSearchResults && (
+              <div
+                className="tak-search-results-popover"
+                role="listbox"
+                aria-label="نتایج جستجو"
+              >
+                {isHeaderSearchLoading && (
+                  <div className="tak-search-results-state">در حال جستجو...</div>
+                )}
+
+                {!isHeaderSearchLoading && headerSearchError && (
+                  <div className="tak-search-results-state">{headerSearchError}</div>
+                )}
+
+                {!isHeaderSearchLoading && !headerSearchError && !hasHeaderSearchResults && (
+                  <div className="tak-search-results-state">نتیجه‌ای پیدا نشد</div>
+                )}
+
+                {!isHeaderSearchLoading && !headerSearchError && searchResultBoards.length > 0 && (
+                  <section className="tak-search-results-section" aria-label="بردها">
+                    <p className="tak-search-results-heading">بردها</p>
+                    {searchResultBoards.map((result, index) => {
+                      const title = getSearchBoardTitle(result);
+                      const meta =
+                        result.project_name && result.project_name !== title
+                          ? result.project_name
+                          : result.match_excerpt;
+
+                      return (
+                        <button
+                          key={`board-${result.project_id ?? result.board_id ?? result.id ?? index}`}
+                          type="button"
+                          className="tak-search-result-item"
+                          onClick={() => handleBoardSearchResultClick(result)}
+                        >
+                          <span className="tak-search-result-title">{title}</span>
+                          {meta && <span className="tak-search-result-meta">{meta}</span>}
+                        </button>
+                      );
+                    })}
+                  </section>
+                )}
+
+                {!isHeaderSearchLoading && !headerSearchError && searchResultCards.length > 0 && (
+                  <section className="tak-search-results-section" aria-label="کارت‌ها">
+                    <p className="tak-search-results-heading">کارت‌ها</p>
+                    {searchResultCards.map((result, index) => {
+                      const title = getSearchCardTitle(result);
+                      const meta = [result.project_name, result.board_list_title]
+                        .filter(Boolean)
+                        .join(" / ");
+
+                      return (
+                        <button
+                          key={`card-${result.id ?? index}`}
+                          type="button"
+                          className="tak-search-result-item"
+                          onClick={() => handleCardSearchResultClick(result)}
+                        >
+                          <span className="tak-search-result-title">{title}</span>
+                          {meta && <span className="tak-search-result-meta">{meta}</span>}
+                          {result.match_excerpt && (
+                            <span className="tak-search-result-excerpt">
+                              {result.match_excerpt}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </section>
+                )}
+              </div>
+            )}
 
             <div className="tak-board" dir="rtl">
               <button
