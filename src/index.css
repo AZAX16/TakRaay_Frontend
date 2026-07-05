@@ -187,11 +187,15 @@ body:has(.tak-header.is-night-mode) .create-board-card p {
 
 /* Date picker / modal custom styles */
 .css-1m8qzkt {
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 9999 !important;
+  transform: translateY(8px) !important;
+  z-index: 99999 !important;
+}
+
+.zm-Popper,
+.zm-PopperRoot,
+.zm-Popover {
+  margin-top: 8px !important;
+  z-index: 99999 !important;
 }
 
 .css-137m4ck {
@@ -261,13 +265,17 @@ body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
 
 /* Main Board Page Background (Light Mode) */
 .board-page {
-  background-color: #efefef !important; /* Explicitly #efefef */
+  background-color: var(--board-page-background, var(--app-page-light)) !important;
   transition: background-color 0.3s ease;
+}
+
+.board-page .tak-header {
+  --tak-page: var(--board-page-background, var(--app-page-light));
 }
 
 /* Main Board Page Background (Dark Mode) */
 body:has(.tak-header.is-night-mode) .board-page {
-  background-color: var(--app-page-dark) !important;
+  background-color: var(--board-page-background, var(--app-page-dark)) !important;
 }
 
 /* Sidebar Toggle Button (Chevron) */

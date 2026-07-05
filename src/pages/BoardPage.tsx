@@ -33,7 +33,6 @@ import {
 type IconProps = SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number; };
 function IconBase({ size = 18, strokeWidth = 2, children, ...props }: IconProps) { return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>; }
 function Search(props: IconProps) { return <IconBase {...props}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></IconBase>; }
-function Filter(props: IconProps) { return <IconBase {...props}><path d="M4 6h16" /><path d="M7 12h10" /><path d="M10 18h4" /></IconBase>; }
 function Palette(props: IconProps) { return <IconBase {...props}><circle cx="13.5" cy="6.5" r=".7" /><circle cx="17.5" cy="10.5" r=".7" /><circle cx="8.5" cy="7.5" r=".7" /><circle cx="6.5" cy="12.5" r=".7" /><path d="M12 3a9 9 0 0 0 0 18h1.5a2.5 2.5 0 0 0 1.8-4.2 1.6 1.6 0 0 1 1.1-2.8H18a3 3 0 0 0 3-3 8 8 0 0 0-9-8Z" /></IconBase>; }
 function Plus(props: IconProps) { return <IconBase {...props}><path d="M12 5v14" /><path d="M5 12h14" /></IconBase>; }
 function ChevronLeft(props: IconProps) { return <IconBase {...props}><path d="m15 18-6-6 6-6" /></IconBase>; }
@@ -42,6 +41,16 @@ function ChevronRight(props: IconProps) { return <IconBase {...props}><path d="m
 type ColumnStyleId = 1 | 2 | 3 | 4;
 type ColumnDefinition = { status: BoardStatus; styleId: ColumnStyleId; label: string; bgColor: string; headerBg: string; borderColor: string; };
 type BoardColumn = ColumnDefinition & { listId?: number; title: string; cards: ProjectCard[]; };
+type BoardScrollbarStyle = { thumb: string; track: string };
+const CARD_SEARCH_EXIT_DELAY_MS = 180;
+const DEFAULT_BOARD_BACKGROUND = '#efefef';
+const appearanceBackgroundColors = [
+  '#efefef',
+  '#B8EAED',
+  '#e0786c',
+  '#F3C8C7',
+  '#f8dabb',
+];
 
 const columnDefinitions: ColumnDefinition[] = [
   { status: 'todo', styleId: 4, label: 'برای انجام', bgColor: 'bg-[#F07167]', headerBg: 'bg-[#db675d]', borderColor: 'border-[#F07167]' },
@@ -55,6 +64,17 @@ const headerColors: Record<number, { title: string; button: string }> = {
   2: { title: 'text-white', button: 'border-white/80 text-white hover:text-white hover:bg-white/10' },
   3: { title: 'text-gray-800', button: 'border-gray-600 text-gray-700 hover:text-black hover:bg-black/5' },
   4: { title: 'text-white', button: 'border-white/80 text-white hover:text-white hover:bg-white/10' },
+};
+
+const listScrollbarColors: Record<ColumnStyleId, BoardScrollbarStyle> = {
+  1: { thumb: '#d8d357', track: '#fffcc9' },
+  2: { thumb: '#008f98', track: '#b7f0f4' },
+  3: { thumb: '#c58b54', track: '#ffe3c6' },
+  4: { thumb: '#d9544c', track: '#f7c4c0' },
+};
+const sidebarScrollbarColors: BoardScrollbarStyle = {
+  thumb: '#9B3F5D',
+  track: '#F6D7DC',
 };
 
 const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -112,6 +132,27 @@ function sanitizePhone(value: string) {
   }
 
   return digits;
+}
+function normalizeCardSearch(value: string) {
+  return normalizeDigits(value)
+    .replace(/\u200c/g, ' ')
+    .replace(/ي/g, 'ی')
+    .replace(/ك/g, 'ک')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('fa-IR');
+}
+function getSidebarPopoverPosition(buttonRect: DOMRect, popoverWidth: number) {
+  const gap = 12;
+  const rightSideLeft = buttonRect.right + gap;
+  const hasRoomOnRight = rightSideLeft + popoverWidth <= window.innerWidth - 16;
+
+  return {
+    top: Math.max(16, buttonRect.top - 8),
+    left: hasRoomOnRight
+      ? rightSideLeft
+      : Math.max(16, buttonRect.left - popoverWidth - gap),
+  };
 }
 function collectErrorMessages(value: unknown): string[] {
   if (!value) return [];
@@ -287,7 +328,16 @@ const BoardPage = () => {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [isInvitingMember, setIsInvitingMember] = useState(false);
   const [isLeavingProject, setIsLeavingProject] = useState(false);
+  const [isSidebarSearchOpen, setIsSidebarSearchOpen] = useState(false);
+  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const [cardSearchQuery, setCardSearchQuery] = useState('');
+  const [renderedCardSearchTerm, setRenderedCardSearchTerm] = useState('');
+  const [searchPopoverPosition, setSearchPopoverPosition] = useState({ top: 0, left: 0 });
+  const [appearancePopoverPosition, setAppearancePopoverPosition] = useState({ top: 0, left: 0 });
+  const [boardBackgroundColor, setBoardBackgroundColor] = useState(DEFAULT_BOARD_BACKGROUND);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+  const sidebarSearchButtonRef = useRef<HTMLButtonElement | null>(null);
+  const appearanceButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // Fetch current user identity
   useEffect(() => {
@@ -348,6 +398,7 @@ const BoardPage = () => {
       if (!nextProjectId) {
         setActiveProjectId(null);
         setProject(null);
+        setBoardBackgroundColor(DEFAULT_BOARD_BACKGROUND);
         setMembers([]);
         setColumns(createBoardColumns());
         setMessage('بردی برای نمایش پیدا نشد.');
@@ -391,10 +442,14 @@ const BoardPage = () => {
       );
 
       setProject(projectData);
+      setBoardBackgroundColor(
+        projectData.background_color || projectData.background_color_input || DEFAULT_BOARD_BACKGROUND,
+      );
       setMembers(enrichedMemberData);
       setColumns(createBoardColumns(listData, Object.fromEntries(cardEntries)));
     } catch {
       setProject(null);
+      setBoardBackgroundColor(DEFAULT_BOARD_BACKGROUND);
       setMembers([]);
       setColumns(createBoardColumns());
       setMessage('اتصال به API انجام نشد. لطفا توکن یا دسترسی را بررسی کنید.');
@@ -485,6 +540,32 @@ const visibleColumns = renderedCardSearchTerm
   function openOtherProfile(userId: number) {
     setSelectedUserId(String(userId));
     setIsOthersProfileOpen(true);
+  }
+
+  function toggleSidebarSearch() {
+    if (!isSidebarSearchOpen) {
+      const buttonRect = sidebarSearchButtonRef.current?.getBoundingClientRect();
+
+      if (buttonRect) {
+        setSearchPopoverPosition(getSidebarPopoverPosition(buttonRect, 220));
+      }
+    }
+
+    setIsSidebarSearchOpen((open) => !open);
+    setIsAppearanceOpen(false);
+  }
+
+  function toggleAppearance() {
+    if (!isAppearanceOpen) {
+      const buttonRect = appearanceButtonRef.current?.getBoundingClientRect();
+
+      if (buttonRect) {
+        setAppearancePopoverPosition(getSidebarPopoverPosition(buttonRect, 232));
+      }
+    }
+
+    setIsAppearanceOpen((open) => !open);
+    setIsSidebarSearchOpen(false);
   }
 
   function closeInviteModal() {
@@ -635,7 +716,11 @@ const visibleColumns = renderedCardSearchTerm
   }
 
   return (
-    <div className="board-page h-screen transition-colors duration-300 flex flex-col font-['Vazirmatn'] overflow-hidden" dir="rtl">      
+    <div
+      className="board-page h-screen transition-colors duration-300 flex flex-col font-['Vazirmatn'] overflow-hidden"
+      style={{ '--board-page-background': boardBackgroundColor } as CSSProperties}
+      dir="rtl"
+    >
       <div className="relative z-50">
         <Header />
       </div>
@@ -648,7 +733,7 @@ const visibleColumns = renderedCardSearchTerm
         )}
         <main className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
           <div className="flex gap-6 p-6 h-full w-max items-start">
-            {columns.map((col) => (
+            {visibleColumns.map((col) => (
               <div key={col.status} className={`w-[396px] h-full flex flex-col`}>
                 <div className={`${col.bgColor} rounded-2xl py-3 px-4 flex items-center justify-between shadow-sm z-10 relative`}>
                   <div className="flex items-center gap-2">
@@ -658,29 +743,50 @@ const visibleColumns = renderedCardSearchTerm
                     <Plus size={16} strokeWidth={2.5} />
                   </button>
                 </div>
-                <div className={`${col.bgColor} bg-opacity-30 backdrop-blur-md flex-1 rounded-2xl border ${col.borderColor} border-opacity-50 p-4 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col items-center gap-4 pb-5 shadow-sm mt-3 pt-4`}>
-                   {col.cards.map((card: any) => (
-                     <Card
-                        key={card.id}
-                        {...card} /* ✅ This automatically passes the perfect assigned_to data from the API! */
-                        
-                        date={card.date || card.due_date || undefined}
-                        labels={card.labels || card.tag || ''}
-                        status={col.status} 
-                        
-                        /* Keep this so the "+" dropdown knows who else is on the project */
-                        available_members={apiMembers} 
-                        
-                        /* Walkie-talkies to refresh the board */
-                        onUpdate={() => loadBoard(activeProjectId ?? undefined)}
-                        onDelete={() => loadBoard(activeProjectId ?? undefined)}
-                      />
-                   ))}
-                   {col.cards.length === 0 && !isLoading && (
-                     <div className="mt-6 rounded-xl border border-white/50 bg-white/35 px-4 py-3 text-center text-sm font-bold text-gray-600">
-                       کارتی وجود ندارد
-                     </div>
-                   )}
+                <div
+                  className={`${col.bgColor} bg-opacity-30 backdrop-blur-md flex flex-col flex-1 min-h-0 rounded-2xl border ${col.borderColor} border-opacity-50 overflow-hidden shadow-sm mt-3`}
+                  style={{
+                    '--board-scroll-thumb': listScrollbarColors[col.styleId].thumb,
+                    '--board-scroll-track': listScrollbarColors[col.styleId].track,
+                  } as CSSProperties}
+                >
+                  <div className="board-list-scrollbar my-[15px] flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto overflow-x-hidden px-4 py-1">
+                     {col.cards.map((card: any) => {
+                       const isSearchExit =
+                         cardSearchTerm !== '' &&
+                         !normalizeCardSearch(card.title).startsWith(cardSearchTerm);
+
+                       return (
+                         <div
+                           key={card.id}
+                           className={`grid w-full justify-items-center transition-[grid-template-rows,opacity,transform] duration-200 ease-out ${
+                             isSearchExit
+                               ? 'grid-rows-[0fr] -translate-y-1 scale-[0.98] opacity-0 pointer-events-none'
+                               : 'grid-rows-[1fr] translate-y-0 scale-100 opacity-100'
+                           }`}
+                         >
+                           <div className="min-h-0 overflow-hidden">
+                             <Card
+                                {...card} /* ✅ This automatically passes the perfect assigned_to data from the API! */
+                                date={card.date || card.due_date || undefined}
+                                labels={card.labels || card.tag || ''}
+                                status={col.status}
+                                /* Keep this so the "+" dropdown knows who else is on the project */
+                                available_members={apiMembers}
+                                /* Walkie-talkies to refresh the board */
+                                onUpdate={() => loadBoard(activeProjectId ?? undefined)}
+                                onDelete={() => loadBoard(activeProjectId ?? undefined)}
+                              />
+                           </div>
+                         </div>
+                       );
+                     })}
+                     {col.cards.length === 0 && !isLoading && (
+                       <div className="mt-6 rounded-xl border border-white/50 bg-white/35 px-4 py-3 text-center text-sm font-bold text-gray-600">
+                         کارتی وجود ندارد
+                       </div>
+                     )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -688,11 +794,79 @@ const visibleColumns = renderedCardSearchTerm
         </main>
 
         <div className={`${isSidebarOpen ? 'w-[312px]' : 'w-[64px]'} hidden lg:block shrink-0 h-full relative transition-[width] duration-300 ease-out`}>
-          <button type="button" onClick={() => setIsSidebarOpen((open) => !open)} className="absolute top-8 right-3 z-20 w-10 h-10 rounded-full border-2 border-red-200 bg-red-50 text-red-500 shadow-sm flex items-center justify-center hover:bg-red-100 transition-colors">
+          <button type="button" onClick={() => {
+            setIsSidebarOpen((open) => !open);
+            setIsSidebarSearchOpen(false);
+            setIsAppearanceOpen(false);
+          }} className="absolute top-8 right-3 z-20 w-10 h-10 rounded-full border-2 border-red-200 bg-red-50 text-red-500 shadow-sm flex items-center justify-center hover:bg-red-100 transition-colors">
             {isSidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           </button>
+          {isSidebarOpen && isSidebarSearchOpen && (
+            <div
+              className="fixed z-[1200] w-[220px] rounded-[12px] border-2 border-red-200 bg-[#F6D7DC] p-1 shadow-[0_10px_20px_rgba(190,80,96,0.25)]"
+              style={searchPopoverPosition}
+              dir="rtl"
+            >
+              <div className="flex h-[46px] items-center gap-2 rounded-[8px] border-2 border-red-300 bg-[#F3C8C7] px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
+                <Keyboard aria-hidden="true" size={25} strokeWidth={2.2} className="shrink-0 text-red-500" />
+                <input
+                  autoFocus
+                  type="text"
+                  value={cardSearchQuery}
+                  onChange={(event) => setCardSearchQuery(event.target.value)}
+                  placeholder="جستجو"
+                  aria-label="جستجوی کارت‌ها"
+                  className="min-w-0 flex-1 bg-transparent text-right text-[15px] font-bold text-[#2F3B4A] outline-none placeholder:text-[#7A6570]"
+                />
+                {cardSearchQuery && (
+                  <button
+                    type="button"
+                    aria-label="پاک کردن جستجو"
+                    onClick={() => setCardSearchQuery('')}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-100"
+                  >
+                    <X size={18} strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          {isSidebarOpen && isAppearanceOpen && (
+            <div
+              className="fixed z-[1200] w-[232px] rounded-[12px] border-2 border-red-200 bg-[#F6D7DC] p-3 shadow-[0_10px_20px_rgba(190,80,96,0.25)]"
+              style={appearancePopoverPosition}
+              dir="rtl"
+            >
+              <p className="mb-3 text-center text-[19px] font-extrabold leading-7 text-[#4A5575]">
+                تغییر رنگ پس‌زمینه
+              </p>
+              <div className="flex items-center justify-center gap-2">
+                {appearanceBackgroundColors.map((color) => {
+                  const isSelected = boardBackgroundColor.toLowerCase() === color.toLowerCase();
+
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      aria-label={`تغییر رنگ پس‌زمینه به ${color}`}
+                      aria-pressed={isSelected}
+                      onClick={() => setBoardBackgroundColor(color)}
+                      className={`h-8 w-8 rounded-full border-2 transition hover:scale-105 ${
+                        isSelected
+                          ? 'border-[#4A5575] ring-2 ring-[#4A5575]/30'
+                          : 'border-white/70'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
-          <aside className={`board-sidebar w-[280px] rounded-2xl border-2 border-red-200 bg-transparent p-6 m-4 mt-6 overflow-y-auto flex flex-col shrink-0 h-fit shadow-sm z-10 transition-all duration-300 ease-out ${isSidebarOpen ? 'translate-x-0 opacity-100' : 'translate-x-[232px] opacity-0 pointer-events-none'}`}>
+          <aside
+            className={`board-sidebar w-[280px] rounded-2xl border-2 border-red-200 bg-transparent p-6 m-4 mt-6 flex flex-col shrink-0 h-fit shadow-sm z-10 transition-all duration-300 ease-out ${isSidebarOpen ? 'translate-x-0 opacity-100' : 'translate-x-[232px] opacity-0 pointer-events-none'}`}
+          >
             <div className="flex items-center justify-center gap-2 mb-8 text-red-500 font-bold border-b border-red-200 pb-4 text-xl">
                <span>{project?.name || 'بورد شماره ۱۲'}</span>
             </div>
@@ -724,57 +898,82 @@ const visibleColumns = renderedCardSearchTerm
             )}
 
             <nav className="flex flex-col gap-6 text-red-400 text-base mb-8 px-2" dir="rtl">
-              <a href="#" className="flex items-center justify-start gap-3 text-right hover:text-red-500 transition-colors"><Search size={18} /><span>جستجو</span></a>
-              <a href="#" className="flex items-center justify-start gap-3 text-right hover:text-red-500 transition-colors"><Filter size={18} /><span>فیلتر</span></a>
-              <a href="#" className="flex items-center justify-start gap-3 text-right hover:text-red-500 transition-colors"><Palette size={18} /><span>تنظیمات ظاهری</span></a>
+              <button
+                ref={sidebarSearchButtonRef}
+                type="button"
+                aria-expanded={isSidebarSearchOpen}
+                onClick={toggleSidebarSearch}
+                className={`flex items-center justify-start gap-3 text-right transition-colors hover:text-red-500 ${isSidebarSearchOpen || cardSearchQuery ? 'text-red-500' : ''}`}
+              >
+                <Search size={18} />
+                <span>جستجو</span>
+              </button>
+              <button
+                ref={appearanceButtonRef}
+                type="button"
+                aria-expanded={isAppearanceOpen}
+                onClick={toggleAppearance}
+                className={`flex items-center justify-start gap-3 text-right transition-colors hover:text-red-500 ${isAppearanceOpen ? 'text-red-500' : ''}`}
+              >
+                <Palette size={18} />
+                <span>تنظیمات ظاهری</span>
+              </button>
             </nav>
             
-            <div className="flex flex-col gap-4 border-t border-red-200 pt-6 px-2">
-               {otherSidebarProfiles.map((profile) => (
-                  <div 
-                    key={profile.id} 
-                    className="relative min-h-[58px] rounded-[10px] border border-red-100 py-1 pl-9 pr-2 text-red-400 text-base hover:bg-red-50 transition-colors"
-                    dir="rtl"
-                  >
-                    <Button
-                      variant="whiteSmall"
-                      onClick={() => openOtherProfile(profile.id)}
-                      className="!h-auto !min-h-[54px] !w-full !justify-start !rounded-[10px] !border-transparent !bg-transparent !px-0 !text-red-400 hover:!bg-transparent"
+            <div className="border-t border-red-200 pt-6 px-2">
+               <div
+                 className="board-sidebar-member-scrollbar flex max-h-[222px] flex-col gap-4 overflow-y-auto overflow-x-hidden pl-3 pr-0"
+                 style={{
+                   '--board-scroll-thumb': sidebarScrollbarColors.thumb,
+                   '--board-scroll-track': sidebarScrollbarColors.track,
+                 } as CSSProperties}
+               >
+                 {otherSidebarProfiles.map((profile) => (
+                    <div
+                      key={profile.id}
+                      className="relative min-h-[58px] rounded-[10px] border border-red-100 py-1 pl-9 pr-2 text-red-400 text-base hover:bg-red-50 transition-colors"
+                      dir="rtl"
                     >
-                      <span className="flex w-full items-center gap-3" dir="rtl">
-                        <span className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm border border-gray-300">
-                          <img
-                            src={profile.avatar || defaultProfile}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            onError={(event) => {
-                              event.currentTarget.src = defaultProfile;
-                            }}
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-right text-base font-semibold">
-                          {profile.name}
-                        </span>
-                      </span>
-                    </Button>
-                    {isProjectOwner && (
                       <Button
-                        variant="circleCloseDark"
-                        aria-label={`حذف ${profile.name}`}
-                        disabled={removingMemberId !== null}
-                        onClick={() => void handleRemoveMember(profile.id)}
-                        className="!absolute !left-1.5 !top-1/2 !h-7 !w-7 !-translate-y-1/2 rounded-full hover:!bg-red-100 [&>span]:!text-[24px] [&>span]:!text-red-400 hover:[&>span]:!text-red-500"
-                      />
-                    )}
-                  </div>
-               ))}
+                        variant="whiteSmall"
+                        onClick={() => openOtherProfile(profile.id)}
+                        className="!h-auto !min-h-[54px] !w-full !justify-start !rounded-[10px] !border-transparent !bg-transparent !px-0 !text-red-400 hover:!bg-transparent"
+                      >
+                        <span className="flex w-full items-center gap-3" dir="rtl">
+                          <span className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm border border-gray-300">
+                            <img
+                              src={profile.avatar || defaultProfile}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              onError={(event) => {
+                                event.currentTarget.src = defaultProfile;
+                              }}
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-right text-base font-semibold">
+                            {profile.name}
+                          </span>
+                        </span>
+                      </Button>
+                      {isProjectOwner && (
+                        <Button
+                          variant="circleCloseDark"
+                          aria-label={`حذف ${profile.name}`}
+                          disabled={removingMemberId !== null}
+                          onClick={() => void handleRemoveMember(profile.id)}
+                          className="!absolute !left-1.5 !top-1/2 !h-7 !w-7 !-translate-y-1/2 rounded-full hover:!bg-red-100 [&>span]:!text-[24px] [&>span]:!text-red-400 hover:[&>span]:!text-red-500"
+                        />
+                      )}
+                    </div>
+                 ))}
+               </div>
                {isProjectOwner && (
                  <Button
                    variant="whiteSmall"
                    aria-label="دعوت عضو"
                    disabled={!activeProjectId}
                    onClick={() => setIsInviteModalOpen(true)}
-                   className="!h-auto !min-h-[58px] !w-full !justify-start !rounded-[10px] !border-red-100 !bg-transparent !px-2 !text-red-400 hover:!bg-red-50"
+                   className="!mt-4 !h-auto !min-h-[58px] !w-full !justify-start !rounded-[10px] !border-red-100 !bg-transparent !px-2 !text-red-400 hover:!bg-red-50"
                  >
                    <span className="flex w-full items-center gap-3" dir="rtl">
                      <span className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center shrink-0 shadow-sm border border-red-200 text-red-500">
@@ -885,6 +1084,46 @@ const visibleColumns = renderedCardSearchTerm
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.5); border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(107, 114, 128, 0.8); }
+        .board-list-scrollbar,
+        .board-sidebar-member-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: var(--board-scroll-thumb) transparent;
+        }
+        .board-list-scrollbar::-webkit-scrollbar,
+        .board-sidebar-member-scrollbar::-webkit-scrollbar {
+          width: 10px;
+        }
+        .board-list-scrollbar::-webkit-scrollbar-track,
+        .board-sidebar-member-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .board-list-scrollbar::-webkit-scrollbar-thumb,
+        .board-sidebar-member-scrollbar::-webkit-scrollbar-thumb {
+          background: var(--board-scroll-thumb);
+          border-radius: 999px;
+          min-height: 34px;
+        }
+        .board-list-scrollbar::-webkit-scrollbar-thumb:hover,
+        .board-sidebar-member-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: color-mix(in srgb, var(--board-scroll-thumb) 82%, #24344c);
+        }
+        .board-list-scrollbar::-webkit-scrollbar-button:vertical,
+        .board-sidebar-member-scrollbar::-webkit-scrollbar-button:vertical {
+          display: block;
+          width: 10px;
+          height: 10px;
+          background: transparent;
+        }
+        .board-list-scrollbar::-webkit-scrollbar-button:vertical:decrement,
+        .board-sidebar-member-scrollbar::-webkit-scrollbar-button:vertical:decrement {
+          background-color: var(--board-scroll-thumb);
+          clip-path: polygon(50% 18%, 82% 72%, 18% 72%);
+        }
+        .board-list-scrollbar::-webkit-scrollbar-button:vertical:increment,
+        .board-sidebar-member-scrollbar::-webkit-scrollbar-button:vertical:increment {
+          background-color: var(--board-scroll-thumb);
+          clip-path: polygon(18% 28%, 82% 28%, 50% 82%);
+        }
       `}} />
     </div>
   );
