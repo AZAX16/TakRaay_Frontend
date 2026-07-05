@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { MoonStar, PanelsTopLeft } from "lucide-react";
 import { Button, ToggleSwitch } from "../ui-kit/Button";
 import { SearchInput } from "../ui-kit/Input";
@@ -12,6 +12,7 @@ import {
 } from "../../services/headerApi";
 import MyProfile from "../profile/MyProfile";
 import logoUrl from "../../assets/white1.webp";
+import defaultProfile from "../../assets/default-profile-picture.jpeg";
 import "./Header.css";
 
 const defaultBoardLabel = "بردها";
@@ -30,6 +31,11 @@ function getBoardId(board: HeaderBoardResponse): string {
 function getBoardKey(board: HeaderBoardResponse, index: number): string {
   if (typeof board === "string") return `${board}-${index}`;
   return board.id ? String(board.id) : `${getBoardTitle(board)}-${index}`;
+}
+
+function getBoardIdFromPath(pathname: string): string {
+  const match = pathname.match(/^\/boards\/([^/]+)/);
+  return match?.[1] ? decodeURIComponent(match[1]) : "";
 }
 
 function ChevronDownIcon() {
@@ -166,17 +172,14 @@ function AboutIcon() {
 
 export default function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [activeBoard, setActiveBoard] = useState(defaultBoardLabel);
   const [boards, setBoards] = useState<HeaderBoardResponse[]>([]);
   const [isBoardsLoading, setIsBoardsLoading] = useState(true);
   const [boardsError, setBoardsError] = useState("");
   const [profile, setProfile] = useState<HeaderProfile | null>(null);
 
-  const [isSearchOpen, setIsSearchOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return !window.matchMedia(compactSearchQuery).matches;
-  });
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [isBoardOpen, setIsBoardOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -185,6 +188,11 @@ export default function Header() {
   const [searchValue, setSearchValue] = useState("");
 
   const headerRef = useRef<HTMLDivElement | null>(null);
+  const activeBoardId = getBoardIdFromPath(location.pathname);
+  const activeBoard = activeBoardId
+    ? boards.find((board) => getBoardId(board) === activeBoardId)
+    : undefined;
+  const activeBoardLabel = activeBoard ? getBoardTitle(activeBoard) : defaultBoardLabel;
 
   const closeMenus = () => {
     setIsBoardOpen(false);
@@ -206,23 +214,10 @@ export default function Header() {
         const nextBoards = boardData.filter((board) => getBoardTitle(board));
 
         setBoards(nextBoards);
-
-        setActiveBoard((currentBoard) => {
-          const currentExists = nextBoards.some(
-            (board) => getBoardTitle(board) === currentBoard,
-          );
-
-          if (currentExists) return currentBoard;
-
-          return nextBoards[0]
-            ? getBoardTitle(nextBoards[0])
-            : defaultBoardLabel;
-        });
       } catch {
         if (!ignore) {
           setBoards([]);
           setBoardsError("بردها بارگذاری نشدند");
-          setActiveBoard(defaultBoardLabel);
         }
       } finally {
         if (!ignore) setIsBoardsLoading(false);
@@ -250,7 +245,9 @@ export default function Header() {
     const compactSearchMedia = window.matchMedia(compactSearchQuery);
 
     const syncSearchLayout = () => {
-      setIsSearchOpen(!compactSearchMedia.matches);
+      if (compactSearchMedia.matches) {
+        setIsSearchOpen(false);
+      }
     };
 
     syncSearchLayout();
@@ -331,7 +328,7 @@ export default function Header() {
                 }}
               >
                 <ChevronDownIcon />
-                <span>{activeBoard}</span>
+                <span>{activeBoardLabel}</span>
               </button>
 
               {isBoardOpen && (
@@ -355,16 +352,18 @@ export default function Header() {
                     boards.map((board, index) => {
                       const boardTitle = getBoardTitle(board);
                       const boardId = getBoardId(board);
+                      const isActiveBoard = boardId
+                        ? boardId === activeBoardId
+                        : boardTitle === activeBoardLabel;
 
                       return (
                         <button
                           className={`tak-dropdown-item ${
-                            boardTitle === activeBoard ? "is-active" : ""
+                            isActiveBoard ? "is-active" : ""
                           }`}
                           key={getBoardKey(board, index)}
                           type="button"
                           onClick={() => {
-                            setActiveBoard(boardTitle);
                             closeMenus();
 
                             if (boardId) {
@@ -502,14 +501,13 @@ export default function Header() {
             }}
           >
             <span className="tak-profile-photo">
-              {profile?.avatarUrl ? (
-                <img src={profile.avatarUrl} alt="" />
-              ) : (
-                <>
-                  <span className="tak-profile-face" />
-                  <span className="tak-profile-shirt" />
-                </>
-              )}
+              <img
+                src={profile?.avatarUrl || defaultProfile}
+                alt=""
+                onError={(event) => {
+                  event.currentTarget.src = defaultProfile;
+                }}
+              />
             </span>
           </Button>
         </div>

@@ -327,8 +327,9 @@
   width: 70px;
   height: 70px;
   overflow: hidden;
-  border: 4px solid var(--tak-text);
+  border: 4px solid #d1edf1;
   border-radius: 50%;
+  box-sizing: border-box;
   background:
     radial-gradient(circle at 48% 30%, #ffe0c1 0 13px, transparent 14px),
     linear-gradient(135deg, #e9f3ff 0 48%, #c9dbf6 49% 100%);
