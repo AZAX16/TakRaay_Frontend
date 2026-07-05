@@ -45,10 +45,10 @@ type BoardScrollbarStyle = { thumb: string; track: string };
 const CARD_SEARCH_EXIT_DELAY_MS = 180;
 const DEFAULT_BOARD_BACKGROUND = '#efefef';
 const appearanceBackgroundColors = [
-  '#efefef',
   '#B8EAED',
   '#e0786c',
-  '#F3C8C7',
+  '#4eacb7',
+  '#F3c8c7',
   '#f8dabb',
 ];
 
@@ -442,9 +442,7 @@ const BoardPage = () => {
       );
 
       setProject(projectData);
-      setBoardBackgroundColor(
-        projectData.background_color || projectData.background_color_input || DEFAULT_BOARD_BACKGROUND,
-      );
+      setBoardBackgroundColor(DEFAULT_BOARD_BACKGROUND);
       setMembers(enrichedMemberData);
       setColumns(createBoardColumns(listData, Object.fromEntries(cardEntries)));
     } catch {
