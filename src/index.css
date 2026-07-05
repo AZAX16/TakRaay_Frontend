@@ -261,13 +261,17 @@ body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
 
 /* Main Board Page Background (Light Mode) */
 .board-page {
-  background-color: #efefef !important; /* Explicitly #efefef */
+  background-color: var(--board-page-background, var(--app-page-light)) !important;
   transition: background-color 0.3s ease;
+}
+
+.board-page .tak-header {
+  --tak-page: var(--board-page-background, var(--app-page-light));
 }
 
 /* Main Board Page Background (Dark Mode) */
 body:has(.tak-header.is-night-mode) .board-page {
-  background-color: var(--app-page-dark) !important;
+  background-color: var(--board-page-background, var(--app-page-dark)) !important;
 }
 
 /* Sidebar Toggle Button (Chevron) */
