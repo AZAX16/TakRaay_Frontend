@@ -86,8 +86,8 @@ const MemberCard = ({
         </h3>
 
         <p
-          className={`mt-2 overflow-hidden break-words text-xs leading-5 text-zinc-500 ${
-            isLarge ? "line-clamp-3" : "line-clamp-4"
+          className={`mt-2 overflow-hidden break-words text-xs leading-15 text-zinc-500 ${
+            isLarge ? "line-clamp-5" : "line-clamp-5"
           }`}
         >
           {description}
