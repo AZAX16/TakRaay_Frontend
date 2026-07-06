@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { AxiosError } from "axios";
 import Modal from "../modals/NormalModal";
 import { OtpInputGroup, PasswordInput } from "../ui-kit/Input";
 import { Button } from "../ui-kit/Button";
@@ -79,8 +80,9 @@ export default function ChangePasswordModal({ isOpen, onClose, showError }: Prop
       console.log("OTP sent request triggered");
       setStep("otp");
       setResendTimer(OTP_EXPIRE_TIME);
-    } catch (error) {
-      if (showError) showError(error.response?.data?.message || "خطا در ارسال کد تایید");
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      if (showError) showError(axiosError.response?.data?.message || "خطا در ارسال کد تایید");
     } finally {
       setIsSendingOtp(false);
     }
@@ -122,7 +124,8 @@ export default function ChangePasswordModal({ isOpen, onClose, showError }: Prop
       console.log("OTP Verified");
       setStep("password");
     } catch (error: unknown) {
-      setOtpError(error.response?.data?.detail || "کد وارد شده صحیح نیست.");
+      const axiosError = error as AxiosError<{ detail?: string }>;
+      setOtpError(axiosError.response?.data?.detail || "کد وارد شده صحیح نیست.");
       console.log(userPhone);
     } finally {
       setLoading(false);
@@ -159,7 +162,8 @@ export default function ChangePasswordModal({ isOpen, onClose, showError }: Prop
 
       setStep("success");
     } catch (error: unknown) {
-      if (showError) showError(error.response?.data?.detail || error.response?.data?.password?.[0] || "خطا در تغییر رمز عبور");
+      const axiosError = error as AxiosError<{ detail?: string; password?: string[] }>;
+      if (showError) showError(axiosError.response?.data?.detail || axiosError.response?.data?.password?.[0] || "خطا در تغییر رمز عبور");
     } finally {
       setLoading(false);
     }
@@ -277,3 +281,5 @@ export default function ChangePasswordModal({ isOpen, onClose, showError }: Prop
     </Modal>
   );
 }
+
+

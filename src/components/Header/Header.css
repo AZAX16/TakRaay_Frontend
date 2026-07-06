@@ -2,7 +2,7 @@
   --tak-primary: #0081a7;
   --tak-text: #ffffff;
   --tak-secondary: #05a8d9;
-  --tak-page: #f7f8fc;
+  --tak-page: #efefef;
   --tak-shadow: rgba(0, 84, 110, 0.22);
 
   width: 100%;
@@ -10,6 +10,9 @@
   background: var(--tak-page);
   color: var(--tak-text);
   font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+  
+  /* ✅ Add this line to match the rest of the app's dark mode animation */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .tak-header.is-night-mode {
@@ -193,6 +196,107 @@
   pointer-events: none;
 }
 
+.tak-search-results-popover {
+  position: absolute;
+  left: 15px;
+  top: calc(100% + 12px);
+  z-index: 32;
+  width: 245px;
+  max-height: min(370px, calc(100vh - 145px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: 16px;
+  background: var(--tak-secondary);
+  box-shadow: 0 18px 40px var(--tak-shadow);
+  color: var(--tak-text);
+  direction: rtl;
+  scrollbar-color: rgb(255 255 255 / 0.55) transparent;
+  scrollbar-width: thin;
+}
+
+.tak-search-results-popover::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tak-search-results-popover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tak-search-results-popover::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.45);
+}
+
+.tak-search-results-section + .tak-search-results-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgb(255 255 255 / 0.18);
+}
+
+.tak-search-results-heading {
+  margin: 2px 8px 6px;
+  color: rgb(255 255 255 / 0.84);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.tak-search-results-state {
+  padding: 14px 12px;
+  color: rgb(255 255 255 / 0.9);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.tak-search-result-item {
+  width: 100%;
+  min-height: 46px;
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: stretch;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--tak-text);
+  cursor: pointer;
+  font: inherit;
+  text-align: right;
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.tak-search-result-item:hover {
+  background: rgb(255 255 255 / 0.16);
+  transform: translateY(-1px);
+}
+
+.tak-search-result-title,
+.tak-search-result-meta,
+.tak-search-result-excerpt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tak-search-result-title {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.tak-search-result-meta,
+.tak-search-result-excerpt {
+  color: rgb(255 255 255 / 0.78);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .tak-board {
   position: relative;
   z-index: 6;
@@ -324,8 +428,9 @@
   width: 70px;
   height: 70px;
   overflow: hidden;
-  border: 4px solid var(--tak-text);
+  border: 4px solid #d1edf1;
   border-radius: 50%;
+  box-sizing: border-box;
   background:
     radial-gradient(circle at 48% 30%, #ffe0c1 0 13px, transparent 14px),
     linear-gradient(135deg, #e9f3ff 0 48%, #c9dbf6 49% 100%);
@@ -593,6 +698,13 @@
   .tak-search-wrapper > div {
     width: 100%;
     height: 42px;
+  }
+
+  .tak-search-results-popover {
+    inset-inline: 14px;
+    top: calc(100% + 62px);
+    width: auto;
+    max-height: min(300px, calc(100vh - 160px));
   }
 
   .tak-search-panel {
@@ -897,6 +1009,11 @@
 
   .tak-search-wrapper > div {
     height: 40px;
+  }
+
+  .tak-search-results-popover {
+    inset-inline: 6px;
+    top: calc(100% + 56px);
   }
 
   .tak-menu-popover {

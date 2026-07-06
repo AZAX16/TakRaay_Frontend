@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import defaultProfile from "../../assets/default-profile-picture.jpeg";
 import CustomeDatePicker from "../calender/DatePicker";
+import { updateCard, deleteCard } from "../../services/ServiceCard";
 
 type Member = {
   id: number;
@@ -11,36 +12,71 @@ type Member = {
 
 type ApiMember = {
   id: number;
-  full_name: string;
-  avatar: string | null;
+  full_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  avatar?: string | null;
+  image?: string | null;
+  profile_image?: string | null;
 };
 
 type CardProps = {
+  id: number;
   title?: string | null;
   labels?: string | null;
   description?: string | null;
   status?: string | null;
   assigned_to?: ApiMember[] | null;
   available_members?: ApiMember[] | null;
-  date?: string;
+  due_date?: string;
   onDelete?: () => void;
+  onUpdate?: () => void;
 };
 
+function isPhoneNumberLike(value: string) {
+  return /^(\+|00)?[\d۰-۹٠-٩][\d۰-۹٠-٩\s\-()]{6,}$/.test(value.trim());
+}
+
+function getMemberDisplayName(member: ApiMember) {
+  const firstAndLastName = [member.first_name, member.last_name]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  const candidates = [member.full_name, firstAndLastName, member.name];
+
+  for (const candidate of candidates) {
+    const name = candidate?.trim();
+    if (name && !isPhoneNumberLike(name)) {
+      return name;
+    }
+  }
+
+  return "...";
+}
+
+function getMemberImage(member: ApiMember) {
+  return member.avatar || member.image || member.profile_image || null;
+}
+
 export default function Card({
+  id,
   title,
   labels,
   description,
   status,
   assigned_to,
   available_members,
-  date,
+  due_date,
   onDelete,
+  onUpdate,
 }: CardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [taskTitle, setTaskTitle] = useState(title ?? "...");
   const [taskTag, setTaskTag] = useState(labels ?? "...");
   const [taskDescription, setTaskDescription] = useState(description ?? "...");
-  const [taskDate, setTaskDate] = useState(new Date());
+  const [taskDate, setTaskDate] = useState(due_date ? new Date(due_date) : new Date());
   const [taskStatus, setTaskStatus] = useState("برای انجام");
   const [members, setMembers] = useState<Member[]>([]);
 
@@ -75,25 +111,27 @@ export default function Card({
     setMembers(
       (assigned_to ?? []).map((member) => ({
         id: member.id,
-        name: member.full_name || "...",
-        image: member.avatar,
+        name: getMemberDisplayName(member),
+        image: getMemberImage(member),
       }))
     );
 
     setAvailableMembers(
       (available_members ?? []).map((member) => ({
         id: member.id,
-        name: member.full_name || "...",
-        image: member.avatar,
+        name: getMemberDisplayName(member),
+        image: getMemberImage(member),
       }))
     );
   }, [assigned_to, available_members]);
 
-  useEffect(() => {
-    if (!date) return;
+useEffect(() => {
+  if (!due_date) return;
 
-    console.log("date from api:", date);
-  }, [date]);
+  const [year, month, day] = due_date.split("-").map(Number);
+
+  setTaskDate(new Date(year, month - 1, day));
+}, [due_date]);
 
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -116,14 +154,57 @@ export default function Card({
     setter(toPersianNumbers(value));
   }
 
+const reverseStatusMap: Record<string, string> = {
+  "برای انجام": "todo",
+  "در دست انجام": "doing",
+  "برای بررسی": "review",
+  "تمام شده": "done",
+};
+
+
+const handleSave = async () => {
+  try {
+const payload = {
+  title: taskTitle,
+  labels: taskTag,
+  description: taskDescription,
+  status: reverseStatusMap[taskStatus] || "todo",
+  assigned_to: members.map((member) => member.id),
+  due_date: taskDate.toISOString().split("T")[0]
+};
+
+    const updatedCard = await updateCard(id, payload);
+    onUpdate?.();
+    console.log("updated:", updatedCard);
+
+    setIsEditing(false);
+  } catch (error) {
+    console.error("Update card failed:", error);
+  }
+};
+
+const handleDelete = async () => {
+  try {
+    await deleteCard(id);
+
+    onDelete?.();
+  } catch (error) {
+    console.error("Delete card failed:", error);
+  }
+};
+
   function getCardColor() {
-    if (taskStatus === "برای انجام")
-      return { light: "#F3C8C7", dark: "#F07167", text: "#ffffff" };
-    if (taskStatus === "در دست انجام")
-      return { light: "#FFFEE8", dark: "#FFFC9C", text: "#9b5930" };
-    if (taskStatus === "برای بررسی")
-      return { light: "#B8EAED", dark: "#00AFB9", text: "#ffffff" };
-    return { light: "#FEECDB", dark: "#FED9B7", text: "#9b5930" };
+    // To Do (Red/Pink)
+    if (taskStatus === "برای انجام") return { light: "#F3C8C7", dark: "#F07167", text: "#ffffff" };
+    
+    // Doing (Peach/Orange - Swapped to match column)
+    if (taskStatus === "در دست انجام") return { light: "#FEECDB", dark: "#FED9B7", text: "#9b5930" };
+    
+    // Review (Teal)
+    if (taskStatus === "برای بررسی") return { light: "#B8EAED", dark: "#00AFB9", text: "#ffffff" };
+    
+    // Done (Yellow - Default fallback, swapped to match column)
+    return { light: "#FFFEE8", dark: "#FFFC9C", text: "#9b5930" }; 
   }
 
   const colors = getCardColor();
@@ -249,7 +330,7 @@ export default function Card({
             {/* BUTTONS */}
             <div className="flex gap-[10px] mt-auto h-[30px]">
               <button
-                onClick={onDelete}
+                onClick={handleDelete}
                 className="flex-1 h-[30px] rounded-[10px] border text-[11px] font-[500] transition-all duration-300"
                 style={{ borderColor: colors.text, background: "rgba(255,255,255,0.3)", color: colors.text }}
                 onMouseEnter={(e) => {
@@ -264,11 +345,16 @@ export default function Card({
                 حذف
               </button>
               <button
-                onClick={() => {
-                  setIsEditing(!isEditing);
-                  setShowMemberDropdown(false);
-                  setShowStatusDropdown(false);
-                }}
+onClick={() => {
+  if (isEditing) {
+    handleSave();
+  } else {
+    setIsEditing(true);
+  }
+
+  setShowMemberDropdown(false);
+  setShowStatusDropdown(false);
+}}
                 className="flex-1 h-[30px] rounded-[10px] border text-[11px] font-[500] transition-all duration-300"
                 style={{ borderColor: colors.text, background: "rgba(255,255,255,0.3)", color: colors.text }}
                 onMouseEnter={(e) => {

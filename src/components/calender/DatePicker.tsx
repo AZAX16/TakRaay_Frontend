@@ -48,6 +48,7 @@ const CustomeDatePicker: React.FC<CustomeDatePickerProps> = ({
             onChange(e.value);
           }
         }}
+        popoverClassName="custom-calendar-popup"
       />
     </div>
 
