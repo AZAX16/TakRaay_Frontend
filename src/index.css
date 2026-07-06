@@ -238,6 +238,24 @@ body:has(.tak-header.is-night-mode) .create-board-card p {
     box-shadow 0.3s ease;
 }
 
+.zm-MonthYearButton {
+  border-radius: 8px !important;
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
 /* Dark mode */
 body:has(.tak-header.is-night-mode) .dashboard-page {
   background-color: var(--app-page-dark);
@@ -329,4 +347,12 @@ body:has(.tak-header.is-night-mode) .board-page .text-gray-600 {
   color: #dbeafe !important; 
   background-color: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+body:has(.tak-header.is-night-mode) .about-overview-icons svg {
+  color: #dbeafe;
+}
+
+body:has(.tak-header.is-night-mode) .about-overview-icons p {
+  color: #dbeafe;
 }
