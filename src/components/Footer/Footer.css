@@ -137,6 +137,10 @@
   text-align: center;
 }
 
+.tak-footer-brand {
+  gap: 0;
+}
+
 .tak-footer-copy-detail,
 .tak-footer-logo-caption {
   line-height: 1.75;
@@ -149,6 +153,10 @@
   height: auto;
   display: block;
   object-fit: contain;
+}
+
+.tak-footer-logo-caption {
+  margin-top: -6px;
 }
 
 .tak-footer-nav {
@@ -282,6 +290,20 @@
 
   .tak-footer-logo {
     width: min(160px, 100%);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 920px) {
+  .tak-footer-grid {
+    min-height: 164px;
+  }
+
+  .tak-footer-divider {
+    height: 124px;
+  }
+
+  .tak-footer-nav {
+    transform: none;
   }
 }
 

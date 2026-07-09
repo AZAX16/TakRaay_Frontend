@@ -5,7 +5,6 @@ import {
   Instagram,
   LayoutDashboard,
   Linkedin,
-  Mail,
 } from "lucide-react";
 import karbordLogo from "../../assets/karbord_logo.webp";
 import "./Footer.css";
@@ -30,10 +29,16 @@ function XIcon() {
 }
 
 const socialLinks = [
-  { href: "#", label: "x.com/takraay", icon: <XIcon /> },
   {
-    href: "#",
-    label: "linkedin.com/takraay",
+    href: "https://x.com/Takraay",
+    label: "x.com/Takraay",
+    text: "x.com/Takraay",
+    icon: <XIcon />,
+  },
+  {
+    href: "https://www.linkedin.com/in/tak-raay-a15070421/",
+    label: "linkedin.com/in/tak-raay-a15070421",
+    text: "linkedin.com/tak-raay",
     icon: (
       <Linkedin
         aria-hidden="true"
@@ -43,8 +48,9 @@ const socialLinks = [
     ),
   },
   {
-    href: "#",
-    label: "instagram.com/takraay",
+    href: "https://www.instagram.com/karboard_takraay/",
+    label: "instagram.com/karboard_takraay",
+    text: "@karboard_takraay",
     icon: (
       <Instagram
         aria-hidden="true"
@@ -110,13 +116,13 @@ export default function Footer() {
                     aria-label={link.label}
                     className="tak-footer-link tak-footer-social-link"
                     href={link.href}
-                    key={link.label}
+                    key={link.href}
                     title={link.label}
                     target="_blank"
                     rel="noreferrer"
                   >
                     <span className="tak-footer-social-text" dir="ltr">
-                      {link.label}
+                      {link.text}
                     </span>
                     <span className="tak-footer-icon-box">{link.icon}</span>
                   </a>
