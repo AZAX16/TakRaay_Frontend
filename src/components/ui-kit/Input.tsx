@@ -16,6 +16,7 @@ type TextInputProps = {
   variant?: TextInputVariant;
   type?: string;
   placeholder?: string;
+  placeholderAlign?: "left" | "right";
   value?: string;
   onChange?: ChangeEventHandler<HTMLInputElement>;
   disabled?: boolean;
@@ -205,6 +206,7 @@ export function Input({
   variant = "grayLarge",
   type = "text",
   placeholder = "",
+  placeholderAlign = "right",
   value,
   onChange,
   disabled = false,
@@ -232,6 +234,9 @@ export function Input({
     typeof normalizedValue === "string" ? normalizedValue : "";
 
   const isLeftAligned = shouldAutoFormat && shouldAlignLeft(currentValue);
+  const inputAlignsLeft = currentValue
+    ? isLeftAligned
+    : placeholderAlign === "left";
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
     if (shouldAutoFormat) {
@@ -244,12 +249,12 @@ export function Input({
 
   return (
     <input
-      dir={isLeftAligned ? "ltr" : "rtl"}
+      dir={inputAlignsLeft ? "ltr" : "rtl"}
       type={type === "number" ? "text" : type}
       name={name}
       aria-label={ariaLabel}
       className={`${baseClasses} ${variants[variant]} ${
-        isLeftAligned ? "text-left" : "text-right"
+        inputAlignsLeft ? "text-left" : "text-right"
       }`}
       placeholder={placeholder}
       value={normalizedValue}
