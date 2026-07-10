@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import { Button } from '../components/ui-kit/Button';
 import { fetchDashboardData, type DashboardResponse, logoutUser} from '../services/DashboardApi';
@@ -14,6 +15,7 @@ const toPersianDigits = (str: string | number | undefined | null) => {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<DashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,20 +42,6 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const profileData = await fetchDashboardData()
-        setProfile(profileData);
-      } catch (error) {
-        console.error("Error loading dashboard data:", error);
-        setError("دریافت اطلاعات با مشکل مواجه شد");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, []);
 
   const todoTasks = profile?.todo_cards || [];
   const inProgressTasks = profile?.doing_cards || [];
@@ -65,10 +53,11 @@ export default function Dashboard() {
       
       if (refreshToken) {
         await logoutUser(refreshToken);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
       }
-      else {console.log("no refresh token");}
+
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      navigate('/login', { replace: true });
     } catch (error) {
       console.error("مشکلی در ارتباط با سرور برای خروج پیش آمد", error);
     } finally { 
@@ -81,7 +70,7 @@ export default function Dashboard() {
     <div className="dashboard-page min-h-screen flex flex-col items-center font-sans dir-rtl">
         <Header />
           <div className="flex justify-center text-xl font-bold text-[#4eacb7] p-4 max-w-[700px] rounded-xl ">
-            درحال بارگذاری اظلاعات داشبورد
+            درحال بارگذاری اطلاعات داشبورد
           </div>
       </div>
   );}
@@ -176,8 +165,12 @@ export default function Dashboard() {
                       وظیفه‌ای برای نمایش وجود ندارد
                     </p>
                   ) : (inProgressTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between py-3 border-b-2 border-[#4eacb7]">
+                  <div key={task.id} className="flex flex-col gap-1 py-3 border-b-2 border-[#4eacb7]">
                     <span className="text-sm font-medium text-black pr-2">{toPersianDigits(task.title)}</span>
+                    <div className="flex justify-between items-center text-xs text-[#00AFB9] font-semibold pr-2 pl-2">
+                      <span>{toPersianDigits(task.project_title)}</span>
+                      <span>{toPersianDigits(task.due_date)}</span>
+                    </div>
                   </div>
                 )))}
               </div>
@@ -194,8 +187,12 @@ export default function Dashboard() {
                       وظیفه‌ای برای نمایش وجود ندارد
                     </p>
                   ) : (todoTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between py-3 border-b-2 border-[#4eacb7]">
+                  <div key={task.id} className="flex flex-col gap-1 py-3 border-b-2 border-[#4eacb7]">
                     <span className="text-sm font-medium text-black pr-2">{toPersianDigits(task.title)}</span>
+                    <div className="flex justify-between items-center text-xs text-[#00AFB9] font-semibold pr-2 pl-2">
+                      <span>{toPersianDigits(task.project_title)}</span>
+                      <span>{toPersianDigits(task.due_date)}</span>
+                    </div>
                   </div>
                 )))}
               </div>

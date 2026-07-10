@@ -280,6 +280,7 @@ export default function SignupPage() {
                 type="tel"
                 value={phone}
                 placeholder='۰۹۱۲۳۴۵۶۷۸۹'
+                placeholderAlign="left"
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   handlePhoneChange(e);
                   setPhoneError("");
@@ -398,6 +399,7 @@ export default function SignupPage() {
                 type="tel"
                 value={phone}
                 placeholder='۰۹۱۲۳۴۵۶۷۸۹'
+                placeholderAlign="left"
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   handlePhoneChange(e);
                   setPhoneError("");

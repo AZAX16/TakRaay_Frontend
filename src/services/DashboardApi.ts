@@ -3,6 +3,8 @@ import api from './api';
 export interface TaskCard {
   id: number;
   title: string; 
+  project_title: string;
+  due_date: string | null;
 }
 
 export interface ProfileData {
