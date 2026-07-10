@@ -996,9 +996,9 @@
   }
 
   .tak-logo {
-    left: calc(50% - 28px);
-    width: min(132px, calc(100vw - 176px));
-    height: 44px;
+    left: 50%;
+    width: min(158.4px, calc(100vw - 176px));
+    height: 52.8px;
   }
 
   .tak-search-wrapper,
@@ -1029,8 +1029,8 @@
 
 @media (max-width: 360px) {
   .tak-logo {
-    width: min(112px, calc(100vw - 176px));
-    height: 38px;
+    width: min(134.4px, calc(100vw - 176px));
+    height: 45.6px;
   }
 
   .tak-menu-wrap {
