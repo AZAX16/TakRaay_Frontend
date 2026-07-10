@@ -1,4 +1,15 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type SVGProps } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type SVGProps,
+} from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Keyboard, LogOut, X } from 'lucide-react';
 import Header from '../components/Header/Header';
@@ -44,13 +55,32 @@ type BoardColumn = ColumnDefinition & { listId?: number; title: string; cards: P
 type BoardScrollbarStyle = { thumb: string; track: string };
 const CARD_SEARCH_EXIT_DELAY_MS = 180;
 const DEFAULT_BOARD_BACKGROUND = '#efefef';
+const BOARD_BACKGROUND_SESSION_KEY = 'takraay:board-background';
 const appearanceBackgroundColors = [
   '#B8EAED',
-  '#e0786c',
+  DEFAULT_BOARD_BACKGROUND,
   '#4eacb7',
   '#F3c8c7',
   '#f8dabb',
 ];
+
+function getSessionBoardBackground(projectId: number | string) {
+  try {
+    const savedColor = window.sessionStorage.getItem(`${BOARD_BACKGROUND_SESSION_KEY}:${projectId}`);
+    return appearanceBackgroundColors.find((color) => color.toLowerCase() === savedColor?.toLowerCase())
+      ?? DEFAULT_BOARD_BACKGROUND;
+  } catch {
+    return DEFAULT_BOARD_BACKGROUND;
+  }
+}
+
+function saveSessionBoardBackground(projectId: number | string, color: string) {
+  try {
+    window.sessionStorage.setItem(`${BOARD_BACKGROUND_SESSION_KEY}:${projectId}`, color);
+  } catch {
+    // Keep the color active in memory when session storage is unavailable.
+  }
+}
 
 const columnDefinitions: ColumnDefinition[] = [
   { status: 'todo', styleId: 4, label: 'برای انجام', bgColor: 'bg-[#F07167]', headerBg: 'bg-[#db675d]', borderColor: 'border-[#F07167]' },
@@ -304,6 +334,202 @@ type ApiMember = { id: number; full_name: string; avatar: string | null; };
 type SidebarProfile = { id: number; name: string; avatar: string | null };
 type CurrentSidebarProfile = { id: number | null; name: string; avatar: string | null };
 
+type PersistentScrollAreaProps = {
+  children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+  viewportClassName?: string;
+};
+
+type ScrollbarMetrics = {
+  maxScroll: number;
+  maxThumbOffset: number;
+  scrollTop: number;
+  thumbHeight: number;
+  thumbOffset: number;
+};
+
+const MIN_SCROLL_THUMB_HEIGHT = 34;
+
+function PersistentScrollArea({ children, className = '', style, viewportClassName = '' }: PersistentScrollAreaProps) {
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{ pointerId: number; startScrollTop: number; startY: number } | null>(null);
+  const [metrics, setMetrics] = useState<ScrollbarMetrics>({
+    maxScroll: 0,
+    maxThumbOffset: 0,
+    scrollTop: 0,
+    thumbHeight: MIN_SCROLL_THUMB_HEIGHT,
+    thumbOffset: 0,
+  });
+
+  const syncMetrics = useCallback(() => {
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+
+    const trackHeight = track.clientHeight;
+    const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+    const proportionalHeight = viewport.scrollHeight > 0
+      ? trackHeight * (viewport.clientHeight / viewport.scrollHeight)
+      : trackHeight;
+    const thumbHeight = maxScroll === 0
+      ? trackHeight
+      : Math.min(trackHeight, Math.max(MIN_SCROLL_THUMB_HEIGHT, proportionalHeight));
+    const maxThumbOffset = Math.max(0, trackHeight - thumbHeight);
+    const scrollTop = Math.min(viewport.scrollTop, maxScroll);
+    const thumbOffset = maxScroll > 0 ? (scrollTop / maxScroll) * maxThumbOffset : 0;
+
+    setMetrics((current) => {
+      const next = { maxScroll, maxThumbOffset, scrollTop, thumbHeight, thumbOffset };
+      const isUnchanged = Object.keys(next).every((key) =>
+        Math.abs(current[key as keyof ScrollbarMetrics] - next[key as keyof ScrollbarMetrics]) < 0.5,
+      );
+
+      return isUnchanged ? current : next;
+    });
+  }, []);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+
+    let frameId = 0;
+    const scheduleSync = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(syncMetrics);
+    };
+    const resizeObserver = new ResizeObserver(scheduleSync);
+    const observeContent = () => {
+      resizeObserver.observe(viewport);
+      resizeObserver.observe(track);
+      Array.from(viewport.children).forEach((child) => resizeObserver.observe(child));
+    };
+    const mutationObserver = new MutationObserver(() => {
+      observeContent();
+      scheduleSync();
+    });
+
+    observeContent();
+    mutationObserver.observe(viewport, { childList: true, subtree: true });
+    viewport.addEventListener('scroll', scheduleSync, { passive: true });
+    scheduleSync();
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      viewport.removeEventListener('scroll', scheduleSync);
+      mutationObserver.disconnect();
+      resizeObserver.disconnect();
+    };
+  }, [syncMetrics]);
+
+  function scrollByStep(direction: -1 | 1) {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    viewport.scrollBy({
+      top: direction * Math.max(48, viewport.clientHeight * 0.16),
+      behavior: 'smooth',
+    });
+  }
+
+  function handleTrackPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+
+    const pointerOffset = event.clientY - track.getBoundingClientRect().top;
+    const thumbCenter = metrics.thumbOffset + metrics.thumbHeight / 2;
+    viewport.scrollBy({
+      top: (pointerOffset < thumbCenter ? -1 : 1) * viewport.clientHeight * 0.8,
+      behavior: 'smooth',
+    });
+  }
+
+  function handleThumbPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startScrollTop: viewport.scrollTop,
+      startY: event.clientY,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  function handleThumbPointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current;
+    const viewport = viewportRef.current;
+    if (!drag || !viewport || drag.pointerId !== event.pointerId || metrics.maxThumbOffset === 0) return;
+
+    viewport.scrollTop = drag.startScrollTop
+      + (event.clientY - drag.startY) * (metrics.maxScroll / metrics.maxThumbOffset);
+  }
+
+  function stopThumbDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+
+    dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function handleThumbKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>) {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const keyActions: Record<string, () => void> = {
+      ArrowDown: () => scrollByStep(1),
+      ArrowUp: () => scrollByStep(-1),
+      End: () => viewport.scrollTo({ top: metrics.maxScroll, behavior: 'smooth' }),
+      Home: () => viewport.scrollTo({ top: 0, behavior: 'smooth' }),
+      PageDown: () => viewport.scrollBy({ top: viewport.clientHeight * 0.8, behavior: 'smooth' }),
+      PageUp: () => viewport.scrollBy({ top: -viewport.clientHeight * 0.8, behavior: 'smooth' }),
+    };
+    const action = keyActions[event.key];
+    if (!action) return;
+
+    event.preventDefault();
+    action();
+  }
+
+  return (
+    <div className={`persistent-scroll-area ${className}`} style={style}>
+      <div ref={viewportRef} className={`persistent-scroll-viewport ${viewportClassName}`}>
+        {children}
+      </div>
+      <div className={`persistent-scrollbar ${metrics.maxScroll > 0.5 ? 'is-visible' : 'is-hidden'}`}>
+        <button type="button" className="persistent-scrollbar-arrow is-up" aria-label="Scroll up" onClick={() => scrollByStep(-1)} />
+        <div ref={trackRef} className="persistent-scrollbar-track" onPointerDown={handleTrackPointerDown}>
+          <button
+            type="button"
+            role="scrollbar"
+            aria-label="Scroll vertically"
+            aria-orientation="vertical"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(metrics.maxScroll)}
+            aria-valuenow={Math.round(metrics.scrollTop)}
+            className="persistent-scrollbar-thumb"
+            style={{ height: metrics.thumbHeight, transform: `translateY(${metrics.thumbOffset}px)` }}
+            onKeyDown={handleThumbKeyDown}
+            onPointerDown={handleThumbPointerDown}
+            onPointerMove={handleThumbPointerMove}
+            onPointerUp={stopThumbDrag}
+            onPointerCancel={stopThumbDrag}
+          />
+        </div>
+        <button type="button" className="persistent-scrollbar-arrow is-down" aria-label="Scroll down" onClick={() => scrollByStep(1)} />
+      </div>
+    </div>
+  );
+}
+
 const BoardPage = () => {
   const { boardId } = useParams();
   const location = useLocation();
@@ -406,6 +632,7 @@ const BoardPage = () => {
       }
 
       setActiveProjectId(nextProjectId);
+      setBoardBackgroundColor(getSessionBoardBackground(nextProjectId));
       const [projectData, listData, memberData] = await Promise.all([
         fetchProject(nextProjectId),
         fetchBoardLists(nextProjectId),
@@ -442,7 +669,6 @@ const BoardPage = () => {
       );
 
       setProject(projectData);
-      setBoardBackgroundColor(DEFAULT_BOARD_BACKGROUND);
       setMembers(enrichedMemberData);
       setColumns(createBoardColumns(listData, Object.fromEntries(cardEntries)));
     } catch {
@@ -564,6 +790,15 @@ const visibleColumns = renderedCardSearchTerm
 
     setIsAppearanceOpen((open) => !open);
     setIsSidebarSearchOpen(false);
+  }
+
+  function handleBoardBackgroundChange(color: string) {
+    setBoardBackgroundColor(color);
+
+    const projectId = project?.id ?? activeProjectId;
+    if (projectId != null) {
+      saveSessionBoardBackground(projectId, color);
+    }
   }
 
   function closeInviteModal() {
@@ -723,7 +958,7 @@ const visibleColumns = renderedCardSearchTerm
         <Header />
       </div>
 
-      <div className="flex flex-1 overflow-hidden relative z-0">
+      <div className="flex flex-1 relative min-h-0">
         {(isLoading || message) && (
           <div className={`absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-xl bg-white/95 px-4 py-2 text-sm font-bold text-red-500 shadow-sm transition-opacity duration-500 ${isLoading || isMessageVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
             {isLoading ? 'در حال دریافت اطلاعات برد...' : message}
@@ -748,7 +983,10 @@ const visibleColumns = renderedCardSearchTerm
                     '--board-scroll-track': listScrollbarColors[col.styleId].track,
                   } as CSSProperties}
                 >
-                  <div className="board-list-scrollbar my-[15px] flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto overflow-x-hidden px-4 py-1">
+                  <PersistentScrollArea
+                    className="board-list-scrollbar my-[15px] min-h-0 flex-1"
+                    viewportClassName="flex h-full min-h-0 flex-col items-center gap-4 overflow-x-hidden pl-6 pr-4 py-1"
+                  >
                      {col.cards.map((card: any) => {
                        const isSearchExit =
                          cardSearchTerm !== '' &&
@@ -784,24 +1022,24 @@ const visibleColumns = renderedCardSearchTerm
                          کارتی وجود ندارد
                        </div>
                      )}
-                  </div>
+                  </PersistentScrollArea>
                 </div>
               </div>
             ))}
           </div>
         </main>
 
-        <div className={`${isSidebarOpen ? 'w-[312px]' : 'w-[64px]'} hidden lg:block shrink-0 h-full relative transition-[width] duration-300 ease-out`}>
+        <div className={`board-sidebar-shell ${isSidebarOpen ? 'is-open w-[312px]' : 'w-[64px]'} absolute inset-y-0 left-0 z-[60] h-full transition-[width] duration-300 ease-out`}>
           <button type="button" onClick={() => {
             setIsSidebarOpen((open) => !open);
             setIsSidebarSearchOpen(false);
             setIsAppearanceOpen(false);
-          }} className="absolute top-8 right-3 z-20 w-10 h-10 rounded-full border-2 border-red-200 bg-red-50 text-red-500 shadow-sm flex items-center justify-center hover:bg-red-100 transition-colors">
+          }} className="absolute -top-5 right-3 z-[60] w-10 h-10 rounded-full border-2 border-red-200 bg-red-50 text-red-500 shadow-sm flex items-center justify-center hover:bg-red-100 transition-colors">
             {isSidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           </button>
           {isSidebarOpen && isSidebarSearchOpen && (
             <div
-              className="fixed z-[1200] w-[220px] rounded-[12px] border-2 border-red-200 bg-[#F6D7DC] p-1 shadow-[0_10px_20px_rgba(190,80,96,0.25)]"
+              className="board-sidebar-popover fixed z-[1200] w-[220px] rounded-[12px] border-2 border-red-200 bg-[#F6D7DC] p-1 shadow-[0_10px_20px_rgba(190,80,96,0.25)]"
               style={searchPopoverPosition}
               dir="rtl"
             >
@@ -831,7 +1069,7 @@ const visibleColumns = renderedCardSearchTerm
           )}
           {isSidebarOpen && isAppearanceOpen && (
             <div
-              className="fixed z-[1200] w-[232px] rounded-[12px] border-2 border-red-200 bg-[#F6D7DC] p-3 shadow-[0_10px_20px_rgba(190,80,96,0.25)]"
+              className="board-sidebar-popover fixed z-[1200] w-[232px] rounded-[12px] border-2 border-red-200 bg-[#F6D7DC] p-3 shadow-[0_10px_20px_rgba(190,80,96,0.25)]"
               style={appearancePopoverPosition}
               dir="rtl"
             >
@@ -848,7 +1086,7 @@ const visibleColumns = renderedCardSearchTerm
                       type="button"
                       aria-label={`تغییر رنگ پس‌زمینه به ${color}`}
                       aria-pressed={isSelected}
-                      onClick={() => setBoardBackgroundColor(color)}
+                      onClick={() => handleBoardBackgroundChange(color)}
                       className={`h-8 w-8 rounded-full border-2 transition hover:scale-105 ${
                         isSelected
                           ? 'border-[#4A5575] ring-2 ring-[#4A5575]/30'
@@ -863,14 +1101,14 @@ const visibleColumns = renderedCardSearchTerm
           )}
           
           <aside
-            className={`board-sidebar w-[280px] rounded-2xl border-2 border-red-200 bg-transparent p-6 m-4 mt-6 flex flex-col shrink-0 h-fit shadow-sm z-10 transition-all duration-300 ease-out ${isSidebarOpen ? 'translate-x-0 opacity-100' : 'translate-x-[232px] opacity-0 pointer-events-none'}`}
+            className={`board-sidebar w-[280px] rounded-2xl border-2 border-red-200 p-4 sm:p-6 m-4 mt-6 flex min-h-0 flex-col shrink-0 h-fit shadow-sm z-10 transition-all duration-300 ease-out ${isSidebarOpen ? 'translate-x-0 opacity-100' : 'translate-x-[232px] opacity-0 pointer-events-none'}`}
           >
-            <div className="flex items-center justify-center gap-2 mb-8 text-red-500 font-bold border-b border-red-200 pb-4 text-xl">
+            <div className="flex min-w-0 shrink-0 items-center justify-center gap-2 mb-5 sm:mb-8 text-red-500 font-bold border-b border-red-200 pb-3 sm:pb-4 text-xl">
                <span>{project?.name || 'بورد شماره ۱۲'}</span>
             </div>
 
             {currentUserProfile && (
-              <div className="mb-6 border-b border-red-200 px-2 pb-6">
+              <div className="mb-4 sm:mb-6 shrink-0 border-b border-red-200 px-2 pb-4 sm:pb-6">
                 <Button
                   variant="whiteSmall"
                   onClick={() => setIsMyProfileOpen(true)}
@@ -895,7 +1133,7 @@ const visibleColumns = renderedCardSearchTerm
               </div>
             )}
 
-            <nav className="flex flex-col gap-6 text-red-400 text-base mb-8 px-2" dir="rtl">
+            <nav className="flex shrink-0 flex-col gap-4 sm:gap-6 text-red-400 text-base mb-4 sm:mb-8 px-2" dir="rtl">
               <button
                 ref={sidebarSearchButtonRef}
                 type="button"
@@ -918,9 +1156,10 @@ const visibleColumns = renderedCardSearchTerm
               </button>
             </nav>
             
-            <div className="border-t border-red-200 pt-6 px-2">
-               <div
-                 className="board-sidebar-member-scrollbar flex max-h-[222px] flex-col gap-4 overflow-y-auto overflow-x-hidden pl-3 pr-0"
+            <div className="board-sidebar-members flex min-h-0 flex-col border-t border-red-200 pt-4 sm:pt-6 px-2">
+               <PersistentScrollArea
+                 className="board-sidebar-member-scrollbar min-h-0 max-h-[222px]"
+                 viewportClassName="flex h-full min-h-0 flex-col gap-4 overflow-x-hidden pl-3 pr-0"
                  style={{
                    '--board-scroll-thumb': sidebarScrollbarColors.thumb,
                    '--board-scroll-track': sidebarScrollbarColors.track,
@@ -964,14 +1203,14 @@ const visibleColumns = renderedCardSearchTerm
                       )}
                     </div>
                  ))}
-               </div>
+               </PersistentScrollArea>
                {isProjectOwner && (
                  <Button
                    variant="whiteSmall"
                    aria-label="دعوت عضو"
                    disabled={!activeProjectId}
                    onClick={() => setIsInviteModalOpen(true)}
-                   className="!mt-4 !h-auto !min-h-[58px] !w-full !justify-start !rounded-[10px] !border-red-100 !bg-transparent !px-2 !text-red-400 hover:!bg-red-50"
+                   className="!mt-4 !h-auto !min-h-[58px] !w-full !shrink-0 !justify-start !rounded-[10px] !border-red-100 !bg-transparent !px-2 !text-red-400 hover:!bg-red-50"
                  >
                    <span className="flex w-full items-center gap-3" dir="rtl">
                      <span className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center shrink-0 shadow-sm border border-red-200 text-red-500">
@@ -986,7 +1225,7 @@ const visibleColumns = renderedCardSearchTerm
             </div>
 
             {canLeaveProject && (
-              <div className="mt-4 border-t border-red-200 px-2 pt-4">
+              <div className="mt-4 shrink-0 border-t border-red-200 px-2 pt-4">
                 <Button
                   variant="whiteSmall"
                   aria-label="ترک پروژه"
@@ -1078,49 +1317,130 @@ const visibleColumns = renderedCardSearchTerm
       </Modal>
 
       <style dangerouslySetInnerHTML={{__html: `
+        .board-sidebar {
+          max-height: calc(100% - 40px);
+          overflow: hidden;
+          background-color: var(--board-page-background, var(--app-page-light));
+          background-clip: padding-box;
+        }
+        .board-sidebar > div:first-child > span {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .board-sidebar-members {
+          flex: 1 1 auto;
+          overflow: hidden;
+        }
+        .board-sidebar-member-scrollbar {
+          flex: 0 1 222px;
+        }
         .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.5); border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(107, 114, 128, 0.8); }
-        .board-list-scrollbar,
-        .board-sidebar-member-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: var(--board-scroll-thumb) transparent;
+        .persistent-scroll-area {
+          position: relative;
+          overflow: hidden;
         }
-        .board-list-scrollbar::-webkit-scrollbar,
-        .board-sidebar-member-scrollbar::-webkit-scrollbar {
+        .persistent-scroll-viewport {
+          overflow-y: scroll;
+          overscroll-behavior: contain;
+          scrollbar-width: none;
+        }
+        .persistent-scroll-viewport::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
+        }
+        .persistent-scrollbar {
+          position: absolute;
+          inset: 0 auto 0 0;
+          z-index: 2;
+          display: flex;
           width: 10px;
+          flex-direction: column;
+          direction: ltr;
+          user-select: none;
         }
-        .board-list-scrollbar::-webkit-scrollbar-track,
-        .board-sidebar-member-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
+        .persistent-scrollbar.is-hidden {
+          visibility: hidden;
+          pointer-events: none;
         }
-        .board-list-scrollbar::-webkit-scrollbar-thumb,
-        .board-sidebar-member-scrollbar::-webkit-scrollbar-thumb {
-          background: var(--board-scroll-thumb);
-          border-radius: 999px;
-          min-height: 34px;
+        .persistent-scrollbar.is-visible {
+          visibility: visible;
         }
-        .board-list-scrollbar::-webkit-scrollbar-thumb:hover,
-        .board-sidebar-member-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: color-mix(in srgb, var(--board-scroll-thumb) 82%, #24344c);
-        }
-        .board-list-scrollbar::-webkit-scrollbar-button:vertical,
-        .board-sidebar-member-scrollbar::-webkit-scrollbar-button:vertical {
-          display: block;
+        .persistent-scrollbar-arrow {
+          position: relative;
           width: 10px;
           height: 10px;
+          flex: 0 0 10px;
+          border: 0;
+          padding: 0;
+          background: transparent;
+          cursor: pointer;
+        }
+        .persistent-scrollbar-arrow::before {
+          position: absolute;
+          inset: 2px 1px;
+          background: var(--board-scroll-thumb);
+          content: '';
+        }
+        .persistent-scrollbar-arrow.is-up::before {
+          clip-path: polygon(50% 10%, 88% 82%, 12% 82%);
+        }
+        .persistent-scrollbar-arrow.is-down::before {
+          clip-path: polygon(12% 18%, 88% 18%, 50% 90%);
+        }
+        .persistent-scrollbar-track {
+          position: relative;
+          min-height: 0;
+          flex: 1 1 auto;
           background: transparent;
         }
-        .board-list-scrollbar::-webkit-scrollbar-button:vertical:decrement,
-        .board-sidebar-member-scrollbar::-webkit-scrollbar-button:vertical:decrement {
-          background-color: var(--board-scroll-thumb);
-          clip-path: polygon(50% 18%, 82% 72%, 18% 72%);
+        .persistent-scrollbar-thumb {
+          position: absolute;
+          top: 0;
+          left: 2px;
+          width: 6px;
+          min-height: 34px;
+          border: 0;
+          border-radius: 999px;
+          padding: 0;
+          background: var(--board-scroll-thumb);
+          cursor: grab;
+          touch-action: none;
         }
-        .board-list-scrollbar::-webkit-scrollbar-button:vertical:increment,
-        .board-sidebar-member-scrollbar::-webkit-scrollbar-button:vertical:increment {
-          background-color: var(--board-scroll-thumb);
-          clip-path: polygon(18% 28%, 82% 28%, 50% 82%);
+        .persistent-scrollbar-thumb:hover {
+          background: color-mix(in srgb, var(--board-scroll-thumb) 82%, #24344c);
+        }
+        .persistent-scrollbar-thumb:active {
+          cursor: grabbing;
+        }
+        .persistent-scrollbar-thumb:focus-visible {
+          outline: 2px solid color-mix(in srgb, var(--board-scroll-thumb) 55%, white);
+          outline-offset: 1px;
+        }
+        @media (max-width: 1023px) {
+          .board-sidebar-shell {
+            position: absolute;
+            inset: 0 0 0 auto;
+            z-index: 60;
+            width: 64px !important;
+            pointer-events: none;
+          }
+          .board-sidebar-shell.is-open {
+            width: min(312px, 100%) !important;
+          }
+          .board-sidebar-shell > button,
+          .board-sidebar-shell .board-sidebar,
+          .board-sidebar-shell .board-sidebar-popover {
+            pointer-events: auto;
+          }
+          .board-sidebar {
+            width: calc(100% - 32px);
+          }
         }
       `}} />
     </div>
