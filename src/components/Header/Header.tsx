@@ -22,6 +22,23 @@ import "./Header.css";
 const defaultBoardLabel = "بردها";
 const compactSearchQuery = "(max-width: 980px)";
 const headerSearchDelayMs = 220;
+const nightModeStorageKey = "takraay-night-mode";
+
+function getStoredNightMode(): boolean {
+  try {
+    return window.sessionStorage.getItem(nightModeStorageKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function storeNightMode(isNightMode: boolean): void {
+  try {
+    window.sessionStorage.setItem(nightModeStorageKey, String(isNightMode));
+  } catch {
+    // Keep the toggle usable when browser storage is unavailable.
+  }
+}
 
 function getBoardTitle(board: HeaderBoardResponse): string {
   if (typeof board === "string") return board;
@@ -206,7 +223,7 @@ export default function Header() {
   const [isBoardOpen, setIsBoardOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isNightMode, setIsNightMode] = useState(false);
+  const [isNightMode, setIsNightMode] = useState(getStoredNightMode);
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<ProjectSearchResponse>(() =>
     createEmptySearchResults(),
@@ -229,6 +246,11 @@ export default function Header() {
     setIsBoardOpen(false);
     setIsMenuOpen(false);
   };
+
+  function handleNightModeChange(nextIsNightMode: boolean) {
+    setIsNightMode(nextIsNightMode);
+    storeNightMode(nextIsNightMode);
+  }
 
   function resetHeaderSearch() {
     setSearchValue("");
@@ -656,7 +678,7 @@ export default function Header() {
                       <span className="tak-menu-label">حالت شب/روز</span>
                       <ToggleSwitch
                         checked={isNightMode}
-                        onChange={setIsNightMode}
+                        onChange={handleNightModeChange}
                         aria-label="تغییر حالت شب/روز"
                       />
                     </div>
