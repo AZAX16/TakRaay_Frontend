@@ -240,6 +240,8 @@ body:has(.tak-header.is-night-mode) .create-board-card p {
 
 .zm-MonthYearButton {
   border-radius: 8px !important;
+}
+
 /* Dashboard title */
 .dashboard-page-title {
   color: var(--app-text-light);
@@ -293,7 +295,11 @@ body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
 
 /* Main Board Page Background (Dark Mode) */
 body:has(.tak-header.is-night-mode) .board-page {
-  background-color: var(--board-page-background, var(--app-page-dark)) !important;
+  background-color: var(--app-page-dark) !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-page .tak-header {
+  --tak-page: var(--app-page-dark);
 }
 
 /* Sidebar Toggle Button (Chevron) */
