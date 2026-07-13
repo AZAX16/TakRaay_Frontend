@@ -4,7 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 
-const API_BASE_URL = "https://karboard.chbkn.run/api";
+const API_BASE_URL = "https://karboard.chbkn.dev/api";
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
