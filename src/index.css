@@ -362,3 +362,24 @@ body:has(.tak-header.is-night-mode) .about-overview-icons svg {
 body:has(.tak-header.is-night-mode) .about-overview-icons p {
   color: #dbeafe;
 }
+
+
+/* Dashboard Columns Scrollbar */
+.dashboard-task-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4eacb7 #b8eaed; /* تغییر رنگ متناسب با تم داشبورد شما */
+}
+
+.dashboard-task-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-task-scroll::-webkit-scrollbar-track {
+  background: #b8eaed;
+  border-radius: 999px;
+}
+
+.dashboard-task-scroll::-webkit-scrollbar-thumb {
+  background: #4eacb7;
+  border-radius: 999px;
+}

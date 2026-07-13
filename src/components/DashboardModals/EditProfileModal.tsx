@@ -4,6 +4,8 @@ import { Input, TextArea } from '../ui-kit/Input';
 import { Button } from '../ui-kit/Button';
 import apiClient from '../../services/api';
 import defaultProfilePic from '../../assets/default-profile-picture.jpeg';
+import ErrorModal from '../modals/ErrorModal';
+import { getProfileUpdateErrorMessage } from '../../utils/DashboardErrorHelper';
 
 type UserProfileData = {
   full_name?: string | null;
@@ -34,14 +36,16 @@ const getAvatarSrc = (avatar?: string | null) => {
   if (avatar.startsWith('blob:') || avatar.startsWith('data:') || avatar.startsWith('http')) {
     return avatar;
   }
-  return `https://karboard.chbkn.run${avatar}`;
+  return `https://karboard.chbkn.dev${avatar}`;
 };
 
 export default function EditProfileModal({ isOpen, onClose, initialData, onSuccessRefresh }: EditProfileModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  // استیت فرم
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [modalErrorMessage, setModalErrorMessage] = useState('');
+
   const [formData, setFormData] = useState<UserProfileFormData>({
     full_name: initialData?.full_name ?? "",
     student_id: initialData?.student_id ?? "",
@@ -50,15 +54,13 @@ export default function EditProfileModal({ isOpen, onClose, initialData, onSucce
     bio: initialData?.bio ?? "",
   });
 
-  // استیت‌های مربوط به عکس پروفایل
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(initialData?.avatar || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAvatarDeleted, setIsAvatarDeleted] = useState<boolean>(false);
 
-  // یک استیت کمکی برای تشخیص تغییر وضعیت باز و بسته شدن
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-  // آپدیت استیت در زمان رندر (بدون نیاز به useEffect برای سینک کردن پراپ و استیت)
   if (isOpen !== prevIsOpen) {
     setPrevIsOpen(isOpen);
     if (isOpen && initialData) {
@@ -71,11 +73,11 @@ export default function EditProfileModal({ isOpen, onClose, initialData, onSucce
       });
       setAvatarPreview(initialData.avatar || null);
       setAvatarFile(null);
+      setIsAvatarDeleted(false);
       setStep(1);
     }
   }
 
-  // کلین‌آپ برای جلوگیری از نشت حافظه (Memory Leak) پیش‌نمایش عکس
   useEffect(() => {
     return () => {
       if (avatarPreview && avatarPreview !== initialData?.avatar) {
@@ -93,21 +95,44 @@ export default function EditProfileModal({ isOpen, onClose, initialData, onSucce
     const file = e.target.files?.[0];
     if (file) {
       setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file)); // ساخت URL موقت برای نمایش عکس انتخاب شده
+      setAvatarPreview(URL.createObjectURL(file));
+      setIsAvatarDeleted(false);
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setIsAvatarDeleted(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      // ایجاد FormData برای ارسال دیتا و فایل
       const submitData = new FormData();
-      if (formData.full_name) submitData.append('full_name', formData.full_name);
-      if (formData.student_id) submitData.append('student_id', formData.student_id);
-      if (formData.job_title) submitData.append('job_title', formData.job_title);
-      if (formData.skills) submitData.append('skills', formData.skills);
-      if (formData.bio) submitData.append('bio', formData.bio);
-      if (avatarFile) submitData.append('avatar', avatarFile);
+      if (formData.full_name !== undefined && formData.full_name !== null) {
+        submitData.append('full_name', formData.full_name);
+      }
+      if (formData.student_id !== undefined && formData.student_id !== null) {
+        submitData.append('student_id', formData.student_id);
+      }
+      if (formData.job_title !== undefined && formData.job_title !== null) {
+        submitData.append('job_title', formData.job_title);
+      }
+      if (formData.skills !== undefined && formData.skills !== null) {
+        submitData.append('skills', formData.skills);
+      }
+      if (formData.bio !== undefined && formData.bio !== null) {
+        submitData.append('bio', formData.bio);
+      }
+      if (avatarFile) {
+        submitData.append('avatar', avatarFile);
+      } else if (isAvatarDeleted) {
+        submitData.append('avatar', '');
+      }
 
       await apiClient.patch('/auth/profile/', submitData, {
           headers: {
@@ -115,10 +140,12 @@ export default function EditProfileModal({ isOpen, onClose, initialData, onSucce
           }
         });
 
-      setStep(2); // رفتن به استپ موفقیت در صورت دریافت ریسپانس 2xx
+      setStep(2);
     } catch (error) {
-      // TODO: هندل کردن ارور بک‌اند برای نمایش به کاربر در آینده (مودال ارور و ...)
       console.error("خطا در ثبت اطلاعات:", error);
+      const parsedMessage = getProfileUpdateErrorMessage(error);
+      setModalErrorMessage(parsedMessage);
+      setIsErrorModalOpen(true);
     } finally {
       setIsLoading(false);
     }
@@ -127,11 +154,13 @@ export default function EditProfileModal({ isOpen, onClose, initialData, onSucce
   // بستن مودال و ریست کردن استپ
   const handleClose = () => {
     setStep(1);
-    onSuccessRefresh(); // درخواست برای رفرش کردن دیتای داشبورد
+    setIsErrorModalOpen(false);
+    onSuccessRefresh();
     onClose();
   };
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={handleClose} title="ویرایش اطلاعات کاربری">
       {step === 1 ? (
         <div className="flex flex-col gap-6 w-full md:w-[650px]">
@@ -155,6 +184,15 @@ export default function EditProfileModal({ isOpen, onClose, initialData, onSucce
               >
                 تغییر عکس پروفایل
               </button>
+              {(avatarPreview || avatarFile) && (
+                      <button
+                        className="text-xs font-semibold text-[#e0786c] transition-colors hover:text-[#f85a40] hover:underline focus-visible:outline-none"
+                        onClick={handleRemoveAvatar}
+                        type="button"
+                      >
+                        حذف عکس پروفایل
+                      </button>
+                    )}
               <input
                 type="file"
                 accept="image/*"
@@ -211,5 +249,11 @@ export default function EditProfileModal({ isOpen, onClose, initialData, onSucce
         </div>
       )}
     </Modal>
+    <ErrorModal 
+        isOpen={isErrorModalOpen} 
+        onClose={() => setIsErrorModalOpen(false)} 
+        message={modalErrorMessage} 
+      />
+    </>
   );
 }
