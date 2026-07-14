@@ -31,8 +31,8 @@ type CardProps = {
   assigned_to?: ApiMember[] | null;
   available_members?: ApiMember[] | null;
   due_date?: string;
-  onDelete?: () => void;
-  onUpdate?: () => void;
+  onDelete?: (cardId: number) => void;
+  onUpdate?: (cardId: number) => void;
 };
 
 const DEFAULT_CARD_TITLE = "کارت جدید";
@@ -180,7 +180,7 @@ const payload = {
 };
 
     const updatedCard = await updateCard(id, payload);
-    onUpdate?.();
+    onUpdate?.(id);
     console.log("updated:", updatedCard);
 
     setIsEditing(false);
@@ -193,7 +193,7 @@ const handleDelete = async () => {
   try {
     await deleteCard(id);
 
-    onDelete?.();
+    onDelete?.(id);
   } catch (error) {
     console.error("Delete card failed:", error);
   }

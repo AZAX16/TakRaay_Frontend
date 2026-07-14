@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ChangeEvent,
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
@@ -56,18 +57,27 @@ type BoardScrollbarStyle = { thumb: string; track: string };
 const CARD_SEARCH_EXIT_DELAY_MS = 180;
 const DEFAULT_BOARD_BACKGROUND = '#efefef';
 const BOARD_BACKGROUND_SESSION_KEY = 'takraay:board-background';
+const BOARD_BACKGROUND_IMAGE_SESSION_KEY = 'takraay:board-background-image';
+const MAX_BOARD_BACKGROUND_IMAGE_SIZE = 3 * 1024 * 1024;
 const appearanceBackgroundColors = [
   '#B8EAED',
   DEFAULT_BOARD_BACKGROUND,
-  '#4eacb7',
-  '#F3c8c7',
-  '#f8dabb',
+  '#275D73',
+  '#7B4D76',
+  '#BFA58A',
 ];
+const legacyAppearanceColorMap: Record<string, string> = {
+  '#4eacb7': '#275D73',
+  '#f3c8c7': '#7B4D76',
+  '#f8dabb': '#BFA58A',
+};
 
 function getSessionBoardBackground(projectId: number | string) {
   try {
     const savedColor = window.sessionStorage.getItem(`${BOARD_BACKGROUND_SESSION_KEY}:${projectId}`);
-    return appearanceBackgroundColors.find((color) => color.toLowerCase() === savedColor?.toLowerCase())
+    const normalizedSavedColor = savedColor?.toLowerCase();
+    return appearanceBackgroundColors.find((color) => color.toLowerCase() === normalizedSavedColor)
+      ?? (normalizedSavedColor ? legacyAppearanceColorMap[normalizedSavedColor] : undefined)
       ?? DEFAULT_BOARD_BACKGROUND;
   } catch {
     return DEFAULT_BOARD_BACKGROUND;
@@ -79,6 +89,30 @@ function saveSessionBoardBackground(projectId: number | string, color: string) {
     window.sessionStorage.setItem(`${BOARD_BACKGROUND_SESSION_KEY}:${projectId}`, color);
   } catch {
     // Keep the color active in memory when session storage is unavailable.
+  }
+}
+
+function getSessionBoardBackgroundImage(projectId: number | string) {
+  try {
+    return window.sessionStorage.getItem(`${BOARD_BACKGROUND_IMAGE_SESSION_KEY}:${projectId}`);
+  } catch {
+    return null;
+  }
+}
+
+function saveSessionBoardBackgroundImage(projectId: number | string, imageData: string) {
+  try {
+    window.sessionStorage.setItem(`${BOARD_BACKGROUND_IMAGE_SESSION_KEY}:${projectId}`, imageData);
+  } catch {
+    // Keep the image active in memory when session storage is unavailable or full.
+  }
+}
+
+function clearSessionBoardBackgroundImage(projectId: number | string) {
+  try {
+    window.sessionStorage.removeItem(`${BOARD_BACKGROUND_IMAGE_SESSION_KEY}:${projectId}`);
+  } catch {
+    // Keep the current board usable when session storage is unavailable.
   }
 }
 
@@ -330,6 +364,31 @@ function createBoardColumns(lists: BoardList[] = [], cardsByList: Record<number,
   });
 }
 
+function withColumnCards(column: BoardColumn, cards: ProjectCard[]): BoardColumn {
+  const sortedCards = sortByOrder(cards.filter((card) => !card.is_archived));
+  return {
+    ...column,
+    cards: sortedCards,
+    title: `${column.label} (${toPersianDigits(sortedCards.length)})`,
+  };
+}
+
+async function enrichProjectMembers(
+  projectId: number | string,
+  projectMembers: ProjectMember[],
+): Promise<ProjectMember[]> {
+  return Promise.all(
+    projectMembers.map(async (member) => {
+      try {
+        const profile = await fetchProjectMemberProfile(projectId, member.id);
+        return { ...member, ...profile };
+      } catch {
+        return member;
+      }
+    }),
+  );
+}
+
 type ApiMember = { id: number; full_name: string; avatar: string | null; };
 type SidebarProfile = { id: number; name: string; avatar: string | null };
 type CurrentSidebarProfile = { id: number | null; name: string; avatar: string | null };
@@ -561,9 +620,11 @@ const BoardPage = () => {
   const [searchPopoverPosition, setSearchPopoverPosition] = useState({ top: 0, left: 0 });
   const [appearancePopoverPosition, setAppearancePopoverPosition] = useState({ top: 0, left: 0 });
   const [boardBackgroundColor, setBoardBackgroundColor] = useState(DEFAULT_BOARD_BACKGROUND);
+  const [boardBackgroundImage, setBoardBackgroundImage] = useState<string | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
   const sidebarSearchButtonRef = useRef<HTMLButtonElement | null>(null);
   const appearanceButtonRef = useRef<HTMLButtonElement | null>(null);
+  const backgroundImageInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const boardName = project?.name.trim();
@@ -627,13 +688,17 @@ const BoardPage = () => {
     setIsLoading(true);
     setMessage(null);
     try {
-      const projects = await fetchProjects();
-      const nextProjectId = projectId ?? projects[0]?.id;
+      let nextProjectId = projectId;
+      if (!nextProjectId) {
+        const projects = await fetchProjects();
+        nextProjectId = projects[0]?.id;
+      }
 
       if (!nextProjectId) {
         setActiveProjectId(null);
         setProject(null);
         setBoardBackgroundColor(DEFAULT_BOARD_BACKGROUND);
+        setBoardBackgroundImage(null);
         setMembers([]);
         setColumns(createBoardColumns());
         setMessage('بردی برای نمایش پیدا نشد.');
@@ -642,40 +707,32 @@ const BoardPage = () => {
 
       setActiveProjectId(nextProjectId);
       setBoardBackgroundColor(getSessionBoardBackground(nextProjectId));
+      setBoardBackgroundImage(getSessionBoardBackgroundImage(nextProjectId));
       const [projectData, listData, memberData] = await Promise.all([
         fetchProject(nextProjectId),
         fetchBoardLists(nextProjectId),
         fetchProjectMembers(nextProjectId),
       ]);
-      const enrichedMemberData = await Promise.all(
-        memberData.map(async (member) => {
-          try {
-            const profile = await fetchProjectMemberProfile(nextProjectId, member.id);
-            return { ...member, ...profile };
-          } catch {
-            return member;
-          }
-        }),
-      );
-
-      // ✅ Fetch full, detailed data for every card sequentially using getCardById
-      const cardEntries = await Promise.all(
-        listData
-          .filter((list) => !list.is_archived)
-          .map(async (list) => {
-            const basicCards = await fetchListCards(list.id);
-            const detailedCards = await Promise.all(
-              basicCards.map(async (card: ProjectCard) => {
-                try {
-                  return await getCardById(card.id);
-                } catch (err) {
-                  return card; 
-                }
-              })
-            );
-            return [list.id, detailedCards] as const;
-          }),
-      );
+      const [enrichedMemberData, cardEntries] = await Promise.all([
+        enrichProjectMembers(nextProjectId, memberData),
+        Promise.all(
+          listData
+            .filter((list) => !list.is_archived)
+            .map(async (list) => {
+              const basicCards = await fetchListCards(list.id);
+              const detailedCards = await Promise.all(
+                basicCards.map(async (card: ProjectCard) => {
+                  try {
+                    return await getCardById(card.id);
+                  } catch {
+                    return card;
+                  }
+                }),
+              );
+              return [list.id, detailedCards] as const;
+            }),
+        ),
+      ]);
 
       setProject(projectData);
       setMembers(enrichedMemberData);
@@ -683,11 +740,52 @@ const BoardPage = () => {
     } catch {
       setProject(null);
       setBoardBackgroundColor(DEFAULT_BOARD_BACKGROUND);
+      setBoardBackgroundImage(null);
       setMembers([]);
       setColumns(createBoardColumns());
       setMessage('اتصال به API انجام نشد. لطفا توکن یا دسترسی را بررسی کنید.');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function refreshProjectMembers(projectId: number | string) {
+    const memberData = await fetchProjectMembers(projectId);
+    setMembers(await enrichProjectMembers(projectId, memberData));
+  }
+
+  function updateCardInColumns(updatedCard: ProjectCard) {
+    setColumns((currentColumns) => {
+      const currentColumn = currentColumns.find((column) =>
+        column.cards.some((card) => card.id === updatedCard.id),
+      );
+      const targetStatus = updatedCard.status ?? currentColumn?.status;
+      if (!targetStatus) return currentColumns;
+
+      return currentColumns.map((column) => {
+        const cardsWithoutUpdatedCard = column.cards.filter((card) => card.id !== updatedCard.id);
+        const nextCards = column.status === targetStatus
+          ? [...cardsWithoutUpdatedCard, { ...updatedCard, status: targetStatus }]
+          : cardsWithoutUpdatedCard;
+        return withColumnCards(column, nextCards);
+      });
+    });
+  }
+
+  function removeCardFromColumns(cardId: number) {
+    setColumns((currentColumns) =>
+      currentColumns.map((column) =>
+        withColumnCards(column, column.cards.filter((card) => card.id !== cardId)),
+      ),
+    );
+  }
+
+  async function handleCardUpdated(cardId: number) {
+    try {
+      const updatedCard = await getCardById(cardId);
+      updateCardInColumns(updatedCard);
+    } catch {
+      setMessage('نمایش کارت به‌روزرسانی نشد. صفحه را دوباره بارگذاری کنید.');
     }
   }
 
@@ -803,11 +901,42 @@ const visibleColumns = renderedCardSearchTerm
 
   function handleBoardBackgroundChange(color: string) {
     setBoardBackgroundColor(color);
+    setBoardBackgroundImage(null);
 
     const projectId = project?.id ?? activeProjectId;
     if (projectId != null) {
       saveSessionBoardBackground(projectId, color);
+      clearSessionBoardBackgroundImage(projectId);
     }
+  }
+
+  function handleBoardBackgroundImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setMessage('لطفاً یک فایل تصویری انتخاب کنید.');
+      return;
+    }
+
+    if (file.size > MAX_BOARD_BACKGROUND_IMAGE_SIZE) {
+      setMessage('حجم تصویر باید کمتر از ۳ مگابایت باشد.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') return;
+
+      setBoardBackgroundImage(reader.result);
+      const projectId = project?.id ?? activeProjectId;
+      if (projectId != null) {
+        saveSessionBoardBackgroundImage(projectId, reader.result);
+      }
+    };
+    reader.onerror = () => setMessage('بارگذاری تصویر انجام نشد.');
+    reader.readAsDataURL(file);
   }
 
   function closeInviteModal() {
@@ -852,7 +981,7 @@ const visibleColumns = renderedCardSearchTerm
       setIsInvitingMember(true);
       setInviteError(null);
       await inviteProjectMember(projectId, { phone });
-      await loadBoard(projectId);
+      await refreshProjectMembers(projectId);
       closeInviteModal();
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -926,7 +1055,7 @@ const visibleColumns = renderedCardSearchTerm
         setSelectedUserId(null);
       }
 
-      await loadBoard(projectId);
+      setMembers((currentMembers) => currentMembers.filter((member) => member.id !== userId));
     } catch (error) {
       if (import.meta.env.DEV) {
         const response = (error as { response?: { data?: unknown; status?: number } })?.response;
@@ -952,15 +1081,39 @@ const visibleColumns = renderedCardSearchTerm
         const createdList = await createBoardList(activeProjectId, { title: column.status });
         listId = createdList.id;
       }
-      await createListCard(listId, { title: 'کارت جدید', description: '', due_date: null, labels: '', status: column.status, assigned_to: [] });
-      await loadBoard(activeProjectId);
+      const createdCard = await createListCard(listId, { title: 'کارت جدید', description: '', due_date: null, labels: '', status: column.status, assigned_to: [] });
+      setColumns((currentColumns) =>
+        currentColumns.map((currentColumn) => {
+          if (currentColumn.status !== column.status) return currentColumn;
+          return withColumnCards(
+            { ...currentColumn, listId },
+            [...currentColumn.cards, { ...createdCard, status: createdCard.status ?? column.status }],
+          );
+        }),
+      );
     } catch { setMessage('ساخت کارت انجام نشد.'); }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="dashboard-page min-h-screen flex flex-col items-center font-sans dir-rtl">
+        <Header />
+        <div className="flex justify-center text-xl font-bold text-[#4eacb7] p-4 max-w-[700px] rounded-xl">
+          در حال بارگذاری اطلاعات برد
+        </div>
+      </div>
+    );
   }
 
   return (
     <div
       className="board-page h-screen transition-colors duration-300 flex flex-col font-['Vazirmatn'] overflow-hidden"
-      style={{ '--board-page-background': boardBackgroundColor } as CSSProperties}
+      style={{
+        '--board-page-background': boardBackgroundColor,
+        backgroundImage: boardBackgroundImage ? `url(${boardBackgroundImage})` : undefined,
+        backgroundSize: boardBackgroundImage ? 'cover' : undefined,
+        backgroundPosition: boardBackgroundImage ? 'center' : undefined,
+      } as CSSProperties}
       dir="rtl"
     >
       <div className="relative z-50">
@@ -968,9 +1121,9 @@ const visibleColumns = renderedCardSearchTerm
       </div>
 
       <div className="flex flex-1 relative min-h-0">
-        {(isLoading || message) && (
-          <div className={`absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-xl bg-white/95 px-4 py-2 text-sm font-bold text-red-500 shadow-sm transition-opacity duration-500 ${isLoading || isMessageVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
-            {isLoading ? 'در حال دریافت اطلاعات برد...' : message}
+        {message && (
+          <div className={`absolute top-4 left-1/2 z-30 -translate-x-1/2 rounded-xl bg-white/95 px-4 py-2 text-sm font-bold text-red-500 shadow-sm transition-opacity duration-500 ${isMessageVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
+            {message}
           </div>
         )}
         <main className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
@@ -1018,9 +1171,8 @@ const visibleColumns = renderedCardSearchTerm
                                 status={col.status}
                                 /* Keep this so the "+" dropdown knows who else is on the project */
                                 available_members={apiMembers}
-                                /* Walkie-talkies to refresh the board */
-                                onUpdate={() => loadBoard(activeProjectId ?? undefined)}
-                                onDelete={() => loadBoard(activeProjectId ?? undefined)}
+                                onUpdate={(cardId) => void handleCardUpdated(cardId)}
+                                onDelete={removeCardFromColumns}
                               />
                            </div>
                          </div>
@@ -1106,6 +1258,33 @@ const visibleColumns = renderedCardSearchTerm
                   );
                 })}
               </div>
+              <input
+                ref={backgroundImageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleBoardBackgroundImageChange}
+              />
+              <button
+                type="button"
+                onClick={() => backgroundImageInputRef.current?.click()}
+                className="mt-3 w-full rounded-lg border border-[#4A5575]/35 bg-white/55 px-3 py-2 text-sm font-bold text-[#4A5575] transition hover:bg-white/80"
+              >
+                آپلود عکس پس‌زمینه
+              </button>
+              {boardBackgroundImage && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBoardBackgroundImage(null);
+                    const projectId = project?.id ?? activeProjectId;
+                    if (projectId != null) clearSessionBoardBackgroundImage(projectId);
+                  }}
+                  className="mt-2 w-full rounded-lg px-3 py-1 text-xs font-bold text-[#9B3F5D] transition hover:bg-white/45"
+                >
+                  حذف تصویر
+                </button>
+              )}
             </div>
           )}
           
