@@ -565,6 +565,15 @@ const BoardPage = () => {
   const sidebarSearchButtonRef = useRef<HTMLButtonElement | null>(null);
   const appearanceButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  useEffect(() => {
+    const boardName = project?.name.trim();
+    document.title = boardName ? `Karboard | ${boardName}` : 'Karboard';
+
+    return () => {
+      document.title = 'Karboard';
+    };
+  }, [project?.name]);
+
   // Fetch current user identity
   useEffect(() => {
     Promise.allSettled([fetchCurrentUser(), fetchHeaderProfile()]).then(([currentUserResult, profileResult]) => {
