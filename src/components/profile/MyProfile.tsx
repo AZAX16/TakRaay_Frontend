@@ -1,43 +1,75 @@
-import { useEffect, useState } from "react"
-import Modal from "../modals/NormalModal"
-import defaultProfile from "../../assets/default-profile-picture.jpeg"
+import { useEffect, useState } from "react";
+import Modal from "../modals/NormalModal";
+import defaultProfile from "../../assets/default-profile-picture.jpeg";
 import { getProfile } from "../../services/ServiceProfile";
 import type { Profile } from "../../services/ServiceProfile";
 
-export default function MyProfile({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export default function MyProfile({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function toPersianNumbers(value: string | number) {
+    const persianNumbers = [
+      "۰",
+      "۱",
+      "۲",
+      "۳",
+      "۴",
+      "۵",
+      "۶",
+      "۷",
+      "۸",
+      "۹",
+    ];
+
+    return value
+      .toString()
+      .replace(/[0-9]/g, (digit) => persianNumbers[Number(digit)]);
+  }
 
   const fetchProfile = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
+
     try {
-      const data = await getProfile()
-      setProfile(data)
+      const data = await getProfile();
+      setProfile(data);
     } catch (err) {
-      setError('خطا در دریافت اطلاعات پروفایل')
-      console.error(err)
+      setError("خطا در بارگذاری اطلاعات پروفایل");
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (isOpen) {
-      fetchProfile()
+      fetchProfile();
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="پروفایل من">
       <div className="flex flex-col items-center gap-5">
         {loading && (
-          <div className="text-center text-[#387FA3]">در حال بارگذاری...</div>
+          <div className="text-center text-[#387FA3]">
+             درحال بارگذاری اطلاعات پروفایل
+          </div>
         )}
+
         {error && (
-          <div className="text-center text-[#387FA3]">{error}</div>
+          <div className="text-center text-[#387FA3]">
+            {error}
+          </div>
         )}
+
         {profile && (
           <>
             <div
@@ -80,10 +112,11 @@ export default function MyProfile({ isOpen, onClose }: { isOpen: boolean; onClos
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src =
-                        defaultProfile
+                        defaultProfile;
                     }}
                   />
                 </div>
+
                 {/* INFO */}
                 <div className="flex-1 w-full flex flex-col gap-3">
                   {[
@@ -113,8 +146,9 @@ export default function MyProfile({ isOpen, onClose }: { isOpen: boolean; onClos
                       >
                         {label}
                       </label>
+
                       <div
-                        dir="ltr"
+                        dir="rtl"
                         className="
                           bg-[#B8EAED]
                           text-[#387FA3]
@@ -126,12 +160,13 @@ export default function MyProfile({ isOpen, onClose }: { isOpen: boolean; onClos
                           break-words
                         "
                       >
-                        {value || "..."}
+                        {value ? toPersianNumbers(value) : "..."}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
+
               {/* BIO */}
               <div>
                 <label
@@ -145,6 +180,7 @@ export default function MyProfile({ isOpen, onClose }: { isOpen: boolean; onClos
                 >
                   درباره من:
                 </label>
+
                 <div
                   className="
                     bg-[#B8EAED]
@@ -165,5 +201,5 @@ export default function MyProfile({ isOpen, onClose }: { isOpen: boolean; onClos
         )}
       </div>
     </Modal>
-  )
+  );
 }

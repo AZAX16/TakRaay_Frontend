@@ -383,3 +383,7 @@ body:has(.tak-header.is-night-mode) .about-overview-icons p {
   background: #4eacb7;
   border-radius: 999px;
 }
+
+input::placeholder {
+  color: var(--placeholder-color);
+}

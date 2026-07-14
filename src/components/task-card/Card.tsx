@@ -249,22 +249,28 @@ const handleDelete = async () => {
               <input
                 disabled={!isEditing}
                 value={taskTitle}
+                placeholder="نام کارت"
                 maxLength={22}
                 onChange={(e) =>
                   handlePersianInput(setTaskTitle, e.target.value)
                 }
-                className="flex-1 min-w-0 h-[30px] rounded-[10px] border bg-transparent text-right text-[14px] font-[700] outline-none px-[10px] truncate"
-                style={{ borderColor: colors.text }}
+                className="flex-1 min-w-0 h-[30px] rounded-[10px] border bg-transparent text-right text-[14px] font-[700] outline-none px-[10px] truncate placeholder:opacity-70"
+                style={{ borderColor: colors.text, "--placeholder-color": colors.text } as React.CSSProperties}
               />
               <input
                 disabled={!isEditing}
                 value={taskTag}
+                placeholder="#تگ"
                 maxLength={8}
                 onChange={(e) =>
                   handlePersianInput(setTaskTag, e.target.value)
                 }
-                className="w-[60px] h-[30px] rounded-[10px] text-center text-[11px] font-[700] outline-none px-[5px]"
-                style={{ background: colors.text, color: colors.dark }}
+                className="w-[60px] h-[30px] rounded-[10px] text-center text-[11px] font-[700] outline-none px-[5px] placeholder:opacity-70"
+                style={{
+                  background: colors.text,
+                  color: colors.dark,
+                  "--placeholder-color": colors.dark,
+                } as React.CSSProperties}
               />
             </div>
             {/* DESCRIPTION */}
@@ -275,12 +281,13 @@ const handleDelete = async () => {
               <textarea
                 disabled={!isEditing}
                 value={taskDescription}
+                placeholder="توضیحات کارت"
                 maxLength={110}
                 onChange={(e) =>
                   handlePersianInput(setTaskDescription, e.target.value)
                 }
-                className="flex-1 h-[90px] rounded-[10px] border resize-none outline-none p-[10px] text-[11px] font-[500] overflow-hidden"
-                style={{ borderColor: colors.text, background: "rgba(255,255,255,0.3)" }}
+                className="flex-1 h-[90px] rounded-[10px] border resize-none outline-none p-[10px] text-[11px] font-[500] overflow-hidden placeholder:opacity-70"
+                style={{ borderColor: colors.text, background: "rgba(255,255,255,0.3)", "--placeholder-color": colors.text } as React.CSSProperties}
               />
             </div>
             {/* STATUS */}

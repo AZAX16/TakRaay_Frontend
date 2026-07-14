@@ -16,6 +16,25 @@ export default function OthersProfile({ isOpen, onClose, projectId, userId }: Ot
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function toPersianNumbers(value: string | number) {
+    const persianNumbers = [
+      "۰",
+      "۱",
+      "۲",
+      "۳",
+      "۴",
+      "۵",
+      "۶",
+      "۷",
+      "۸",
+      "۹",
+    ];
+
+    return value
+      .toString()
+      .replace(/[0-9]/g, (digit) => persianNumbers[Number(digit)]);
+  }
+
   const fetchProfile = useCallback(async () => {
     if (!projectId || !userId) return;
 
@@ -26,7 +45,7 @@ export default function OthersProfile({ isOpen, onClose, projectId, userId }: Ot
       const data = await getMemberProfile(projectId, userId);
       setProfile(data);
     } catch (err: any) {
-      setError('خطا در دریافت اطلاعات پروفایل');
+      setError('خطا در بارگذاری اطلاعات پروفایل');
       console.error(err);
     } finally {
       setLoading(false);
@@ -43,7 +62,7 @@ export default function OthersProfile({ isOpen, onClose, projectId, userId }: Ot
     <Modal isOpen={isOpen} onClose={onClose} title="پروفایل ایشان">
       <div className="flex flex-col items-center gap-5">
         {loading && (
-          <div className="text-center text-[#387FA3]">در حال بارگذاری...</div>
+          <div className="text-center text-[#387FA3]"> درحال بارگذاری اطلاعات پروفایل</div>
         )}
         {error && (
           <div className="text-center text-[#387FA3]">{error}</div>
@@ -123,7 +142,7 @@ export default function OthersProfile({ isOpen, onClose, projectId, userId }: Ot
                       {label}
                     </label>
                     <div
-                      dir="ltr"
+                      dir="rtl"
                       className="
                         bg-[#B8EAED]
                         text-[#387FA3]
@@ -135,7 +154,7 @@ export default function OthersProfile({ isOpen, onClose, projectId, userId }: Ot
                         break-words
                       "
                     >
-                      {value || "..."}
+                      {value ? toPersianNumbers(value) : "..."}
                     </div>
                   </div>
                 ))}
