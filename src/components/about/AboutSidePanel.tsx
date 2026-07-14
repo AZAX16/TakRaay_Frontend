@@ -185,8 +185,7 @@ const AboutSidePanel = () => {
           </div>
 
           <p className="text-sm leading-7 text-[#444]">
-            ما یک تیم دانشجویی از دانشگاه علم و صنعت ایران هستیم که تلاش کردیم یک ابزار ساده و کاربردی برای
-            مدیریت پروژه‌ها و بردهای شخصی طراحی کنیم.
+           ما یک تیم دانشجویی از دانشگاه علم و صنعت ایران هستیم که در قالب یک پروژه گروهی، تلاش کردیم کاربرد را به عنوان ابزاری ساده برای مدیریت پروژه‌ها و بردهای شخصی طراحی کنیم.
           </p>
         </div>
 
@@ -197,8 +196,7 @@ const AboutSidePanel = () => {
           </div>
 
           <p className="text-sm leading-7 text-[#444]">
-            هدف ما ایجاد فضایی منظم برای مدیریت کارها، پیگیری روند پروژه و
-            ساده‌تر کردن همکاری تیمی است.
+          هدف ما ارائه یک سایت کاربردی برای درس تحلیل و طراحی سیستم‌ها بود؛ سایتی برای مدیریت منظم کارها، پیگیری پروژه و همکاری تیمی که در آینده می‌تواند به ابزاری کامل‌تر تبدیل شود.
           </p>
         </div>
 
@@ -207,7 +205,7 @@ const AboutSidePanel = () => {
             نمای کلی پروژه
           </h3>
 
-          <div className="grid grid-cols-3 text-center">
+          <div className="about-overview-icons grid grid-cols-3 text-center">
             <div className="flex flex-col items-center gap-1 border-l-2 border-[#E0786C] px-2">
                 <UsersIcon />
                 <p className="text-sm font-bold text-[#2F3B4A]">۶ عضو</p>
@@ -220,7 +218,7 @@ const AboutSidePanel = () => {
 
             <div className="flex flex-col items-center gap-1 px-2">
                 <TechIcon />
-                <p className="text-sm font-bold text-[#2F3B4A]">+۸ تکنولوژی</p>
+                <p className="text-sm font-bold text-[#2F3B4A]">+۶ تکنولوژی</p>
             </div>
             </div>
         </div>

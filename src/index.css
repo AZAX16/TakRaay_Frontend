@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap");
+@import "@fontsource/vazirmatn";
 
 @tailwind base;
 @tailwind components;
@@ -7,13 +7,13 @@
 :root {
   font-family: Vazirmatn, Tahoma, Arial, sans-serif;
   color: #24344c;
-  background: #f7f8fc;
+  background: #efefef;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --app-page-light: #f7f8fc;
+  --app-page-light: #efefef;
   --app-page-dark: #053442;
   --app-text-light: #000000;
   --app-text-dark: #ffffff;
@@ -33,8 +33,8 @@ html {
 }
 
 body {
-  min-height: 100vh;
   margin: 0;
+  font-family: Vazirmatn, Tahoma, Arial, sans-serif;
   background-color: var(--app-page-light);
 }
 
@@ -67,15 +67,60 @@ textarea {
   transition: color 0.3s ease;
 }
 
+/* FAQ frame background */
+.faq-frame-bg {
+  background-image:
+    linear-gradient(rgba(239, 239, 239, 0.78), rgba(239, 239, 239, 0.78)),
+    url("/images/faq-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* FAQ scrollbar */
+.card-dropdown-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.card-dropdown-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.faq-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4f6689 #b8eaed;
+}
+
+.faq-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.faq-scroll::-webkit-scrollbar-track {
+  background: #b8eaed;
+  border-radius: 999px;
+}
+
+.faq-scroll::-webkit-scrollbar-thumb {
+  background: #4f6689;
+  border-radius: 999px;
+  border: 2px solid #b8eaed;
+}
+
+/* FAQ frame */
+.faq-frame {
+  border-color: #4a5575;
+}
+
 /* Dark mode trigger from Header */
 body:has(.tak-header.is-night-mode) {
   --tak-page: var(--app-page-dark);
   --tak-text: var(--app-text-dark);
-
   background-color: var(--app-page-dark);
 }
 
-body:has(.tak-header.is-night-mode) html,
 body:has(.tak-header.is-night-mode) #root {
   background-color: var(--app-page-dark);
 }
@@ -91,6 +136,16 @@ body:has(.tak-header.is-night-mode) .about-page-title,
 body:has(.tak-header.is-night-mode) .about-section-title,
 body:has(.tak-header.is-night-mode) .faq-page-title {
   color: var(--app-text-dark);
+}
+
+body:has(.tak-header.is-night-mode) .faq-frame {
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+body:has(.tak-header.is-night-mode) .faq-frame-bg {
+  background-image:
+    linear-gradient(rgba(5, 52, 66, 0.82), rgba(5, 52, 66, 0.82)),
+    url("/images/faq-bg.jpg");
 }
 
 /* About page cards */
@@ -122,55 +177,76 @@ body:has(.tak-header.is-night-mode) .about-overview-icons p {
   color: #dbeafe !important;
 }
 
-/* FAQ scrollbar */
-.faq-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #4f6689 #b8eaed;
-}
-
-.faq-scroll::-webkit-scrollbar {
-  width: 10px;
-}
-
-.faq-scroll::-webkit-scrollbar-track {
-  background: #b8eaed;
-  border-radius: 999px;
-}
-
-.faq-scroll::-webkit-scrollbar-thumb {
-  background: #4f6689;
-  border-radius: 999px;
-  border: 2px solid #b8eaed;
-}
-
-.faq-frame {
-  border-color: #4a5575;
-}
-
-body:has(.tak-header.is-night-mode) .faq-frame {
-  border-color: rgba(255, 255, 255, 0.85);
-}
-
-.faq-frame-bg {
-  background-image:
-    linear-gradient(rgba(247, 248, 252, 0.78), rgba(247, 248, 252, 0.78)),
-    url("/images/faq-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-body:has(.tak-header.is-night-mode) .faq-frame-bg {
-  background-image:
-    linear-gradient(rgba(5, 52, 66, 0.82), rgba(5, 52, 66, 0.82)),
-    url("/images/faq-bg.jpg");
-}
-
+/* Create board card dark mode */
 .create-board-card {
-  background-color: #ffffff;
   transition:
     background-color 0.3s ease,
-    color 0.3s ease;
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #21465c;
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card svg,
+body:has(.tak-header.is-night-mode) .create-board-card span,
+body:has(.tak-header.is-night-mode) .create-board-card p {
+  color: #ffffff;
+}
+
+/* Date picker / modal custom styles */
+.css-1m8qzkt {
+  transform: translateY(8px) !important;
+  z-index: 99999 !important;
+}
+
+.zm-Popper,
+.zm-PopperRoot,
+.zm-Popover {
+  margin-top: 8px !important;
+  z-index: 99999 !important;
+}
+
+.css-137m4ck {
+  border-radius: 25px !important;
+}
+
+.zm-DaysButton,
+.zm-IconNextButton,
+.zm-IconPrevButton {
+  border-radius: 100% !important;
+}
+
+.zm-YearPickerButton,
+.zm-MonthPickerButton,
+.zm-MonthYearButton {
+  border-radius: 8px !important;
+}
+
+
+/* Dashboard page */
+.dashboard-page {
+  min-height: 100vh;
+  background-color: var(--app-page-light);
+  transition: background-color 0.3s ease;
+}
+
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 body:has(.tak-header.is-night-mode) .create-board-card {
@@ -301,6 +377,7 @@ body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
 
 .board-page .tak-header {
   --tak-page: var(--board-page-background, var(--app-page-light));
+  background: transparent;
 }
 
 /* Main Board Page Background (Dark Mode) */
@@ -379,3 +456,27 @@ body:has(.tak-header.is-night-mode) .about-overview-icons p {
   color: #dbeafe;
 }
 
+
+/* Dashboard Columns Scrollbar */
+.dashboard-task-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4eacb7 #b8eaed; /* تغییر رنگ متناسب با تم داشبورد شما */
+}
+
+.dashboard-task-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-task-scroll::-webkit-scrollbar-track {
+  background: #b8eaed;
+  border-radius: 999px;
+}
+
+.dashboard-task-scroll::-webkit-scrollbar-thumb {
+  background: #4eacb7;
+  border-radius: 999px;
+}
+
+input::placeholder {
+  color: var(--placeholder-color);
+}

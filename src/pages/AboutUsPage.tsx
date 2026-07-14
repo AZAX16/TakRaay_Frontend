@@ -1,4 +1,5 @@
 import Header from "../components/Header/Header";
+import Footer from "../components/Footer/Footer";
 import TeamSection from "../components/about/TeamSection";
 import AboutSidePanel from "../components/about/AboutSidePanel";
 
@@ -22,35 +23,19 @@ const AboutUsIcon = () => {
   );
 };
 
-const HeartIcon = () => {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-6 w-6 text-[#E07D73]"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20.8 4.6c-1.8-1.7-4.6-1.6-6.3.2L12 7.4 9.5 4.8C7.8 3 5 2.9 3.2 4.6 1.3 6.4 1.3 9.5 3.1 11.4L12 20l8.9-8.6c1.8-1.9 1.8-5 .1-6.8Z" />
-    </svg>
-  );
-};
+
 
 const AboutUsPage = () => {
   return (
     <div
       dir="rtl"
-      className="about-page min-h-screen text-right transition-colors duration-300"
+      className="about-page flex min-h-screen flex-col text-right transition-colors duration-300"
     >
       <Header />
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
-          <aside className="flex w-full shrink-0 flex-col lg:w-[330px]">
+          <aside className="flex w-full shrink-0 flex-col lg:w-[380px]">
             <div className="about-section-title mb-4 flex h-7 items-center justify-start gap-2">
               <AboutUsIcon />
 
@@ -72,13 +57,13 @@ const AboutUsPage = () => {
                   gender: "male",
                   name: "حسین مجیدی",
                   description:
-                    "برنامه‌ریزی ساختار پروژه و نظارت روی پیشرفت کلی تیم.",
+                    "همراه در شکل‌دهی مسیر کلی پروژه، ایجاد هماهنگی بین بخش‌ها و حفظ تمرکز تیم روی هدف اصلی تک‌رای.",
                 },
                 {
                   gender: "female",
                   name: "یکتا شریف‌پور",
                   description:
-                    "مدیریت روند پروژه، هماهنگی اعضا و پیگیری تسک‌های تیم.",
+                    "همراه در مدیریت جریان کار، پیگیری پیشرفت پروژه و ایجاد نظم در ارتباط میان اعضای تیم.",
                 },
               ]}
             />
@@ -92,23 +77,25 @@ const AboutUsPage = () => {
                   gender: "male",
                   name: "علیرضا پویان",
                   description:
-                    "پیاده‌سازی صفحات اصلی با React، TypeScript و Tailwind.",
+                    "همراه در توسعه رابط کاربری و ساخت تجربه‌ای ساده برای کاربران.",
                 },
                 {
                   gender: "female",
                   name: "محیا معینی",
-                  description: "طراحی و توسعه کامپوننت‌های UI Kit و فرم‌ها.",
+                  description:
+                    "همراه در طراحی اجزای بصری و ایجاد ظاهر یکپارچه برای سامانه.",
                 },
                 {
                   gender: "female",
                   name: "زینب فلاحی",
-                  description: "اتصال صفحات به API و مدیریت state صفحه‌ها.",
+                  description:
+                    "همراه در اتصال بخش‌های سامانه و بهبود ارتباط صفحات با داده‌ها.",
                 },
                 {
                   gender: "female",
                   name: "محدثه واحدی",
                   description:
-                    "ریسپانسیو کردن صفحات و بهبود تجربه کاربری.",
+                    "همراه در بهبود نمایش صفحات و سازگاری بهتر با دستگاه‌های مختلف.",
                 },
               ]}
             />
@@ -122,23 +109,23 @@ const AboutUsPage = () => {
                   gender: "male",
                   name: "امین شیروانی",
                   description:
-                    "طراحی APIها، مدیریت دیتابیس و پیاده‌سازی احراز هویت.",
+                    "همراه در توسعه زیرساخت فنی و مدیریت ارتباط داده‌های سامانه.",
                 },
                 {
                   gender: "female",
                   name: "نرگس طایفی",
-                  description: "آماده‌سازی Swagger برای فرانت.",
+                  description:
+                    "همراه در مستندسازی سرویس‌ها و هماهنگی بهتر بخش‌های فنی.",
                 },
               ]}
             />
           </section>
         </div>
 
-        <div className="mt-8 flex items-center justify-start gap-2 rounded-2xl bg-[#B8EAED] px-5 py-4 text-right text-lg font-bold text-[#E07D73]">
-          <HeartIcon />
-          <span>از انتخاب کاربورد سپاسگزاریم!</span>
-        </div>
+        
       </main>
+
+      <Footer />
     </div>
   );
 };

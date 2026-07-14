@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Board } from "../../utils/boardTypes";
 
 type BoardCardProps = {
@@ -7,7 +8,12 @@ type BoardCardProps = {
 };
 
 const BoardCard = ({ board, onDelete }: BoardCardProps) => {
+  const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleOpenBoard = () => {
+    navigate(`/boards/${board.id}`);
+  };
 
   const handleDelete = async () => {
     const shouldDelete = window.confirm(
@@ -26,13 +32,28 @@ const BoardCard = ({ board, onDelete }: BoardCardProps) => {
 
   return (
     <article
-      className="relative flex h-[220px] w-full max-w-[230px] flex-col rounded-2xl p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+      onClick={handleOpenBoard}
+      className="relative flex h-[220px] w-full max-w-[230px] cursor-pointer flex-col rounded-2xl p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
       style={{ backgroundColor: board.color }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleOpenBoard();
+        }
+      }}
     >
       {onDelete && (
         <button
           type="button"
-          onClick={handleDelete}
+          onClick={(event) => {
+            event.stopPropagation();
+            handleDelete();
+          }}
+          onKeyDown={(event) => {
+            event.stopPropagation();
+          }}
           disabled={isDeleting}
           className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-zinc-700 transition hover:bg-white hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-60"
           aria-label="حذف پروژه"
