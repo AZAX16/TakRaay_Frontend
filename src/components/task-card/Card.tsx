@@ -35,6 +35,8 @@ type CardProps = {
   onUpdate?: () => void;
 };
 
+const DEFAULT_CARD_TITLE = "کارت جدید";
+
 function isPhoneNumberLike(value: string) {
   return /^(\+|00)?[\d۰-۹٠-٩][\d۰-۹٠-٩\s\-()]{6,}$/.test(value.trim());
 }
@@ -108,8 +110,11 @@ export default function Card({
   }, [status]);
 
   useEffect(() => {
+    const assignedMembers = assigned_to ?? [];
+    const assignedMemberIds = new Set(assignedMembers.map((member) => member.id));
+
     setMembers(
-      (assigned_to ?? []).map((member) => ({
+      assignedMembers.map((member) => ({
         id: member.id,
         name: getMemberDisplayName(member),
         image: getMemberImage(member),
@@ -121,7 +126,7 @@ export default function Card({
         id: member.id,
         name: getMemberDisplayName(member),
         image: getMemberImage(member),
-      }))
+      })).filter((member) => !assignedMemberIds.has(member.id))
     );
   }, [assigned_to, available_members]);
 
@@ -165,7 +170,8 @@ const reverseStatusMap: Record<string, string> = {
 const handleSave = async () => {
   try {
 const payload = {
-  title: taskTitle,
+  // Keep the API's required title valid when the untouched placeholder is saved.
+  title: taskTitle.trim() || DEFAULT_CARD_TITLE,
   labels: taskTag,
   description: taskDescription,
   status: reverseStatusMap[taskStatus] || "todo",
@@ -235,7 +241,9 @@ const handleDelete = async () => {
 
         <div
           ref={cardRef}
-          className="w-[380px] h-[230px] rounded-[15px] border p-[10px] flex gap-[10px] overflow-visible relative"
+          className={`w-[380px] h-[230px] rounded-[15px] border p-[10px] flex gap-[10px] overflow-visible relative ${
+            showMemberDropdown || showStatusDropdown ? "z-[100]" : "z-0"
+          }`}
           style={{
             background: `linear-gradient(135deg, ${colors.light} 0%, ${colors.dark} 100%)`,
             borderColor: colors.text,
@@ -306,7 +314,7 @@ const handleDelete = async () => {
                 </button>
                 {showStatusDropdown && isEditing && (
                   <div
-                    className="absolute top-[35px] left-1/2 -translate-x-1/2 rounded-[10px] overflow-hidden z-[9999] shadow-lg"
+                    className="card-dropdown-scroll absolute top-[35px] left-1/2 -translate-x-1/2 z-[9999] max-h-[180px] overflow-y-auto overscroll-contain rounded-[10px] shadow-lg"
                     style={{ background: colors.text }}
                   >
                     {["برای انجام", "در دست انجام", "برای بررسی", "تمام شده"].map((item) => (
@@ -356,6 +364,11 @@ onClick={() => {
   if (isEditing) {
     handleSave();
   } else {
+    // New cards start with the API-required default, but the editor should
+    // show an empty field so the user can type without deleting it first.
+    if (taskTitle.trim() === DEFAULT_CARD_TITLE) {
+      setTaskTitle("");
+    }
     setIsEditing(true);
   }
 
@@ -432,7 +445,7 @@ onClick={() => {
                   </button>
                   {showMemberDropdown && (
                     <div
-                      className=" absolute top-[35px] left-1/2 -translate-x-1/2 rounded-[10px] overflow-hidden z-[9999] shadow-lg"
+                      className="card-dropdown-scroll absolute top-[35px] left-1/2 -translate-x-1/2 z-[9999] max-h-[180px] overflow-y-auto overscroll-contain rounded-[10px] shadow-lg"
                       style={{ background: colors.text }}
                     >
                       {availableMembers.map((member) => (

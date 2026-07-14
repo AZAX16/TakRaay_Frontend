@@ -78,6 +78,17 @@ textarea {
 }
 
 /* FAQ scrollbar */
+.card-dropdown-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.card-dropdown-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .faq-scroll {
   scrollbar-width: thin;
   scrollbar-color: #4f6689 #b8eaed;
@@ -303,15 +314,21 @@ body:has(.tak-header.is-night-mode) .board-page .tak-header {
 }
 
 /* Sidebar Toggle Button (Chevron) */
-body:has(.tak-header.is-night-mode) .board-page > div > button.bg-red-50 {
+body:has(.tak-header.is-night-mode) .board-page .board-sidebar-shell > button {
   background-color: #0081a7 !important;
   color: #ffffff !important;
-  border-color: #0081a7 !important;
+  border-color: #ffffff !important;
+}
+
+/* Keep the shell and its panel animated at every breakpoint. */
+.board-sidebar-shell {
+  transition: width 0.3s ease-out;
 }
 
 /* Sidebar Container */
 .board-sidebar {
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out,
+    background-color 0.3s ease, border-color 0.3s ease;
 }
 
 body:has(.tak-header.is-night-mode) .board-sidebar {

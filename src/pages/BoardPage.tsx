@@ -985,7 +985,7 @@ const visibleColumns = renderedCardSearchTerm
                 >
                   <PersistentScrollArea
                     className="board-list-scrollbar my-[15px] min-h-0 flex-1"
-                    viewportClassName="flex h-full min-h-0 flex-col items-center gap-4 overflow-x-hidden pl-6 pr-4 py-1"
+                    viewportClassName="flex h-full min-h-0 flex-col items-center gap-4 overflow-x-hidden pl-3 pr-1 py-1"
                   >
                      {col.cards.map((card: any) => {
                        const isSearchExit =
@@ -998,10 +998,10 @@ const visibleColumns = renderedCardSearchTerm
                            className={`grid w-full justify-items-center transition-[grid-template-rows,opacity,transform] duration-200 ease-out ${
                              isSearchExit
                                ? 'grid-rows-[0fr] -translate-y-1 scale-[0.98] opacity-0 pointer-events-none'
-                               : 'grid-rows-[1fr] translate-y-0 scale-100 opacity-100'
+                               : 'grid-rows-[1fr] opacity-100'
                            }`}
                          >
-                           <div className="min-h-0 overflow-hidden">
+                           <div className="relative min-h-0 overflow-visible">
                              <Card
                                 {...card} /* ✅ This automatically passes the perfect assigned_to data from the API! */
                                 date={card.date || card.due_date || undefined}
@@ -1029,13 +1029,13 @@ const visibleColumns = renderedCardSearchTerm
           </div>
         </main>
 
-        <div className={`board-sidebar-shell ${isSidebarOpen ? 'is-open w-[312px]' : 'w-[64px]'} absolute inset-y-0 left-0 z-[60] h-full transition-[width] duration-300 ease-out`}>
+        <div className={`board-sidebar-shell ${isSidebarOpen ? 'is-open w-[312px]' : 'w-[64px]'} absolute inset-y-0 right-0 z-[60] h-full transition-[width] duration-300 ease-out`}>
           <button type="button" onClick={() => {
             setIsSidebarOpen((open) => !open);
             setIsSidebarSearchOpen(false);
             setIsAppearanceOpen(false);
-          }} className="absolute -top-5 right-3 z-[60] w-10 h-10 rounded-full border-2 border-red-200 bg-red-50 text-red-500 shadow-sm flex items-center justify-center hover:bg-red-100 transition-colors">
-            {isSidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          }} className="absolute -top-5 left-3 z-[60] w-10 h-10 rounded-full border-2 border-red-200 bg-red-50 text-red-500 shadow-sm flex items-center justify-center hover:bg-red-100 transition-colors">
+            {isSidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
           {isSidebarOpen && isSidebarSearchOpen && (
             <div
