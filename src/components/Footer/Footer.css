@@ -155,6 +155,17 @@
   object-fit: contain;
 }
 
+.tak-footer-logo-link {
+  display: block;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.tak-footer-logo-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
 .tak-footer-logo-caption {
   margin-top: -6px;
 }

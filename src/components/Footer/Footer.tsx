@@ -147,7 +147,13 @@ export default function Footer() {
           <div className="tak-footer-divider" aria-hidden="true" />
 
           <section className="tak-footer-section tak-footer-brand">
-            <img className="tak-footer-logo" src={karbordLogo} alt="کاربرد" />
+            <NavLink
+              className="tak-footer-link tak-footer-logo-link"
+              to="/boards"
+              aria-label="بردها"
+            >
+              <img className="tak-footer-logo" src={karbordLogo} alt="" />
+            </NavLink>
             <div className="tak-footer-logo-caption">
               تولید شده توسط تیم تک‌رای
               <br />
