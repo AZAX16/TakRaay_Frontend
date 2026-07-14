@@ -111,7 +111,9 @@ const TechItem = ({
   return (
     <div className="flex flex-col items-center gap-1">
       {children}
-      <span className="text-[11px] font-bold text-[#2F3B4A]">{label}</span>
+      <span className="whitespace-nowrap text-[10px] font-bold text-[#2F3B4A]">
+        {label}
+      </span>
     </div>
   );
 };
@@ -140,37 +142,23 @@ const ReactIcon = () => (
   </div>
 );
 
-const HtmlIcon = () => (
-  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FFF0EA]">
-    <svg className="h-9 w-9" viewBox="0 0 32 32" aria-hidden="true">
-      <path fill="#E44D26" d="M5 3h22l-2 23-9 3-9-3L5 3Z" />
-      <path fill="#F16529" d="M16 5h9l-1.7 19.5L16 27.2V5Z" />
-      <path
-        fill="#fff"
-        d="M16 13h-4l-.2-2H16V8H8.5l.7 8H16v-3Zm0 8.8-3.2-.9-.2-2.4H9.7l.4 4.6 5.9 1.7v-3Z"
-      />
-      <path
-        fill="#fff"
-        d="M16 13v3h3.5l-.3 3.9-3.2.9v3l5.9-1.7.8-9.1H16Zm0-5v3h7.2l.2-3H16Z"
-      />
-    </svg>
+const DjangoIcon = () => (
+  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF5EF] p-1">
+    <img
+      src="/images/django-logo.png"
+      alt="Django"
+      className="h-full w-full rounded-lg object-contain"
+    />
   </div>
 );
 
-const CssIcon = () => (
-  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAF2FF]">
-    <svg className="h-9 w-9" viewBox="0 0 32 32" aria-hidden="true">
-      <path fill="#1572B6" d="M5 3h22l-2 23-9 3-9-3L5 3Z" />
-      <path fill="#33A9DC" d="M16 5h9l-1.7 19.5L16 27.2V5Z" />
-      <path
-        fill="#fff"
-        d="M16 13h-4l-.2-2H16V8H8.5l.7 8H16v-3Zm0 8.8-3.2-.9-.2-2.4H9.7l.4 4.6 5.9 1.7v-3Z"
-      />
-      <path
-        fill="#fff"
-        d="M16 13v3h3.5l-.3 3.9-3.2.9v3l5.9-1.7.8-9.1H16Zm0-5v3h7.2l.2-3H16Z"
-      />
-    </svg>
+const TailwindIcon = () => (
+  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F4FBFF] p-1">
+    <img
+      src="/images/tailwind-logo.png"
+      alt="Tailwind CSS"
+      className="h-full w-full rounded-lg object-contain"
+    />
   </div>
 );
 
@@ -185,7 +173,9 @@ const AboutSidePanel = () => {
           </div>
 
           <p className="text-sm leading-7 text-[#444]">
-           ما یک تیم دانشجویی از دانشگاه علم و صنعت ایران هستیم که در قالب یک پروژه گروهی، تلاش کردیم کاربرد را به عنوان ابزاری ساده برای مدیریت پروژه‌ها و بردهای شخصی طراحی کنیم.
+            ما یک تیم دانشجویی از دانشگاه علم و صنعت ایران هستیم که در قالب یک
+            پروژه گروهی، تلاش کردیم تک‌رای را به عنوان ابزاری ساده برای مدیریت
+            پروژه‌ها و بردهای شخصی طراحی کنیم.
           </p>
         </div>
 
@@ -196,7 +186,9 @@ const AboutSidePanel = () => {
           </div>
 
           <p className="text-sm leading-7 text-[#444]">
-          هدف ما ارائه یک سایت کاربردی برای درس تحلیل و طراحی سیستم‌ها بود؛ سایتی برای مدیریت منظم کارها، پیگیری پروژه و همکاری تیمی که در آینده می‌تواند به ابزاری کامل‌تر تبدیل شود.
+            هدف ما ارائه یک سایت کاربردی برای درس تحلیل و طراحی سیستم‌ها بود؛
+            سایتی برای مدیریت منظم کارها، پیگیری پروژه و همکاری تیمی که در آینده
+            می‌تواند به ابزاری کامل‌تر تبدیل شود.
           </p>
         </div>
 
@@ -207,20 +199,20 @@ const AboutSidePanel = () => {
 
           <div className="about-overview-icons grid grid-cols-3 text-center">
             <div className="flex flex-col items-center gap-1 border-l-2 border-[#E0786C] px-2">
-                <UsersIcon />
-                <p className="text-sm font-bold text-[#2F3B4A]">۶ عضو</p>
+              <UsersIcon />
+              <p className="text-sm font-bold text-[#2F3B4A]">۶ عضو</p>
             </div>
 
             <div className="flex flex-col items-center gap-1 border-l-2 border-[#E0786C] px-2">
-                <CalendarIcon />
-                <p className="text-sm font-bold text-[#2F3B4A]">۲ ماه</p>
+              <CalendarIcon />
+              <p className="text-sm font-bold text-[#2F3B4A]">۲ ماه</p>
             </div>
 
             <div className="flex flex-col items-center gap-1 px-2">
-                <TechIcon />
-                <p className="text-sm font-bold text-[#2F3B4A]">+۶ تکنولوژی</p>
+              <TechIcon />
+              <p className="text-sm font-bold text-[#2F3B4A]">+۶ تکنولوژی</p>
             </div>
-            </div>
+          </div>
         </div>
 
         <div>
@@ -237,12 +229,12 @@ const AboutSidePanel = () => {
               <ReactIcon />
             </TechItem>
 
-            <TechItem label="HTML">
-              <HtmlIcon />
+            <TechItem label="Django">
+              <DjangoIcon />
             </TechItem>
 
-            <TechItem label="CSS">
-              <CssIcon />
+            <TechItem label="Tailwind">
+              <TailwindIcon />
             </TechItem>
           </div>
         </div>
