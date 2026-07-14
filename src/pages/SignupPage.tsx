@@ -223,7 +223,7 @@ export default function SignupPage() {
         localStorage.setItem("refresh_token", refreshToken);
       }
 
-      navigate("/dashboard", { replace: true });
+      navigate("/boards", { replace: true });
     } catch (error: unknown) {
       console.log("LOGIN ERROR FULL:", error);
 

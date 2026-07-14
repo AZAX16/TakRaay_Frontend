@@ -109,7 +109,7 @@ const BoardCard = ({ board, onDelete }: BoardCardProps) => {
       </div>
 
       <span className="mt-3 text-center text-[11px] font-medium text-zinc-700/80">
-        کاربورد
+        کاربرد
       </span>
     </article>
   );

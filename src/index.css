@@ -249,6 +249,81 @@ body:has(.tak-header.is-night-mode) .create-board-card p {
     box-shadow 0.3s ease;
 }
 
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #dbeafe;
+}
+/* Create board card dark mode */
+.create-board-card {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #21465c;
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card svg,
+body:has(.tak-header.is-night-mode) .create-board-card span,
+body:has(.tak-header.is-night-mode) .create-board-card p {
+  color: #ffffff;
+}
+
+/* Date picker / modal custom styles */
+.css-1m8qzkt {
+  transform: translateY(8px) !important;
+  z-index: 99999 !important;
+}
+
+.zm-Popper,
+.zm-PopperRoot,
+.zm-Popover {
+  margin-top: 8px !important;
+  z-index: 99999 !important;
+}
+
+.css-137m4ck {
+  border-radius: 25px !important;
+}
+
+.zm-DaysButton,
+.zm-IconNextButton,
+.zm-IconPrevButton {
+  border-radius: 100% !important;
+}
+
+.zm-YearPickerButton,
+.zm-MonthPickerButton,
+.zm-MonthYearButton {
+  border-radius: 8px !important;
+}
+
+
+/* Dashboard page */
+.dashboard-page {
+  min-height: 100vh;
+  background-color: var(--app-page-light);
+  transition: background-color 0.3s ease;
+}
+
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
 .zm-MonthYearButton {
   border-radius: 8px !important;
 }
