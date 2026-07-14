@@ -176,3 +176,206 @@ body:has(.tak-header.is-night-mode) .faq-frame-bg {
 body:has(.tak-header.is-night-mode) .create-board-card {
   background-color: #dbeafe;
 }
+/* Create board card dark mode */
+.create-board-card {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #21465c;
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card svg,
+body:has(.tak-header.is-night-mode) .create-board-card span,
+body:has(.tak-header.is-night-mode) .create-board-card p {
+  color: #ffffff;
+}
+
+/* Date picker / modal custom styles */
+.css-1m8qzkt {
+  transform: translateY(8px) !important;
+  z-index: 99999 !important;
+}
+
+.zm-Popper,
+.zm-PopperRoot,
+.zm-Popover {
+  margin-top: 8px !important;
+  z-index: 99999 !important;
+}
+
+.css-137m4ck {
+  border-radius: 25px !important;
+}
+
+.zm-DaysButton,
+.zm-IconNextButton,
+.zm-IconPrevButton {
+  border-radius: 100% !important;
+}
+
+.zm-YearPickerButton,
+.zm-MonthPickerButton,
+.zm-MonthYearButton {
+  border-radius: 8px !important;
+}
+
+
+/* Dashboard page */
+.dashboard-page {
+  min-height: 100vh;
+  background-color: var(--app-page-light);
+  transition: background-color 0.3s ease;
+}
+
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.zm-MonthYearButton {
+  border-radius: 8px !important;
+}
+
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Dark mode */
+body:has(.tak-header.is-night-mode) .dashboard-page {
+  background-color: var(--app-page-dark);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-page-title {
+  color: var(--app-text-dark);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface {
+  background-color: #21465c;
+  color: #ffffff;
+  box-shadow: 0 16px 34px rgb(0 0 0 / 0.18);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface .text-black {
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
+  color: #dbeafe;
+}
+
+
+
+/* Main Board Page Background (Light Mode) */
+.board-page {
+  background-color: var(--board-page-background, var(--app-page-light)) !important;
+  transition: background-color 0.3s ease;
+}
+
+.board-page .tak-header {
+  --tak-page: var(--board-page-background, var(--app-page-light));
+}
+
+/* Main Board Page Background (Dark Mode) */
+body:has(.tak-header.is-night-mode) .board-page {
+  background-color: var(--app-page-dark) !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-page .tak-header {
+  --tak-page: var(--app-page-dark);
+}
+
+/* Sidebar Toggle Button (Chevron) */
+body:has(.tak-header.is-night-mode) .board-page .board-sidebar-shell > button {
+  background-color: #0081a7 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+/* Keep the shell and its panel animated at every breakpoint. */
+.board-sidebar-shell {
+  transition: width 0.3s ease-out;
+}
+
+/* Sidebar Container */
+.board-sidebar {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out,
+    background-color 0.3s ease, border-color 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar {
+  background-color: #042530 !important;
+  border-color: #0081a7 !important;
+}
+
+/* Sidebar Header (Project Name) */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-b {
+  border-color: #0081a7 !important;
+  color: #05a8d9 !important;
+}
+
+/* Sidebar Navigation Links */
+body:has(.tak-header.is-night-mode) .board-sidebar nav a {
+  color: #ffffff !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar nav a:hover {
+  color: #05a8d9 !important;
+}
+
+/* Sidebar Profiles Container Border */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t {
+  border-color: #0081a7 !important;
+}
+
+/* Sidebar Profile Names */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t .text-red-400 {
+  color: #ffffff !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t > div:hover {
+  background-color: rgba(0, 129, 167, 0.2) !important;
+}
+
+/* Empty Card Placeholder Text */
+body:has(.tak-header.is-night-mode) .board-page .text-gray-600 {
+  color: #dbeafe !important; 
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+body:has(.tak-header.is-night-mode) .about-overview-icons svg {
+  color: #dbeafe;
+}
+
+body:has(.tak-header.is-night-mode) .about-overview-icons p {
+  color: #dbeafe;
+}
+

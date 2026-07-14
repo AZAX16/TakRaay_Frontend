@@ -10,6 +10,36 @@ const BoardsPage = () => {
   const { boards, isLoading, error, addBoard, removeBoard } = useBoards();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  if (isLoading) {
+    return (
+      <div
+        dir="rtl"
+        className="boards-page flex min-h-screen flex-col items-center bg-[var(--tak-page)] font-sans transition-colors duration-300"
+      >
+        <Header />
+
+        <div className="flex justify-center rounded-xl p-4 text-xl font-bold text-[#4eacb7]">
+          در حال بارگذاری اطلاعات بردها
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        dir="rtl"
+        className="boards-page flex min-h-screen flex-col items-center bg-[var(--tak-page)] font-sans transition-colors duration-300"
+      >
+        <Header />
+
+        <div className="flex justify-center rounded-xl p-4 text-xl font-bold text-[#e0786c]">
+          خطا در بارگذاری اطلاعات بردها
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       dir="rtl"
@@ -39,33 +69,17 @@ const BoardsPage = () => {
           </h1>
         </section>
 
-        {isLoading && (
-          <div className="flex min-h-52 items-center justify-center">
-            <p className="text-sm font-medium text-zinc-500">
-              در حال دریافت بردها...
-            </p>
-          </div>
-        )}
+        <section className="grid grid-cols-1 justify-items-center gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {boards.map((board) => (
+            <BoardCard
+              key={board.id}
+              board={board}
+              onDelete={removeBoard}
+            />
+          ))}
 
-        {!isLoading && error && (
-          <div className="flex min-h-52 items-center justify-center">
-            <p className="text-sm font-medium text-red-500">{error}</p>
-          </div>
-        )}
-
-        {!isLoading && !error && (
-          <section className="grid grid-cols-1 justify-items-center gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {boards.map((board) => (
-              <BoardCard
-                key={board.id}
-                board={board}
-                onDelete={removeBoard}
-              />
-            ))}
-
-            <CreateBoardCard onClick={() => setIsCreateModalOpen(true)} />
-          </section>
-        )}
+          <CreateBoardCard onClick={() => setIsCreateModalOpen(true)} />
+        </section>
       </main>
 
       <Footer />
