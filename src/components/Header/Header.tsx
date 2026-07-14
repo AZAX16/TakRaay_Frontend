@@ -578,7 +578,7 @@ export default function Header() {
               )}
             </div>
 
-            <Link className="tak-logo" to="/about-us" aria-label="کاربورد">
+            <Link className="tak-logo" to="/boards" aria-label="کاربورد">
               <img className="tak-logo-image" src={logoUrl} alt="" />
             </Link>
 
