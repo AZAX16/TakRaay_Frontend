@@ -302,6 +302,7 @@ body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
 
 .board-page .tak-header {
   --tak-page: var(--board-page-background, var(--app-page-light));
+  background: transparent;
 }
 
 /* Main Board Page Background (Dark Mode) */

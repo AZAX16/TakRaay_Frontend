@@ -33,9 +33,11 @@ const CustomeDatePicker: React.FC<CustomeDatePickerProps> = ({
         {...props}
         accentColor={accentColor}
         defaultValue={dateValue}
-        style={{
-          color: textColor,
-          background: "transparent",
+        inputAttributes={{
+          style: {
+            color: textColor,
+            background: "transparent",
+          },
         }}
         inputClass={`
           ${inputClass}
@@ -48,7 +50,7 @@ const CustomeDatePicker: React.FC<CustomeDatePickerProps> = ({
             onChange(e.value);
           }
         }}
-        popoverClassName="custom-calendar-popup"
+        className="custom-calendar-popup"
       />
     </div>
 
