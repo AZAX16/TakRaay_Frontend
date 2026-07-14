@@ -143,7 +143,7 @@ export default function Dashboard() {
                 {/* بخش‌های اطلاعات */}
                 <div className="border-t-2 border-[#e0786c] pt-0">
                   <p className="text-sm text-[#e0786c] mb-1">شماره دانشجویی</p>
-                  <p className="text-sm font-bold text-black text-left">{toPersianDigits(profile?.profile?.student_id) || ""}</p>
+                  <p className="text-sm font-bold text-black">{toPersianDigits(profile?.profile?.student_id) || ""}</p>
                 </div>
 
                 <div className="border-t-2 border-[#e0786c] pt-0">
@@ -153,7 +153,7 @@ export default function Dashboard() {
 
                 <div className="border-t-2 border-[#e0786c] pt-0">
                   <p className="text-sm text-[#e0786c] mb-1">مهارت‌های شغلی</p>
-                  <p className="text-sm font-bold text-black">{profile?.profile?.skills || ""}</p>
+                  <p className="text-sm font-bold text-black">{toPersianDigits(profile?.profile?.skills) || ""}</p>
                 </div>
 
                 <div className="border-t-2 border-[#e0786c] pt-0 mb-4">
