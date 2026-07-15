@@ -1,0 +1,482 @@
+@import "@fontsource/vazirmatn";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+  color: #24344c;
+  background: #efefef;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --app-page-light: #efefef;
+  --app-page-dark: #053442;
+  --app-text-light: #000000;
+  --app-text-dark: #ffffff;
+
+  --tak-page: var(--app-page-light);
+  --tak-text: #24344c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background-color: var(--app-page-light);
+}
+
+body {
+  margin: 0;
+  font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+  background-color: var(--app-page-light);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+  background-color: var(--app-page-light);
+}
+
+/* Page backgrounds */
+.boards-page,
+.about-page,
+.faq-page {
+  min-height: 100vh;
+  background-color: var(--app-page-light);
+  transition: background-color 0.3s ease;
+}
+
+/* Page titles */
+.boards-page-title,
+.about-page-title,
+.about-section-title,
+.faq-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* FAQ frame background */
+.faq-frame-bg {
+  background-image:
+    linear-gradient(rgba(239, 239, 239, 0.78), rgba(239, 239, 239, 0.78)),
+    url("/images/faq-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* FAQ scrollbar */
+.card-dropdown-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.card-dropdown-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.faq-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4f6689 #b8eaed;
+}
+
+.faq-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.faq-scroll::-webkit-scrollbar-track {
+  background: #b8eaed;
+  border-radius: 999px;
+}
+
+.faq-scroll::-webkit-scrollbar-thumb {
+  background: #4f6689;
+  border-radius: 999px;
+  border: 2px solid #b8eaed;
+}
+
+/* FAQ frame */
+.faq-frame {
+  border-color: #4a5575;
+}
+
+/* Dark mode trigger from Header */
+body:has(.tak-header.is-night-mode) {
+  --tak-page: var(--app-page-dark);
+  --tak-text: var(--app-text-dark);
+  background-color: var(--app-page-dark);
+}
+
+body:has(.tak-header.is-night-mode) #root {
+  background-color: var(--app-page-dark);
+}
+
+body:has(.tak-header.is-night-mode) .boards-page,
+body:has(.tak-header.is-night-mode) .about-page,
+body:has(.tak-header.is-night-mode) .faq-page {
+  background-color: var(--app-page-dark);
+}
+
+body:has(.tak-header.is-night-mode) .boards-page-title,
+body:has(.tak-header.is-night-mode) .about-page-title,
+body:has(.tak-header.is-night-mode) .about-section-title,
+body:has(.tak-header.is-night-mode) .faq-page-title {
+  color: var(--app-text-dark);
+}
+
+body:has(.tak-header.is-night-mode) .faq-frame {
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+body:has(.tak-header.is-night-mode) .faq-frame-bg {
+  background-image:
+    linear-gradient(rgba(5, 52, 66, 0.82), rgba(5, 52, 66, 0.82)),
+    url("/images/faq-bg.jpg");
+}
+
+/* About page cards */
+.about-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .about-surface {
+  background-color: #21465c;
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .about-surface p,
+body:has(.tak-header.is-night-mode) .about-surface span {
+  color: #dbeafe;
+}
+
+body:has(.tak-header.is-night-mode) .about-surface h3 {
+  color: #f3c8c7;
+}
+
+/* About overview icons */
+body:has(.tak-header.is-night-mode) .about-overview-icons svg,
+body:has(.tak-header.is-night-mode) .about-overview-icons p {
+  color: #dbeafe !important;
+}
+
+/* Create board card dark mode */
+.create-board-card {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #21465c;
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card svg,
+body:has(.tak-header.is-night-mode) .create-board-card span,
+body:has(.tak-header.is-night-mode) .create-board-card p {
+  color: #ffffff;
+}
+
+/* Date picker / modal custom styles */
+.css-1m8qzkt {
+  transform: translateY(8px) !important;
+  z-index: 99999 !important;
+}
+
+.zm-Popper,
+.zm-PopperRoot,
+.zm-Popover {
+  margin-top: 8px !important;
+  z-index: 99999 !important;
+}
+
+.css-137m4ck {
+  border-radius: 25px !important;
+}
+
+.zm-DaysButton,
+.zm-IconNextButton,
+.zm-IconPrevButton {
+  border-radius: 100% !important;
+}
+
+.zm-YearPickerButton,
+.zm-MonthPickerButton,
+.zm-MonthYearButton {
+  border-radius: 8px !important;
+}
+
+
+/* Dashboard page */
+.dashboard-page {
+  min-height: 100vh;
+  background-color: var(--app-page-light);
+  transition: background-color 0.3s ease;
+}
+
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #dbeafe;
+}
+/* Create board card dark mode */
+.create-board-card {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card {
+  background-color: #21465c;
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .create-board-card svg,
+body:has(.tak-header.is-night-mode) .create-board-card span,
+body:has(.tak-header.is-night-mode) .create-board-card p {
+  color: #ffffff;
+}
+
+/* Date picker / modal custom styles */
+.css-1m8qzkt {
+  transform: translateY(8px) !important;
+  z-index: 99999 !important;
+}
+
+.zm-Popper,
+.zm-PopperRoot,
+.zm-Popover {
+  margin-top: 8px !important;
+  z-index: 99999 !important;
+}
+
+.css-137m4ck {
+  border-radius: 25px !important;
+}
+
+.zm-DaysButton,
+.zm-IconNextButton,
+.zm-IconPrevButton {
+  border-radius: 100% !important;
+}
+
+.zm-YearPickerButton,
+.zm-MonthPickerButton,
+.zm-MonthYearButton {
+  border-radius: 8px !important;
+}
+
+
+/* Dashboard page */
+.dashboard-page {
+  min-height: 100vh;
+  background-color: var(--app-page-light);
+  transition: background-color 0.3s ease;
+}
+
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.zm-MonthYearButton {
+  border-radius: 8px !important;
+}
+
+/* Dashboard title */
+.dashboard-page-title {
+  color: var(--app-text-light);
+  transition: color 0.3s ease;
+}
+
+/* Dashboard cards / surfaces */
+.dashboard-surface {
+  background-color: #ffffff;
+  color: #24344c;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Dark mode */
+body:has(.tak-header.is-night-mode) .dashboard-page {
+  background-color: var(--app-page-dark);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-page-title {
+  color: var(--app-text-dark);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface {
+  background-color: #21465c;
+  color: #ffffff;
+  box-shadow: 0 16px 34px rgb(0 0 0 / 0.18);
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface .text-black {
+  color: #ffffff;
+}
+
+body:has(.tak-header.is-night-mode) .dashboard-surface .text-gray-400 {
+  color: #dbeafe;
+}
+
+
+
+/* Main Board Page Background (Light Mode) */
+.board-page {
+  background-color: var(--board-page-background, var(--app-page-light)) !important;
+  transition: background-color 0.3s ease;
+}
+
+.board-page .tak-header {
+  --tak-page: var(--board-page-background, var(--app-page-light));
+  background: transparent;
+}
+
+/* Main Board Page Background (Dark Mode) */
+body:has(.tak-header.is-night-mode) .board-page {
+  background-color: var(--app-page-dark) !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-page .tak-header {
+  --tak-page: var(--app-page-dark);
+}
+
+/* Sidebar Toggle Button (Chevron) */
+body:has(.tak-header.is-night-mode) .board-page .board-sidebar-shell > button {
+  background-color: #0081a7 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+/* Keep the shell and its panel animated at every breakpoint. */
+.board-sidebar-shell {
+  transition: width 0.3s ease-out;
+}
+
+/* Sidebar Container */
+.board-sidebar {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out,
+    background-color 0.3s ease, border-color 0.3s ease;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar {
+  background-color: #042530 !important;
+  border-color: #0081a7 !important;
+}
+
+/* Sidebar Header (Project Name) */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-b {
+  border-color: #0081a7 !important;
+  color: #05a8d9 !important;
+}
+
+/* Sidebar Navigation Links */
+body:has(.tak-header.is-night-mode) .board-sidebar nav a {
+  color: #ffffff !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar nav a:hover {
+  color: #05a8d9 !important;
+}
+
+/* Sidebar Profiles Container Border */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t {
+  border-color: #0081a7 !important;
+}
+
+/* Sidebar Profile Names */
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t .text-red-400 {
+  color: #ffffff !important;
+}
+
+body:has(.tak-header.is-night-mode) .board-sidebar .border-t > div:hover {
+  background-color: rgba(0, 129, 167, 0.2) !important;
+}
+
+/* Empty Card Placeholder Text */
+body:has(.tak-header.is-night-mode) .board-page .text-gray-600 {
+  color: #dbeafe !important; 
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+body:has(.tak-header.is-night-mode) .about-overview-icons svg {
+  color: #dbeafe;
+}
+
+body:has(.tak-header.is-night-mode) .about-overview-icons p {
+  color: #dbeafe;
+}
+
+
+/* Dashboard Columns Scrollbar */
+.dashboard-task-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4eacb7 #b8eaed; /* تغییر رنگ متناسب با تم داشبورد شما */
+}
+
+.dashboard-task-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-task-scroll::-webkit-scrollbar-track {
+  background: #b8eaed;
+  border-radius: 999px;
+}
+
+.dashboard-task-scroll::-webkit-scrollbar-thumb {
+  background: #4eacb7;
+  border-radius: 999px;
+}
+
+input::placeholder {
+  color: var(--placeholder-color);
+}
